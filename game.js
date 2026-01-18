@@ -64,11 +64,6 @@ const inactiveEnemies = Array.from({ length: MAX_ENEMIES }, () => ({
     bullets: []
 }));
 
-// =====================
-// PLAYER SKIN
-// =====================
-const playerImage = new Image();
-playerImage.src = 'chiba.png';
 
 // =====================
 // INPUT
@@ -410,7 +405,8 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // player
-    ctx.drawImage(playerImage, player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
+    ctx.fillStyle = '#00ff00'; // цвет квадрата, можно любой
+    ctx.fillRect(player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
 
     // bullets
     ctx.fillStyle = '#ffff00';
