@@ -310,25 +310,6 @@ function update(dt) {const now = performance.now();
     // обновляем врагов
     updateEnemies(dt);
 
-    // проверка попаданий игрока по врагам
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        for (let j = activeEnemies.length - 1; j >= 0; j--) {
-            const e = activeEnemies[j];
-            if (b.x > e.x && b.x < e.x + e.width &&
-                b.y > e.y && b.y < e.y + e.height) {
-                e.hp -= 10;
-                bullets.splice(i, 1);
-                if (e.hp <= 0) {
-                    e.active = false;
-                    activeEnemies.splice(j, 1);
-                    inactiveEnemies.push(e);
-                }
-                break;
-            }
-        }
-    }
-
     // платформы
     platforms.forEach((p, index) => {
         if (p.temp && now - p.spawnTime > p.lifeTime) {
@@ -511,11 +492,11 @@ function draw() {
         ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
 
         ctx.fillStyle = '#ffff00'; // пули игрока
-        for (const b of bulletPool) {
-            if (!b.active) continue;
-            ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
-            ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
-    }
+    for (const b of bulletPool) {
+        if (!b.active) continue;
+        ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
+        ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
+	}
     });
 
     // HUD
