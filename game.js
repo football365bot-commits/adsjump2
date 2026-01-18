@@ -22,14 +22,6 @@ const CAMERA_SPEED = 1.25;
 const BULLET_SPEED = 12;
 const BULLET_SIZE = 4;
 const FIRE_RATE = 150;
-
-const ENEMY_MAX = {
-    static: { speed: 0, damage: 1, hp: 5 },
-    slow:   { speed: 3, damage: 2, hp: 7 },
-    fast:   { speed: 6, damage: 4, hp: 10 }
-};
-const MAX_ENEMIES = 5; // уменьшили пул
-
 // =====================
 // GAME STATE
 // =====================
@@ -46,7 +38,6 @@ const player = {
     jumpForce: BASE_JUMP_FORCE,
     hp: 100
 };
-
 // =====================
 // BULLETS
 // =====================
@@ -54,22 +45,43 @@ const bullets = [];
 let lastShotTime = 0;
 
 // =====================
-// ENEMIES (пул)
-const activeEnemies = [];
-const inactiveEnemies = Array.from({ length: MAX_ENEMIES }, () => ({
-    active: false,
-    x: 0, y: 0, vx: 0, vy: 0,
-    type: 'static', size: 30, width: 30, height: 30,
-    hp: 0, maxHp: 0, damage: 0, lastShot: 0,
-    bullets: []
-}));
+// ENEMIES
+// =====================
+const enemies = [];
 
+function spawnEnemy(type = null) {
+    if (!type) {
+        const typeRand = Math.random();
+        if (typeRand < 0.5) type = 'static';
+        else if (typeRand < 0.8) type = 'slow';
+        else type = 'fast';
+    }
+
+    let vx = 0;
+    if (type === 'slow') vx = Math.random() < 0.5 ? 1 : -1;
+    if (type === 'fast') vx = Math.random() < 0.5 ? 3 : -3;
+
+    // Спавним врага над камерой, не на фиксированной линии
+    const y = player.y + canvas.height + Math.random() * 100; // чуть выше верхнего края
+    const x = Math.random() * (canvas.width - 40);
+
+        x: Math.random() * (canvas.width - 40),
+        y: canvas.height - 50,
+        vx: vx,
+        vy: 0,
+        type: type,
+        size: 30,
+        width: 30,   // для коллизий
+        height: 30,  // для коллизий
+        hp: 1,
+        damage: 10
+    });
+}
 // =====================
 // PLAYER SKIN
 // =====================
 const playerImage = new Image();
-playerImage.src = 'chiba.png';
-
+playerImage.src = 'chiba.png'; // путь к файлу
 // =====================
 // INPUT
 // =====================
@@ -88,45 +100,49 @@ const platforms = [];
 
 // =====================
 // ITEMS
+// =====================
 const itemTypes = ['trampoline', 'drone', 'rocket', 'bomb', 'spikes', 'medkit', 'adrenaline'];
+
 function getItemForPlatform() {
     const rand = Math.random();
-    if (rand < 0.004) return 'rocket';
-    if (rand < 0.008) return 'drone';
+    if (rand < 0.004) return 'rocket';        // редкий
+    if (rand < 0.008) return 'drone';         // чуть чаще
     if (rand < 0.015) return 'trampoline';
     if (rand < 0.025) return 'bomb';
     if (rand < 0.040) return 'spikes';
     if (rand < 0.050) return 'adrenaline';
     if (rand < 0.075) return 'medkit';
-    return null;
+    return null;                              // на многих платформах нет предмета
 }
 
 // =====================
 // START PLATFORM
+// =====================
 function createStartPlatform() {
-    platforms.push({
+    const startPlatform = {
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
-        y: 50,
+        y: 50, // чуть выше низа экрана
         type: 'normal',
         vx: 0,
         used: false,
         item: null,
-        temp: true,
-        lifeTime: 2000,
-        spawnTime: performance.now()
-    });
+        temp: true, // временная платформа
+        lifeTime: 2000, // 2 секунды
+        spawnTime: performance.now() // момент появления
+    };
+    platforms.push(startPlatform);
 }
+
 createStartPlatform();
 
 // =====================
 // PLATFORM GENERATION
+// =====================
 function getPlatformTypeByScore() {
     const normalChance = Math.max(0.6 - score / 10000, 0.2);
     const brokenChance = Math.min(0.2 + score / 15000, 0.4);
     const movingSlowChance = Math.min(0.1 + score / 20000, 0.2);
-    const movingFastChance = 1 - normalChance - brokenChance - movingSlowChance;
-
-    const rand = Math.random();
+    const movingFastChance = 1 - normalChance - brokenChance - movingSlowChance;const rand = Math.random();
     if (rand < normalChance) return 'normal';
     if (rand < normalChance + brokenChance) return 'broken';
     if (rand < normalChance + brokenChance + movingSlowChance) return 'moving_slow';
@@ -134,203 +150,110 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = 100;
+    let currentY = 100; // начнем чуть выше стартовой платформы
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
         let vx = 0;
         if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
         if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
+
         const itemType = getItemForPlatform();
+
         platforms.push({
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
             y: currentY,
             type: type,
             vx: vx,
-            used: false,item: itemType
+            used: false,
+            item: itemType
         });
         currentY += gap;
     }
 }
+
 generateInitialPlatforms(20);
 
 // =====================
-// UTILS
-function getEnemyTypeByScore(score) {
-    const rand = Math.random();
-    if (score < 5000) return rand < 0.7 ? 'static' : 'slow';
-    if (score < 20000) return rand < 0.5 ? 'static' : rand < 0.85 ? 'slow' : 'fast';
-    return rand < 0.3 ? 'static' : rand < 0.7 ? 'slow' : 'fast';
-}
-
+// UPDATE
 // =====================
-// SPAWN ENEMIES (оптимизированно)
-let lastEnemySpawn = 0;
-function spawnEnemies(score) {
+function update(dt) {
     const now = performance.now();
-    if (now - lastEnemySpawn < 300) return; // проверка каждые 300ms
-    lastEnemySpawn = now;
 
-    const spawnChance = 0.002 + Math.min(score / 30000, 0.01);
-
-    platforms.forEach(p => {
-        if (p.y > player.y && Math.random() < spawnChance) {
-            const enemy = inactiveEnemies.find(e => !e.active);
-            if (!enemy) return;
-
-            enemy.active = true;
-            enemy.type = getEnemyTypeByScore(score);
-
-            const offsetX = Math.random() * 30 * (Math.random() < 0.5 ? -1 : 1);
-            const offsetY = Math.random() * 20 * (Math.random() < 0.5 ? -1 : 1);
-
-            enemy.x = p.x + Math.random() * (PLATFORM_WIDTH - enemy.size) + offsetX;
-            enemy.y = p.y + PLATFORM_HEIGHT + offsetY;
-
-            // скорость подвижных врагов
-            if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed + score * 0.0001);
-            else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed + score * 0.0002);
-            else enemy.vx = 0;
-            enemy.vy = 0;
-
-            enemy.hp = ENEMY_MAX[enemy.type].hp;
-            enemy.maxHp = ENEMY_MAX[enemy.type].hp;
-            enemy.damage = ENEMY_MAX[enemy.type].damage;
-            enemy.lastShot = now;
-            enemy.bullets = [];
-
-            activeEnemies.push(enemy);
-        }
-    });
-}
-
-// =====================
-// UPDATE ENEMIES
-function updateEnemies(dt) {
-    for (let i = activeEnemies.length - 1; i >= 0; i--) {
-        const e = activeEnemies[i];
-
-        // проверка, на экране ли враг
-        const onScreen =
-            e.y > player.y - canvas.height / 2 &&
-            e.y < player.y + canvas.height / 2;
-
-        if (!onScreen) continue;
-
-        e.x += e.vx;
-        e.y += e.vy;
-
-        // отражение от стен
-        if (e.vx !== 0) {
-            if (e.x < 0) e.vx = Math.abs(e.vx);
-            if (e.x + e.size > canvas.width) e.vx = -Math.abs(e.vx);
-        }
-
-        // авто-стрельба каждые 2 секунды
-        if (onScreen && performance.now() - e.lastShot > 2000) {
-            const dx = (player.x + PLAYER_SIZE/2) - (e.x + e.size/2);
-            const dy = (player.y + PLAYER_SIZE/2) - (e.y + e.size/2);
-            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-
-            e.bullets.push({
-                x: e.x + e.size/2,
-                y: e.y + e.size/2,
-                vx: dx / dist * 6,
-                vy: dy / dist * 6,
-                size: 6,
-                damage: e.damage   // 👈 ВАЖНО
-            });
-
-                e.lastShot = performance.now();
-        }
-    
-
-        // движение пуль врагов
-        for (let j = e.bullets.length - 1; j >= 0; j--) {
-            const b = e.bullets[j];
-            b.x += b.vx;
-            b.y += b.vy;
-
-            // попадание в игрока
-            if (
-                b.x > player.x &&
-                b.x < player.x + PLAYER_SIZE &&
-                b.y > player.y &&
-                b.y < player.y + PLAYER_SIZE
-            ) {
-                player.hp -= b.damage;   // 👈 урон по типу врага
-                e.bullets.splice(j, 1);  // 👈 пуля исчезает
-                continue;
-            }
-
-            // выход за экран
-            if (
-                b.x < 0  b.x > canvas.width 
-                b.y < player.y - canvas.height / 2 ||
-                b.y > player.y + canvas.height / 2
-            ) {
-                e.bullets.splice(j, 1);
-            }
-        }
-    }
-}
-
-// =====================
-// UPDATE GAME
-function update(dt) {const now = performance.now();
-
-    // движение игрока
     player.x += inputX * 8;
     if (player.x < -PLAYER_SIZE) player.x = canvas.width;
     if (player.x > canvas.width) player.x = -PLAYER_SIZE;
+
     player.vy += GRAVITY;
     player.y += player.vy;
 
-    // авто-выстрел игрока (по врагам на экране)
-    if (activeEnemies.some(e => e.y < player.y + canvas.height && e.y > player.y - canvas.height) && now - lastShotTime > FIRE_RATE) {
-        bullets.push({ x: player.x + PLAYER_SIZE/2, y: player.y, vy: BULLET_SPEED });
+    
+    // === AUTO SHOOT ===
+    if (now - lastShotTime > FIRE_RATE) {
+        bullets.push({
+            x: player.x + PLAYER_SIZE / 2,
+            y: player.y,
+            vy: BULLET_SPEED
+        });
         lastShotTime = now;
     }
 
-    // движение пуль игрока
+    // === BULLETS UPDATE ===
     for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        b.y += b.vy;
-        if (b.y > canvas.height + 100 || b.y < -100) bullets.splice(i, 1);
+        bullets[i].y += bullets[i].vy;
+
+        if (bullets[i].y > canvas.height + 100 || bullets[i].y < -100) {
+            bullets.splice(i, 1);
+        }
     }
+    // Пример: 0.5% шанс за каждый апдейт создать врага
+    
+    if (Math.random() < 0.05) spawnEnemy(); // static
+    if (Math.random() < 0.03) spawnEnemy(); // slow
+    if (Math.random() < 0.01) spawnEnemy(); {// fast
+        spawnEnemy();
+    }
+    // === ENEMIES UPDATE ===
+    enemies.forEach((enemy, eIndex) => {
+        enemy.y += enemy.vy;
+        enemy.x += enemy.vx;
 
-    // обновляем врагов
-    updateEnemies(dt);
+         // враги двигаются вместе с камерой
+        if (player.y > canvas.height / 2) { // если игрок на верхней позиции
+            const delta = 0; // не движемся, можно убрать
+        } else {
+            const delta = (player.y - canvas.height / 2) * CAMERA_SPEED;
+            enemy.y -= delta; // враги смещаются вместе с платформами
+        }
 
-    // проверка попаданий игрока по врагам
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        for (let j = activeEnemies.length - 1; j >= 0; j--) {
-            const e = activeEnemies[j];
-            if (b.x > e.x && b.x < e.x + e.width &&
-                b.y > e.y && b.y < e.y + e.height) {
-                e.hp -= 10;
-                bullets.splice(i, 1);
-                if (e.hp <= 0) {
-                    e.active = false;
-                    activeEnemies.splice(j, 1);
-                    inactiveEnemies.push(e);
-                }
+        // проверка коллизии с игроком
+        if (player.x + PLAYER_SIZE > enemy.x &&
+            player.x < enemy.x + enemy.width &&
+            player.y + PLAYER_SIZE > enemy.y &&
+            player.y < enemy.y + enemy.height) {
+            player.hp -= enemy.damage; // наносим урон игроку
+        }
+
+        // === КОЛЛИЗИЯ ПУЛЯ → ВРАГ ===
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            if (bullets[i].x > enemy.x && bullets[i].x < enemy.x + enemy.width &&
+                bullets[i].y > enemy.y && bullets[i].y < enemy.y + enemy.height) {
+                enemy.hp -= 10; // урон от пули
+                bullets.splice(i, 1); // удаляем пулю
+                if (enemy.hp <= 0) enemies.splice(eIndex, 1); // убиваем врага
                 break;
             }
         }
-    }
+    });
 
-    // платформы
-    platforms.forEach((p, index) => {
+    platforms.forEach((p, index) => {// удаляем временную платформу, если время вышло
         if (p.temp && now - p.spawnTime > p.lifeTime) {
             platforms.splice(index, 1);
             return;
         }
 
-        // collision with player
-        if (player.vy < 0 &&
-            player.y <= p.y + PLATFORM_HEIGHT &&
+        // коллизия с платформой
+        if (player.vy < 0 &&player.y <= p.y + PLATFORM_HEIGHT &&
             player.y >= p.y &&
             player.x + PLAYER_SIZE > p.x &&
             player.x < p.x + PLATFORM_WIDTH) {
@@ -338,8 +261,8 @@ function update(dt) {const now = performance.now();
             if (p.type === 'broken' && p.used) return;
 
             player.vy = player.jumpForce;
-            if (p.type === 'broken') p.used = true;
 
+            if (p.type === 'broken') p.used = true;// проверка предмета
             if (p.item) {
                 switch (p.item) {
                     case 'trampoline': player.vy += 5; break;
@@ -354,31 +277,36 @@ function update(dt) {const now = performance.now();
             }
         }
 
-        // движение платформ
+        // движение платформ с динамическим ускорением
         if (p.type === 'moving_slow') {
-            let speed = Math.min(3.5, 1 + score * 0.00005);
-            p.vx = Math.sign(p.vx) * speed;
+            let speed = 1 + score * 0.00005; // базовая + ускорение
+            if (speed > 3.5) speed = 3.5;        // максимальная скорость
+            p.vx = Math.sign(p.vx) * speed;  // сохраняем направление
             p.x += p.vx;
         } else if (p.type === 'moving_fast') {
-            let speed = Math.min(9, 3.5 + score * 0.00012);
+            let speed = 3.5 + score * 0.00012;  // базовая + ускорение
+            if (speed > 9) speed = 9;        // максимальная скорость
             p.vx = Math.sign(p.vx) * speed;
             p.x += p.vx;
         }
+
+        // отражение от краёв
         if (p.x < 0) p.vx = Math.abs(p.vx);
         if (p.x + PLATFORM_WIDTH > canvas.width) p.vx = -Math.abs(p.vx);
     });
 
     // камера
     if (player.y > canvas.height / 2) {
-        const delta = (player.y - canvas.height / 2) * CAMERA_SPEED;
-        player.y = canvas.height / 2;
-        platforms.forEach(p => p.y -= delta);
-        activeEnemies.forEach(e => e.y -= delta);
-        score += Math.floor(delta);
-    }
+    const delta = (player.y - canvas.height / 2) * CAMERA_SPEED;
 
-    // респавн врагов
-    spawnEnemies(score);
+    player.y = canvas.height / 2;
+
+    platforms.forEach(p => {
+        p.y -= delta;
+    });
+
+    score += Math.floor(delta);
+}
 
     // recycle платформ
     let maxY = Math.max(...platforms.map(p => p.y));
@@ -390,32 +318,49 @@ function update(dt) {const now = performance.now();
             if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
             if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
             const itemType = getItemForPlatform();
-            platforms[i] = { x: Math.random()*(canvas.width-PLATFORM_WIDTH), y:maxY+gap, type, vx, used:false, item:itemType };
+
+            platforms[i] = {
+                x: Math.random() * (canvas.width - PLATFORM_WIDTH),
+                y: maxY + gap,
+                type: type,
+                vx: vx,
+                used: false,
+                item: itemType
+            };
             maxY = platforms[i].y;
         }
     });
+    
 
-    // Game over
-    if (player.hp <= 0 || player.y < -200) {
-        alert('Game Over');
-        location.reload();
-    }
+    if (player.y < -200) location.reload();
 }
 
 // =====================
 // DRAW
+// =====================
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // player
-    ctx.drawImage(playerImage, player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
-
+    ctx.drawImage(
+    playerImage,
+    player.x,
+    canvas.height - player.y,
+    PLAYER_SIZE,
+    PLAYER_SIZE
+);
     // bullets
     ctx.fillStyle = '#ffff00';
-    bullets.forEach(b => ctx.fillRect(b.x - BULLET_SIZE/2, canvas.height - b.y, BULLET_SIZE, BULLET_SIZE));
-
+    bullets.forEach(b => {
+        ctx.fillRect(
+            b.x - BULLET_SIZE / 2,
+            canvas.height - b.y,
+            BULLET_SIZE,
+            BULLET_SIZE
+        );
+    });
     // platforms
     platforms.forEach(p => {
         if (p.type === 'broken' && p.used) return;
@@ -425,12 +370,11 @@ function draw() {
             case 'moving_slow': ctx.fillStyle = '#00ffff'; break;
             case 'moving_fast': ctx.fillStyle = '#ff00ff'; break;
         }
-        ctx.fillRect(p.x, canvas.height - p.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
-
+        ctx.fillRect(p.x, canvas.height - p.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);// рисуем предмет по центру платформы
         if (p.item) {
             const itemX = p.x + PLATFORM_WIDTH / 2 - 10;
             const itemY = canvas.height - p.y - 20;
-            switch (p.item) {
+            switch(p.item) {
                 case 'trampoline': ctx.fillStyle = '#ffff00'; break;
                 case 'drone': ctx.fillStyle = '#ff8800'; break;
                 case 'rocket': ctx.fillStyle = '#ff0000'; break;
@@ -442,42 +386,32 @@ function draw() {
             ctx.fillRect(itemX, itemY, 20, 20);
         }
     });
-
-    // enemies
-    activeEnemies.forEach(e => {
-        switch(e.type){
-            case 'static': ctx.fillStyle='#ff0000'; break;
-            case 'slow': ctx.fillStyle='#ff8800'; break;
-            case 'fast': ctx.fillStyle='#ffff00'; break;
+    // === ENEMIES DRAW ===
+    enemies.forEach(e => {
+        switch(e.type) {
+            case 'static': ctx.fillStyle = '#ff0000'; break;   // красный
+            case 'slow': ctx.fillStyle = '#ff8800'; break;     // оранжевый
+            case 'fast': ctx.fillStyle = '#ffff00'; break;     // жёлтый
         }
         ctx.fillRect(e.x, canvas.height - e.y - e.size, e.size, e.size);
-
-        // HP bar
-        const hpPercent = e.hp / e.maxHp;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size, 4);
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
-
-        // bullets
-        ctx.fillStyle='#ff00ff';
-        e.bullets.forEach(b=>ctx.fillRect(b.x-b.size/2, canvas.height-b.y-b.size/2, b.size, b.size));
     });
 
     // HUD
     ctx.fillStyle = '#fff';
-    ctx.font='20px Arial';
-    ctx.fillText(`Score: ${score}`, 20, 30);
-    ctx.fillText(`HP: ${player.hp}`, canvas.width - 100, 30);
+    ctx.font = '20px Arial';
+    ctx.fillText(Score: ${score}, 20, 30);
+    ctx.fillText(HP: ${player.hp}, canvas.width - 100, 30);
+    // HP
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px Arial';
+    ctx.fillText(HP: ${player.hp}, canvas.width - 100, 30);
 }
 
 // =====================
 // GAME LOOP
-function gameLoop(t){
+// =====================
+function gameLoop(t) {
     const dt = t - lastTime;
     lastTime = t;
     update(dt);
     draw();
-    requestAnimationFrame(gameLoop);
-}
-requestAnimationFrame(gameLoop);
