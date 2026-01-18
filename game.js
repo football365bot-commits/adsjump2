@@ -168,7 +168,7 @@ function spawnEnemies(score) {
     if (now - lastEnemySpawn < 500) return; // спавн раз в 0.5 секунды
     lastEnemySpawn = now;
 
-    const spawnChance = 0.005 + Math.min(score / 30000, 0.01);
+    const spawnChance = 0.005 + Math.min(score / 30000, 0.03);
 
     // Проверяем, сработал ли спавн
     if (Math.random() > spawnChance) return;
