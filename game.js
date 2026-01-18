@@ -48,9 +48,29 @@ const player = {
 };
 
 // =====================
-// BULLETS
+// BULLETS POOL
 // =====================
-const bullets = [];
+const MAX_BULLETS = 1000; // пул для всех пуль
+const bulletPool = Array.from({ length: MAX_BULLETS }, () => ({
+    active: false,
+    x: 0, y: 0,
+    vx: 0, vy: 0,
+    size: BULLET_SIZE,
+    damage: 0,
+    owner: 'player' // или 'enemy'
+}));
+function spawnBullet(x, y, vx, vy, damage, owner='player') {
+    const b = bulletPool.find(b => !b.active);
+    if (!b) return; // если пул пуст, пуля не спавнится
+    b.active = true;
+    b.x = x;
+    b.y = y;
+    b.vx = vx;
+    b.vy = vy;
+    b.damage = damage;
+    b.owner = owner;
+}
+
 let lastShotTime = 0;
 
 
@@ -231,14 +251,7 @@ function updateEnemies(dt) {
             const dy = (player.y + PLAYER_SIZE/2) - (e.y + e.size/2);
             const dist = Math.sqrt(dx*dx + dy*dy) || 1;
 
-            e.bullets.push({
-                x: e.x + e.size/2,
-                y: e.y + e.size/2,
-                vx: dx / dist * 6,
-                vy: dy / dist * 6,
-                size: 6,
-                damage: e.damage   // 👈 ВАЖНО
-            });
+            spawnBullet(e.x + e.size/2, e.y + e.size/2, dx / dist * 6, dy / dist * 6, e.damage, 'enemy');
 
                 e.lastShot = performance.now();
         }
@@ -287,7 +300,7 @@ function update(dt) {const now = performance.now();
 
     // авто-выстрел игрока (по врагам на экране)
     if (activeEnemies.some(e => e.y < player.y + canvas.height && e.y > player.y - canvas.height) && now - lastShotTime > FIRE_RATE) {
-        bullets.push({ x: player.x + PLAYER_SIZE/2, y: player.y, vy: BULLET_SPEED });
+        spawnBullet(player.x + PLAYER_SIZE/2, player.y, 0, BULLET_SPEED, 10, 'player');
         lastShotTime = now;
     }
 
@@ -401,6 +414,52 @@ function update(dt) {const now = performance.now();
     }
 }
 
+function updateBullets() {
+    for (const b of bulletPool) {
+        if (!b.active) continue;
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // проверка выхода за экран относительно камеры
+        if (
+            b.x < 0  b.x > canvas.width 
+            b.y < player.y - canvas.height / 2 || b.y > player.y + canvas.height / 2
+        ) {
+            b.active = false;
+            continue;
+        }
+
+        // попадание в игрока
+        if (b.owner === 'enemy') {
+            if (
+                b.x > player.x && b.x < player.x + PLAYER_SIZE &&
+                b.y > player.y && b.y < player.y + PLAYER_SIZE
+            ) {
+                player.hp -= b.damage;
+                b.active = false;
+            }
+        }
+
+        // попадание в врагов
+        if (b.owner === 'player') {
+            for (let i = activeEnemies.length - 1; i >= 0; i--) {
+                const e = activeEnemies[i];
+                if (b.x > e.x && b.x < e.x + e.size &&
+                    b.y > e.y && b.y < e.y + e.size
+                ) {
+                    e.hp -= b.damage;
+                    b.active = false;
+                    if (e.hp <= 0) {
+                        e.active = false;
+                        activeEnemies.splice(i, 1);
+                        inactiveEnemies.push(e);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
 // =====================
 // DRAW
 function draw() {
@@ -459,9 +518,12 @@ function draw() {
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
 
-        // bullets
-        ctx.fillStyle='#ff00ff';
-        e.bullets.forEach(b=>ctx.fillRect(b.x-b.size/2, canvas.height-b.y-b.size/2, b.size, b.size));
+        ctx.fillStyle = '#ffff00'; // пули игрока
+        for (const b of bulletPool) {
+            if (!b.active) continue;
+            ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
+            ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
+    }
     });
 
     // HUD
