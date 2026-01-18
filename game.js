@@ -23,6 +23,13 @@ const BULLET_SPEED = 12;
 const BULLET_SIZE = 4;
 const FIRE_RATE = 150;
 
+const ENEMY_MAX = {
+    static: { speed: 0, damage: 1, hp: 5 },
+    slow:   { speed: 3, damage: 2, hp: 7 },
+    fast:   { speed: 6, damage: 4, hp: 10 }
+};
+const MAX_ENEMIES = 5; // уменьшили пул
+
 // =====================
 // GAME STATE
 // =====================
@@ -47,52 +54,21 @@ const bullets = [];
 let lastShotTime = 0;
 
 // =====================
-// ENEMIES
-// =====================
-const enemies = [];
-
-function getEnemyTypeByScore() {
-    const rand = Math.random();
-    if (rand < 0.001) return 'static';
-    if (rand < 0.0008) return 'slow';
-    if (rand < 0.0005) return 'fast';
-}
-
-function generateInitialEnemies(count) {
-    let currentY = 150;
-    for (let i = 0; i < count; i++) {
-        const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
-        const type = getEnemyTypeByScore();
-        let vx = 0;
-        if (type === 'slow') vx = Math.random() < 0.5 ? 1 : -1;
-        if (type === 'fast') vx = Math.random() < 0.5 ? 3 : -3;
-
-        enemies.push({
-            x: Math.random() * (canvas.width - 30),
-            y: currentY,
-            vx: vx,
-            vy: 0,
-            type: type,
-            size: 30,
-            width: 30,
-            height: 30,
-            hp: 1,
-            damage: 1,
-            lastShot: performance.now(),
-            bullets: []
-        });
-
-        currentY += gap;
-    }
-}
-
-generateInitialEnemies(10);
+// ENEMIES (пул)
+const activeEnemies = [];
+const inactiveEnemies = Array.from({ length: MAX_ENEMIES }, () => ({
+    active: false,
+    x: 0, y: 0, vx: 0, vy: 0,
+    type: 'static', size: 30, width: 30, height: 30,
+    hp: 0, maxHp: 0, damage: 0, lastShot: 0,
+    bullets: []
+}));
 
 // =====================
 // PLAYER SKIN
 // =====================
 const playerImage = new Image();
-playerImage.src = 'chiba.png';
+playerImage.src = 'compressed_photo_2026-01-16_10-11-34.png';
 
 // =====================
 // INPUT
@@ -112,9 +88,7 @@ const platforms = [];
 
 // =====================
 // ITEMS
-// =====================
 const itemTypes = ['trampoline', 'drone', 'rocket', 'bomb', 'spikes', 'medkit', 'adrenaline'];
-
 function getItemForPlatform() {
     const rand = Math.random();
     if (rand < 0.004) return 'rocket';
@@ -129,7 +103,6 @@ function getItemForPlatform() {
 
 // =====================
 // START PLATFORM
-// =====================
 function createStartPlatform() {
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
@@ -147,7 +120,6 @@ createStartPlatform();
 
 // =====================
 // PLATFORM GENERATION
-// =====================
 function getPlatformTypeByScore() {
     const normalChance = Math.max(0.6 - score / 10000, 0.2);
     const brokenChance = Math.min(0.2 + score / 15000, 0.4);
@@ -158,8 +130,12 @@ function getPlatformTypeByScore() {
     if (rand < normalChance) return 'normal';
     if (rand < normalChance + brokenChance) return 'broken';
     if (rand < normalChance + brokenChance + movingSlowChance) return 'moving_slow';
-    return 'moving_fast';}function generateInitialPlatforms(count) {
-    let currentY = 100;for (let i = 0; i < count; i++) {
+    return 'moving_fast';
+}
+
+function generateInitialPlatforms(count) {
+    let currentY = 100;
+    for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
         let vx = 0;
@@ -171,8 +147,7 @@ function getPlatformTypeByScore() {
             y: currentY,
             type: type,
             vx: vx,
-            used: false,
-            item: itemType
+            used: false,item: itemType
         });
         currentY += gap;
     }
@@ -180,98 +155,173 @@ function getPlatformTypeByScore() {
 generateInitialPlatforms(20);
 
 // =====================
-// UPDATE
+// UTILS
+function getEnemyTypeByScore(score) {
+    const rand = Math.random();
+    if (score < 5000) return rand < 0.7 ? 'static' : 'slow';
+    if (score < 20000) return rand < 0.5 ? 'static' : rand < 0.85 ? 'slow' : 'fast';
+    return rand < 0.3 ? 'static' : rand < 0.7 ? 'slow' : 'fast';
+}
+
 // =====================
-function update(dt) {
+// SPAWN ENEMIES (оптимизированно)
+let lastEnemySpawn = 0;
+function spawnEnemies(score) {
     const now = performance.now();
+    if (now - lastEnemySpawn < 300) return; // проверка каждые 300ms
+    lastEnemySpawn = now;
 
-    // === PLAYER MOVEMENT ===
-    player.x += inputX * 8;
-    if (player.x < -PLAYER_SIZE) player.x = canvas.width;
-    if (player.x > canvas.width) player.x = -PLAYER_SIZE;
+    const spawnChance = 0.002 + Math.min(score / 30000, 0.01);
 
-    player.vy += GRAVITY;
-    player.y += player.vy;
+    platforms.forEach(p => {
+        if (p.y > player.y && Math.random() < spawnChance) {
+            const enemy = inactiveEnemies.find(e => !e.active);
+            if (!enemy) return;
 
-    // === AUTO SHOOT ===
-    if (now - lastShotTime > FIRE_RATE) {
-        bullets.push({
-            x: player.x + PLAYER_SIZE / 2,
-            y: player.y,
-            vy: BULLET_SPEED
-        });
-        lastShotTime = now;
-    }
+            enemy.active = true;
+            enemy.type = getEnemyTypeByScore(score);
 
-    // === BULLETS UPDATE ===
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].y += bullets[i].vy;
-        if (bullets[i].y > canvas.height + 100 || bullets[i].y < -100) bullets.splice(i, 1);
-    }
+            const offsetX = Math.random() * 30 * (Math.random() < 0.5 ? -1 : 1);
+            const offsetY = Math.random() * 20 * (Math.random() < 0.5 ? -1 : 1);
 
-    // === ENEMIES UPDATE ===
-    enemies.forEach((enemy, eIndex) => {
-        enemy.x += enemy.vx;
+            enemy.x = p.x + Math.random() * (PLATFORM_WIDTH - enemy.size) + offsetX;
+            enemy.y = p.y + PLATFORM_HEIGHT + offsetY;
 
-        if (enemy.x < 0) enemy.vx = Math.abs(enemy.vx);
-        if (enemy.x + enemy.size > canvas.width) enemy.vx = -Math.abs(enemy.vx);
+            // скорость подвижных врагов
+            if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed + score * 0.0001);
+            else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed + score * 0.0002);
+            else enemy.vx = 0;
+            enemy.vy = 0;
 
-        // === Враг стреляет по игроку ===
-        if (performance.now() - enemy.lastShot > 500) { // просто время между выстрелами
-            const dx = (player.x + PLAYER_SIZE / 2) - (enemy.x + enemy.size / 2);
-            const dy = (player.y + PLAYER_SIZE / 2) - (enemy.y + enemy.size / 2);
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const speed = 6;
+            enemy.hp = ENEMY_MAX[enemy.type].hp;
+            enemy.maxHp = ENEMY_MAX[enemy.type].hp;
+            enemy.damage = ENEMY_MAX[enemy.type].damage;
+            enemy.lastShot = now;
+            enemy.bullets = [];
 
-            enemy.bullets.push({
-                x: enemy.x + enemy.size / 2,
-                y: enemy.y + enemy.size / 2,
-                vx: dx / dist * speed,
-                vy: dy / dist * speed,
-                size: 6
-            });
+            activeEnemies.push(enemy);
+        }
+    });
+}
 
-            enemy.lastShot = performance.now();
+// =====================
+// UPDATE ENEMIES
+function updateEnemies(dt) {
+    for (let i = activeEnemies.length - 1; i >= 0; i--) {
+        const e = activeEnemies[i];
+
+        // проверка, на экране ли враг
+        const onScreen =
+            e.y > player.y - canvas.height / 2 &&
+            e.y < player.y + canvas.height / 2;
+
+        if (!onScreen) continue;
+
+        e.x += e.vx;
+        e.y += e.vy;
+
+        // отражение от стен
+        if (e.vx !== 0) {
+            if (e.x < 0) e.vx = Math.abs(e.vx);
+            if (e.x + e.size > canvas.width) e.vx = -Math.abs(e.vx);
         }
 
-        // === Двигаем пули врага и проверяем попадания ===
-        for (let i = enemy.bullets.length - 1; i >= 0; i--) {
-            const b = enemy.bullets[i];
+        // авто-стрельба каждые 2 секунды
+        if (onScreen && performance.now() - e.lastShot > 2000) {
+            const dx = (player.x + PLAYER_SIZE/2) - (e.x + e.size/2);
+            const dy = (player.y + PLAYER_SIZE/2) - (e.y + e.size/2);
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+            e.bullets.push({
+                x: e.x + e.size/2,
+                y: e.y + e.size/2,
+                vx: dx / dist * 6,
+                vy: dy / dist * 6,
+                size: 6,
+                damage: e.damage   // 👈 ВАЖНО
+            });
+
+                e.lastShot = performance.now();
+        }
+    
+
+        // движение пуль врагов
+        for (let j = e.bullets.length - 1; j >= 0; j--) {
+            const b = e.bullets[j];
             b.x += b.vx;
             b.y += b.vy;
 
-            // коллизия с игроком
-            if (player.x + PLAYER_SIZE > b.x && player.x < b.x + b.size &&
-                player.y + PLAYER_SIZE > b.y && player.y < b.y + b.size) {
-                player.hp -= enemy.damage;
-                enemy.bullets.splice(i, 1);
+            // попадание в игрока
+            if (
+                b.x > player.x &&
+                b.x < player.x + PLAYER_SIZE &&
+                b.y > player.y &&
+                b.y < player.y + PLAYER_SIZE
+            ) {
+                player.hp -= b.damage;   // 👈 урон по типу врага
+                e.bullets.splice(j, 1);  // 👈 пуля исчезает
                 continue;
             }
 
-            // убираем пули за пределами экрана
+            // выход за экран
             if (
-                b.x < 0 ||
-                b.x > canvas.width ||
-                b.y < 0 ||
-                b.y > canvas.height
+                b.x < 0  b.x > canvas.width 
+                b.y < player.y - canvas.height / 2 ||
+                b.y > player.y + canvas.height / 2
             ) {
-                enemy.bullets.splice(i, 1);
+                e.bullets.splice(j, 1);
             }
         }
+    }
+}
 
-        // collision with bullets
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            if (bullets[i].x > enemy.x && bullets[i].x < enemy.x + enemy.width &&
-                bullets[i].y > enemy.y && bullets[i].y < enemy.y + enemy.height) {
-                enemy.hp -= 10;
+// =====================
+// UPDATE GAME
+function update(dt) {const now = performance.now();
+
+    // движение игрока
+    player.x += inputX * 8;
+    if (player.x < -PLAYER_SIZE) player.x = canvas.width;
+    if (player.x > canvas.width) player.x = -PLAYER_SIZE;
+    player.vy += GRAVITY;
+    player.y += player.vy;
+
+    // авто-выстрел игрока (по врагам на экране)
+    if (activeEnemies.some(e => e.y < player.y + canvas.height && e.y > player.y - canvas.height) && now - lastShotTime > FIRE_RATE) {
+        bullets.push({ x: player.x + PLAYER_SIZE/2, y: player.y, vy: BULLET_SPEED });
+        lastShotTime = now;
+    }
+
+    // движение пуль игрока
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.y += b.vy;
+        if (b.y > canvas.height + 100 || b.y < -100) bullets.splice(i, 1);
+    }
+
+    // обновляем врагов
+    updateEnemies(dt);
+
+    // проверка попаданий игрока по врагам
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        for (let j = activeEnemies.length - 1; j >= 0; j--) {
+            const e = activeEnemies[j];
+            if (b.x > e.x && b.x < e.x + e.width &&
+                b.y > e.y && b.y < e.y + e.height) {
+                e.hp -= 10;
                 bullets.splice(i, 1);
-                if (enemy.hp <= 0) enemies.splice(eIndex, 1);
+                if (e.hp <= 0) {
+                    e.active = false;
+                    activeEnemies.splice(j, 1);
+                    inactiveEnemies.push(e);
+                }
                 break;
             }
         }
-    });
+    }
 
-    // === PLATFORMS UPDATE ===
+    // платформы
     platforms.forEach((p, index) => {
         if (p.temp && now - p.spawnTime > p.lifeTime) {
             platforms.splice(index, 1);
@@ -304,7 +354,7 @@ function update(dt) {
             }
         }
 
-        // platform movement
+        // движение платформ
         if (p.type === 'moving_slow') {
             let speed = Math.min(3.5, 1 + score * 0.00005);
             p.vx = Math.sign(p.vx) * speed;
@@ -314,21 +364,23 @@ function update(dt) {
             p.vx = Math.sign(p.vx) * speed;
             p.x += p.vx;
         }
-
         if (p.x < 0) p.vx = Math.abs(p.vx);
-        if (p.x + PLATFORM_WIDTH > canvas.width) p.vx = -Math.abs(p.vx);});
+        if (p.x + PLATFORM_WIDTH > canvas.width) p.vx = -Math.abs(p.vx);
+    });
 
-    // === CAMERA ===
+    // камера
     if (player.y > canvas.height / 2) {
         const delta = (player.y - canvas.height / 2) * CAMERA_SPEED;
         player.y = canvas.height / 2;
-
         platforms.forEach(p => p.y -= delta);
-        enemies.forEach(e => e.y -= delta);
+        activeEnemies.forEach(e => e.y -= delta);
         score += Math.floor(delta);
     }
 
-    // === RECYCLE PLATFORMS ===
+    // респавн врагов
+    spawnEnemies(score);
+
+    // recycle платформ
     let maxY = Math.max(...platforms.map(p => p.y));
     platforms.forEach((p, i) => {
         if (p.y < -PLATFORM_HEIGHT) {
@@ -338,50 +390,20 @@ function update(dt) {
             if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
             if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
             const itemType = getItemForPlatform();
-
-            platforms[i] = {
-                x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-                y: maxY + gap,
-                type: type,
-                vx: vx,
-                used: false,
-                item: itemType
-            };
+            platforms[i] = { x: Math.random()*(canvas.width-PLATFORM_WIDTH), y:maxY+gap, type, vx, used:false, item:itemType };
             maxY = platforms[i].y;
         }
     });
 
-    // === SPAWN NEW ENEMIES ===
-    let maxEnemyY = Math.max(...enemies.map(e => e.y));
-    if (maxEnemyY < platforms[platforms.length - 1].y) {
-        const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
-        const type = getEnemyTypeByScore();
-        let vx = 0;
-        if (type === 'slow') vx = Math.random() < 0.5 ? 1 : -1;
-        if (type === 'fast') vx = Math.random() < 0.5 ? 3 : -3;
-
-        enemies.push({
-            x: Math.random() * (canvas.width - 30),
-            y: maxEnemyY + gap,
-            vx: vx,
-            vy: 0,
-            type: type,
-            size: 30,
-            width: 30,
-            height: 30,
-            hp: 1,
-            damage: 10,
-            lastShot: performance.now(),
-            bullets: []
-        });
+    // Game over
+    if (player.hp <= 0 || player.y < -200) {
+        alert('Game Over');
+        location.reload();
     }
-
-    if (player.y < -200) location.reload();
 }
 
 // =====================
 // DRAW
-// =====================
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#111';
@@ -392,7 +414,7 @@ function draw() {
 
     // bullets
     ctx.fillStyle = '#ffff00';
-    bullets.forEach(b => ctx.fillRect(b.x - BULLET_SIZE / 2, canvas.height - b.y, BULLET_SIZE, BULLET_SIZE));
+    bullets.forEach(b => ctx.fillRect(b.x - BULLET_SIZE/2, canvas.height - b.y, BULLET_SIZE, BULLET_SIZE));
 
     // platforms
     platforms.forEach(p => {
@@ -422,35 +444,36 @@ function draw() {
     });
 
     // enemies
-    enemies.forEach(e => {
-        switch (e.type) {
-            case 'static': ctx.fillStyle = '#ff0000'; break;
-            case 'slow': ctx.fillStyle = '#ff8800'; break;
-            case 'fast': ctx.fillStyle = '#ffff00'; break;
+    activeEnemies.forEach(e => {
+        switch(e.type){
+            case 'static': ctx.fillStyle='#ff0000'; break;
+            case 'slow': ctx.fillStyle='#ff8800'; break;
+            case 'fast': ctx.fillStyle='#ffff00'; break;
         }
         ctx.fillRect(e.x, canvas.height - e.y - e.size, e.size, e.size);
-        
-        ctx.fillStyle = '#ff00ff';
-        e.bullets.forEach(b => {
-            ctx.fillRect(
-                b.x - b.size / 2, 
-                canvas.height - b.y - b.size / 2, 
-                b.size, 
-                b.size
-            );
-        });   
+
+        // HP bar
+        const hpPercent = e.hp / e.maxHp;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size, 4);
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
+
+        // bullets
+        ctx.fillStyle='#ff00ff';
+        e.bullets.forEach(b=>ctx.fillRect(b.x-b.size/2, canvas.height-b.y-b.size/2, b.size, b.size));
     });
 
     // HUD
     ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
+    ctx.font='20px Arial';
     ctx.fillText(`Score: ${score}`, 20, 30);
     ctx.fillText(`HP: ${player.hp}`, canvas.width - 100, 30);
 }
 
 // =====================
-// GAME LOOP// =====================
-function gameLoop(t) {
+// GAME LOOP
+function gameLoop(t){
     const dt = t - lastTime;
     lastTime = t;
     update(dt);
