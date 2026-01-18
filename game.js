@@ -298,17 +298,13 @@ function update(dt) {const now = performance.now();
     player.vy += GRAVITY;
     player.y += player.vy;
 
+    updateBullets();
+	
+					
     // авто-выстрел игрока (по врагам на экране)
     if (activeEnemies.some(e => e.y < player.y + canvas.height && e.y > player.y - canvas.height) && now - lastShotTime > FIRE_RATE) {
         spawnBullet(player.x + PLAYER_SIZE/2, player.y, 0, BULLET_SPEED, 10, 'player');
         lastShotTime = now;
-    }
-
-    // движение пуль игрока
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        b.y += b.vy;
-        if (b.y > canvas.height + 100 || b.y < -100) bullets.splice(i, 1);
     }
 
     // обновляем врагов
@@ -470,10 +466,6 @@ function draw() {
    // player
     ctx.fillStyle = '#00ff00'; // цвет квадрата, можно любой
     ctx.fillRect(player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
-
-    // bullets
-    ctx.fillStyle = '#ffff00';
-    bullets.forEach(b => ctx.fillRect(b.x - BULLET_SIZE/2, canvas.height - b.y, BULLET_SIZE, BULLET_SIZE));
 
     // platforms
     platforms.forEach(p => {
