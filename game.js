@@ -265,7 +265,7 @@ function updateEnemies(dt) {
 
             // выход за экран
             if (
-                b.x < 0  b.x > canvas.width 
+                b.x < 0 || b.x > canvas.width ||
                 b.y < player.y - canvas.height / 2 ||
                 b.y > player.y + canvas.height / 2
             ) {
