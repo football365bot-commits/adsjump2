@@ -371,7 +371,7 @@ function updateBullets() {
 
         // проверка выхода за экран относительно камеры
         if (
-            b.x < 0  b.x > canvas.width 
+            b.x < 0 || b.x > canvas.width ||
             b.y < player.y - canvas.height / 2 || b.y > player.y + canvas.height / 2
         ) {
             b.active = false;
