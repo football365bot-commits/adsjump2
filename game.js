@@ -54,6 +54,13 @@ const bullets = [];
 let lastShotTime = 0;
 
 // =====================
+// PLAYER SKIN
+// =====================
+const playerImage = new Image();
+playerImage.src = 'chiba.png'
+
+
+// =====================
 // ENEMIES (пул)
 const activeEnemies = [];
 const inactiveEnemies = Array.from({ length: MAX_ENEMIES }, () => ({
