@@ -253,40 +253,11 @@ function updateEnemies(dt) {
 
             spawnBullet(e.x + e.size/2, e.y + e.size/2, dx / dist * 6, dy / dist * 6, e.damage, 'enemy');
 
-                e.lastShot = performance.now();
+            e.lastShot = performance.now();
         }
     
 
-        // движение пуль врагов
-        for (let j = e.bullets.length - 1; j >= 0; j--) {
-            const b = e.bullets[j];
-            b.x += b.vx;
-            b.y += b.vy;
-
-            // попадание в игрока
-            if (
-                b.x > player.x &&
-                b.x < player.x + PLAYER_SIZE &&
-                b.y > player.y &&
-                b.y < player.y + PLAYER_SIZE
-            ) {
-                player.hp -= b.damage;   // 👈 урон по типу врага
-                e.bullets.splice(j, 1);  // 👈 пуля исчезает
-                continue;
-            }
-
-            // выход за экран
-            if (
-                b.x < 0 || b.x > canvas.width ||
-                b.y < player.y - canvas.height / 2 ||
-                b.y > player.y + canvas.height / 2
-            ) {
-                e.bullets.splice(j, 1);
-            }
-        }
-    }
-}
-
+       
 // =====================
 // UPDATE GAME
 function update(dt) {const now = performance.now();
