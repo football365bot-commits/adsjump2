@@ -68,7 +68,7 @@ const inactiveEnemies = Array.from({ length: MAX_ENEMIES }, () => ({
 // PLAYER SKIN
 // =====================
 const playerImage = new Image();
-playerImage.src = 'compressed_photo_2026-01-16_10-11-34.png';
+playerImage.src = 'chiba.png';
 
 // =====================
 // INPUT
