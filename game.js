@@ -165,42 +165,44 @@ function getEnemyTypeByScore(score) {
 let lastEnemySpawn = 0;
 function spawnEnemies(score) {
     const now = performance.now();
-    if (now - lastEnemySpawn < 300) return; // проверка каждые 300ms
+    if (now - lastEnemySpawn < 500) return; // спавн раз в 0.5 секунды
     lastEnemySpawn = now;
 
-    const spawnChance = 0.002 + Math.min(score / 30000, 0.01);
+    const spawnChance = 0.005 + Math.min(score / 30000, 0.01);
 
-    platforms.forEach(p => {
-        if (p.y > player.y && Math.random() < spawnChance) {
-            const enemy = inactiveEnemies.find(e => !e.active);
-            if (!enemy) return;
+    // Проверяем, сработал ли спавн
+    if (Math.random() > spawnChance) return;
 
-            enemy.active = true;
-            enemy.type = getEnemyTypeByScore(score);
+    const enemy = inactiveEnemies.find(e => !e.active);
+    if (!enemy) return;
 
-            const offsetX = Math.random() * 30 * (Math.random() < 0.5 ? -1 : 1);
-            const offsetY = Math.random() * 20 * (Math.random() < 0.5 ? -1 : 1);
+    // Тип врага
+    enemy.type = getEnemyTypeByScore(score);
 
-            enemy.x = p.x + Math.random() * (PLATFORM_WIDTH - enemy.size) + offsetX;
-            enemy.y = p.y + PLATFORM_HEIGHT + offsetY;
+    // Позиция сверху камеры
+    const cameraTopY = player.y + canvas.height / 2; // верх камеры
+    const spawnOffsetY = Math.random() * 100; // чуть выше
+    enemy.y = cameraTopY + spawnOffsetY;
 
-            // скорость подвижных врагов
-            if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed + score * 0.0001);
-            else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed + score * 0.0002);
-            else enemy.vx = 0;
-            enemy.vy = 0;
+    // Случайная позиция по X
+    enemy.x = Math.random() * (canvas.width - enemy.size);
 
-            enemy.hp = ENEMY_MAX[enemy.type].hp;
-            enemy.maxHp = ENEMY_MAX[enemy.type].hp;
-            enemy.damage = ENEMY_MAX[enemy.type].damage;
-            enemy.lastShot = now;
-            enemy.bullets = [];
+    // Настройка скорости по типу
+    if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed + score * 0.0001);
+    else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed + score * 0.0002);
+    else enemy.vx = 0;
+    enemy.vy = 0;
 
-            activeEnemies.push(enemy);
-        }
-    });
+    // Характеристики
+    enemy.hp = ENEMY_MAX[enemy.type].hp;
+    enemy.maxHp = ENEMY_MAX[enemy.type].hp;
+    enemy.damage = ENEMY_MAX[enemy.type].damage;
+    enemy.lastShot = now;
+    enemy.bullets = [];
+
+    enemy.active = true;
+    activeEnemies.push(enemy);
 }
-
 // =====================
 // UPDATE ENEMIES
 function updateEnemies(dt) {
