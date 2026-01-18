@@ -256,7 +256,8 @@ function updateEnemies(dt) {
             e.lastShot = performance.now();
         }
     
-
+	}
+}
        
 // =====================
 // UPDATE GAME
@@ -461,15 +462,14 @@ function draw() {
         ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size, 4);
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
-
-        ctx.fillStyle = '#ffff00'; // пули игрока
-    for (const b of bulletPool) {
-        if (!b.active) continue;
-        ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
-        ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
-	}
+    	
     });
 
+	for (const b of bulletPool) {
+        	if (!b.active) continue;
+        	ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
+        	ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
+	}
     // HUD
     ctx.fillStyle = '#fff';
     ctx.font='20px Arial';
