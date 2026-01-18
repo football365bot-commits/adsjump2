@@ -53,11 +53,6 @@ const player = {
 const bullets = [];
 let lastShotTime = 0;
 
-// =====================
-// PLAYER SKIN
-// =====================
-const playerImage = new Image();
-playerImage.src = 'chiba.png'
 
 
 // =====================
@@ -411,7 +406,8 @@ function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // player
+   // player
+    ctx.fillStyle = '#00ff00'; // цвет квадрата, можно любой
     ctx.fillRect(player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
 
     // bullets
