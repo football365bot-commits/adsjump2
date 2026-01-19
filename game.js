@@ -312,8 +312,8 @@ function update(dt) {
     lastPlayerY = player.y;
 
     // ===== ПЛАВНАЯ КАМЕРА =====
-    const targetCameraY = player.y - canvas.height / 2; 
-    cameraY += (targetCameraY - cameraY) * 0.1;
+    const targetCameraY = player.y - canvas.height * 0.8; 
+    cameraY += (targetCameraY - cameraY) * 0.5;
 
     updateBullets();
 
