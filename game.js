@@ -44,6 +44,7 @@ const player = {
 let lastTime = 0;
 let score = 0;
 let lastPlayerY = player.y; // важный момент для score
+let startedJump = false;
 let cameraY = player.y - canvas.height / 2; 
 // =====================
 // DIFFICULTY SCALE
@@ -143,7 +144,8 @@ function getPlatformTypeByScore() {
 let maxPlatformY;
 
 function generateInitialPlatforms(count) {
-    let currentY = canvas.height; // старт снизу
+    const START_OFFSET = 0; // расстояние от нижней границы до первой платформы
+    let currentY = canvas.height - START_OFFSET;
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -285,58 +287,66 @@ function updateEnemies(dt) {
 	}
 }
        
-// =====================
-// UPDATE GAME
-function update(dt) {const now = performance.now();
-    score = Math.max(score, Math.floor(-player.y));
-    // движение игрока
-	player.x += inputX * 8;
-	if (player.x < -PLAYER_SIZE) player.x = canvas.width;
-	if (player.x > canvas.width) player.x = -PLAYER_SIZE;
-	player.vy += GRAVITY;
-	player.y += player.vy;
 
-	// ===== ПЛАВНАЯ КАМЕРА =====
-	const targetCameraY = player.y - canvas.height / 2; // хотим центр камеры на игроке
-	cameraY += (targetCameraY - cameraY) * 0.1; // 0.1 - сглаживание
+
+function update(dt) {
+    const now = performance.now();
+
+    // движение игрока
+    player.x += inputX * 8;
+    if (player.x < -PLAYER_SIZE) player.x = canvas.width;
+    if (player.x > canvas.width) player.x = -PLAYER_SIZE;
+    player.vy += GRAVITY;
+    player.y += player.vy;
+
+    // первый прыжок вверх запускает подсчёт score
+    if (!startedJump && player.vy < 0) {
+        startedJump = true;
+        lastPlayerY = player.y; // стартуем отсчёт
+    }
+
+    // подсчёт score по мировой позиции игрока
+    if (startedJump && player.y < lastPlayerY) {
+        score += (lastPlayerY - player.y);
+    }
+    lastPlayerY = player.y;
+
+    // ===== ПЛАВНАЯ КАМЕРА =====
+    const targetCameraY = player.y - canvas.height / 2; 
+    cameraY += (targetCameraY - cameraY) * 0.1;
 
     updateBullets();
-	
-					
+
     // авто-выстрел игрока по врагам с прицелом
-	if (now - lastShotTime > FIRE_RATE) {
-    // ищем врага на экране
-    	let target = null;
-	let minDist = Infinity;
+    if (now - lastShotTime > FIRE_RATE) {
+        let target = null;
+        let minDist = Infinity;
 
-	for (const e of activeEnemies) {
-    	if (e.y < cameraY || e.y > cameraY + canvas.height) continue;
+        for (const e of activeEnemies) {
+            if (e.y < cameraY || e.y > cameraY + canvas.height) continue;
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
+            const dist = dx*dx + dy*dy;
+            if (dist < minDist) {
+                minDist = dist;
+                target = e;
+            }
+        }
 
-    	const dx = e.x - player.x;
-    	const dy = e.y - player.y;
-    	const dist = dx*dx + dy*dy;
+        if (target) {
+            const dx = (target.x + target.size/2) - (player.x + PLAYER_SIZE/2);
+            const dy = (target.y + target.size/2) - (player.y + PLAYER_SIZE/2);
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
 
-    	if (dist < minDist) {
-        	minDist = dist;
-        	target = e;
-    	}
-	}
+            const vx = (dx / dist) * BULLET_SPEED;
+            const vy = (dy / dist) * BULLET_SPEED;
 
-    	if (target) {
-        	const dx = (target.x + target.size/2) - (player.x + PLAYER_SIZE/2);
-        	const dy = (target.y + target.size/2) - (player.y + PLAYER_SIZE/2);
-        	const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-
-        	const vx = (dx / dist) * BULLET_SPEED;
-        	const vy = (dy / dist) * BULLET_SPEED;
-
-        	spawnBullet(player.x + PLAYER_SIZE/2, player.y + PLAYER_SIZE/2, vx, vy, 10, 'player');
-        	lastShotTime = now;
-    	}
-	}
+            spawnBullet(player.x + PLAYER_SIZE/2, player.y + PLAYER_SIZE/2, vx, vy, 10, 'player');
+            lastShotTime = now;
+        }
+    }
 
     // обновляем врагов
-    updateEnemies(dt);
 
  // =====================
 // PLATFORMS UPDATE (OPTIMIZED)
