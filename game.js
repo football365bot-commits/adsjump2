@@ -290,7 +290,10 @@ function updateEnemies(dt) {
 // =====================
 // UPDATE GAME
 function update(dt) {const now = performance.now();
-
+    if (player.y < lastPlayerY) {
+        score += (lastPlayerY - player.y);
+    }
+    lastPlayerY = player.y;
     // движение игрока
 	player.x += inputX * 8;
 	if (player.x < -PLAYER_SIZE) player.x = canvas.width;
