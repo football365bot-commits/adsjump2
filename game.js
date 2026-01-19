@@ -160,7 +160,7 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = cameraY - 100;
+    let currentY = player.y - 150; // начнем чуть выше игрока
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -168,14 +168,17 @@ function generateInitialPlatforms(count) {
         if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
         if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
         const itemType = getItemForPlatform();
-        platforms.push({
+        const platform = {
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
             y: currentY,
-            type: type,
-            vx: vx,
-            used: false,item: itemType
-        });
-        currentY -= gap;
+            type,
+            vx,
+            used: false,
+            item: itemType
+        };
+        platforms.push(platform);
+        currentY -= gap; // координата по мировой оси Y
+        maxPlatformY = Math.min(maxPlatformY, currentY); // обновляем самую верхнюю платформу
     }
 }
 // 
@@ -193,6 +196,9 @@ function getEnemyTypeByScore(score) {
     if (score < 20000) return rand < 0.5 ? 'static' : rand < 0.85 ? 'slow' : 'fast';
     return rand < 0.3 ? 'static' : rand < 0.7 ? 'slow' : 'fast';
 }
+
+
+
 function recyclePlatform(p) {
     const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
     const type = getPlatformTypeByScore();
@@ -202,14 +208,13 @@ function recyclePlatform(p) {
     if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
 
     p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-	const cameraTOP = cameraY;
-    p.y = cameraTOP - gap;
+    p.y = maxPlatformY - gap; // <-- используем верхнюю мировую координату
     p.type = type;
     p.vx = vx;
     p.used = false;
     p.item = getItemForPlatform();
 
-    maxPlatformY = p.y; 
+    maxPlatformY = p.y; // обновляем верхнюю платформу
 }
 // =====================
 // SPAWN ENEMIES (оптимизированно)
