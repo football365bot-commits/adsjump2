@@ -251,7 +251,9 @@ function spawnEnemies(score) {
 
 	enemy.lastShot = now;
 	enemy.bullets = [];
-    
+
+	enemy.active = true;
+	activeEnemies.push(enemy);
 }
 // =====================
 // UPDATE ENEMIES
