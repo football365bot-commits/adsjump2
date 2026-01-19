@@ -35,12 +35,16 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 // PLAYER
 // =====================
 class Player {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.vy = 0;
+    constructor() {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
+        this.reset();
+    }
+
+    reset() {
+        this.x = canvas.width / 2;
+        this.y = canvas.height - 50;
+        this.vy = 0;
     }
 
     update(inputX) {
@@ -74,7 +78,7 @@ class Platform {
         this.vx = 0;
         this.vy = 0;
         this.amplitude = 0;
-        this.used = false;
+        this.active = false;
     }
 
     spawn(x, y, type) {
@@ -83,10 +87,10 @@ class Platform {
         this.y = y;
         this.baseY = y;
         this.type = type;
+        this.active = true;
 
         if (type === 'moving_slow') this.vx = Math.random() < 0.5 ? 1 : -1;
         if (type === 'moving_fast') this.vx = Math.random() < 0.5 ? 3 : -3;
-
         if (type === 'moving_vertical') {
             this.vy = 1;
             this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
@@ -94,40 +98,32 @@ class Platform {
     }
 
     update() {
+        if (!this.active) return;
+
         if (this.type === 'moving_slow' || this.type === 'moving_fast') {
             this.x += this.vx;
-            if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) {
-                this.vx *= -1;
-            }
+            if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
 
         if (this.type === 'moving_vertical') {
             this.y += this.vy;
-            if (
-                this.y > this.baseY + this.amplitude ||
-                this.y < this.baseY - this.amplitude
-            ) {
-                this.vy *= -1;
-            }
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
     }
 
     draw() {
+        if (!this.active) return;
         ctx.fillStyle =
             this.type === 'moving_vertical' ? '#8888ff' :
             this.type === 'moving_fast' ? '#ff00ff' :
             this.type === 'moving_slow' ? '#00ffff' :
             '#00ff88';
 
-        ctx.fillRect(
-            this.x,
-            this.y - cameraY,
-            CONFIG.PLATFORM_WIDTH,
-            CONFIG.PLATFORM_HEIGHT
-        );
+        ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
 
     checkCollision(player) {
+        if (!this.active) return false;
         if (
             player.vy > 0 &&
             player.y + player.size <= this.y + 10 &&
@@ -136,17 +132,19 @@ class Platform {
             player.x < this.x + CONFIG.PLATFORM_WIDTH
         ) {
             player.vy = -player.jumpForce;
+            return true;
         }
+        return false;
     }
 }
 
 // =====================
 // GLOBAL STATE
 // =====================
-let player = new Player(canvas.width / 2, canvas.height / 2);
+let player = new Player();
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 let cameraY = 0;
-let maxPlatformY = player.y;
+let maxPlatformY = canvas.height;
 
 // =====================
 // PLATFORM SPAWN
@@ -161,11 +159,15 @@ function spawnPlatform(p) {
     maxPlatformY = y;
 }
 
+// Инициализация платформ, начиная с нижнего края экрана
 function initPlatforms() {
-    maxPlatformY = player.y + 100;
+    maxPlatformY = canvas.height;
     platforms.forEach(p => spawnPlatform(p));
-}
 
+    // Перемещаем игрока на первую платформу
+    const firstPlatform = platforms[0];
+    player.y = firstPlatform.y - player.size;
+}
 initPlatforms();
 
 // =====================
