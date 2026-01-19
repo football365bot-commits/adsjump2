@@ -31,6 +31,28 @@ const CONFIG = {
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
+// Универсальная функция для очистки объектов за экраном
+function recycleIfOffScreen(obj) {
+    if (!obj.active) return false;
+
+    const top = cameraY;
+    const bottom = cameraY + canvas.height;
+
+    if (obj.y + (obj.height || CONFIG.PLATFORM_HEIGHT) < top ||
+        obj.y > bottom ||
+        obj.x + (obj.width || CONFIG.PLATFORM_WIDTH) < 0 ||
+        obj.x > canvas.width) {
+
+        obj.active = false;
+
+        if ('prevY' in obj) obj.prevY = obj.y;
+        if ('used' in obj) obj.used = false;
+
+        return true;
+    }
+    return false;
+}
+
 // =====================
 // PLAYER
 // =====================
@@ -224,12 +246,19 @@ let startedJump = false;
 function update() {
     player.update(inputX);
 
-    // Платформы
-    platforms.forEach(p => {
+        // Платформы
+        platforms.forEach(p => {
+        // обновляем платформу
         p.update();
+
+        // проверка коллизии только если платформа активна
         p.checkCollision(player);
 
-        if (!p.active) spawnPlatform(p);
+        // если платформа ушла за экран вниз — сразу деактивируем и рециклим
+        if (p.y - cameraY > canvas.height) {
+            p.active = false;      // деактивируем
+            spawnPlatform(p);      // создаём новую платформу сверху
+        }
     });
 
     // Score
