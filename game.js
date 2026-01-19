@@ -130,7 +130,7 @@ function getItemForPlatform() {
 // =====================
 // START PLATFORM
 function createStartPlatform() {
-	y: player.y = PLAYER_SIZE + 5;
+	player.y = canvas.height - PLAYER_SIZE +5;
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
         y: player.y,
@@ -161,7 +161,7 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = 100;
+    let currentY = maxPlatformY;
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
