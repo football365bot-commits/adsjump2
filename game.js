@@ -45,15 +45,15 @@ class Player {
         this.x = canvas.width / 2;
         this.y = canvas.height - 50;
         this.vy = 0;
-        this.lastY = this.y;
+        this.lastY = this.y; // для коллизии
     }
 
     update(inputX) {
         this.x += inputX * 8;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
-        
-        this.lastY = this.y;
+
+        this.lastY = this.y; // запоминаем прошлую позицию
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
     }
@@ -73,6 +73,7 @@ class Platform {
     reset() {
         this.x = 0;
         this.y = 0;
+        this.prevY = 0; // прошлое положение для коллизии
         this.baseY = 0;
         this.type = 'normal';
         this.vx = 0;
@@ -85,6 +86,7 @@ class Platform {
         this.reset();
         this.x = x;
         this.y = y;
+        this.prevY = y;
         this.baseY = y;
         this.type = type;
         this.active = true;
@@ -100,14 +102,25 @@ class Platform {
     update() {
         if (!this.active) return;
 
+        this.prevY = this.y; // сохраняем прошлое положение для коллизии
+
+        // Горизонтальное движение
         if (this.type === 'moving_slow' || this.type === 'moving_fast') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
 
+        // Вертикальное движение
         if (this.type === 'moving_vertical') {
             this.y += this.vy;
-            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) {
+                this.vy *= -1;
+            }
+        }
+
+        // Если платформа ушла за экран вниз → деактивируем
+        if (this.y - cameraY > canvas.height) {
+            this.active = false;
         }
     }
 
@@ -123,31 +136,30 @@ class Platform {
     }
 
     checkCollision(player) {
-    if (!this.active) return false;
+        if (!this.active) return false;
 
-    // предыдущая позиция игрока
-    const prevBottom = player.lastY + player.size;
-    const currBottom = player.y + player.size;
+        const prevBottom = player.lastY + player.size;
+        const currBottom = player.y + player.size;
 
-    // пересечение с платформой
-    if (
-        player.vy > 0 &&
-        prevBottom <= this.y &&
-        currBottom >= this.y &&
-        player.x + player.size > this.x &&
-        player.x < this.x + CONFIG.PLATFORM_WIDTH
-    ) {
-        player.vy = -player.jumpForce;
-        return true;
+        // стандартная проверка коллизии с учетом прошлого кадра
+        if (
+            player.vy > 0 &&
+            prevBottom <= this.prevY + CONFIG.PLATFORM_HEIGHT &&
+            currBottom >= this.prevY &&
+            player.x + player.size > this.x &&
+            player.x < this.x + CONFIG.PLATFORM_WIDTH
+        ) {
+            player.vy = -player.jumpForce;
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 }
 
 // =====================
 // GLOBAL STATE
 // =====================
-const playerPool = [new Player()]; // пул из одного игрока
+const playerPool = [new Player()];
 const player = playerPool[0];
 
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
@@ -184,6 +196,8 @@ function initPlatforms() {
         }
     });
 }
+initPlatforms();
+
 // =====================
 // INPUT
 // =====================
@@ -194,7 +208,7 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchend', () => inputX = 0);
 
 // =====================
-// LOOP
+// GAME LOOP
 // =====================
 function update() {
     player.update(inputX);
@@ -203,16 +217,17 @@ function update() {
         p.update();
         p.checkCollision(player);
 
-        if (p.y - cameraY > canvas.height) spawnPlatform(p);
+        if (!p.active) spawnPlatform(p);
     });
 
     const targetCam = player.y - canvas.height * 0.6;
     if (targetCam < cameraY) cameraY += (targetCam - cameraY) * 0.15;
 
+    // Game Over
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
-        player.reset(); // сброс игрока из пула
-        initPlatforms(); // перезапуск платформ
+        player.reset();     // сброс игрока
+        initPlatforms();    // перезапуск платформ
         cameraY = 0;
     }
 }
