@@ -4,6 +4,21 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// Отключаем стандартные действия браузера на canvas
+canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+canvas.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+canvas.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+
+// Сенсорное управление остаётся
+canvas.addEventListener('touchstart', e => {
+    inputX = e.touches[0].clientX < canvas.width / 2 ? -1 : 1;
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+    inputX = 0;
+}, { passive: false });
+
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
