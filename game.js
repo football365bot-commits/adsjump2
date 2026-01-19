@@ -293,7 +293,7 @@ function update(dt) {
     const now = performance.now();
 
     // движение игрока
-    player.x += inputX * 8;
+    player.x += inputX * 9;
     if (player.x < -PLAYER_SIZE) player.x = canvas.width;
     if (player.x > canvas.width) player.x = -PLAYER_SIZE;
     player.vy += GRAVITY;
@@ -315,13 +315,12 @@ function update(dt) {
     let targetCameraY;
 
     // если игрок поднимается или движется вверх — камера следует
-    if (player.vy < 0 || player.y < cameraY + canvas.height * 0.6) {
-        targetCameraY = player.y - canvas.height * 0.6;
-        cameraY += (targetCameraY - cameraY) * 0.6; // плавное следование
+    const screenAnchor = cameraY + canvas.height * 0.65;
+
+    if (player.y < screenAnchor) {
+        const targetCameraY = player.y - canvas.height * 0.65;
+        cameraY += (targetCameraY - cameraY) * 0.15;
     }
-    // если игрок падает вниз — камера фиксируется
-    // просто не изменяем cameraY
-    
 
     updateBullets();
 
