@@ -170,6 +170,9 @@ function generateInitialPlatforms(count) {
     }
 }
 generateInitialPlatforms(20);
+// =====================
+// PLATFORM MAX Y (cache)
+let maxPlatformY = Math.max(...platforms.map(p => p.y));
 
 // =====================
 // UTILS
@@ -179,7 +182,23 @@ function getEnemyTypeByScore(score) {
     if (score < 20000) return rand < 0.5 ? 'static' : rand < 0.85 ? 'slow' : 'fast';
     return rand < 0.3 ? 'static' : rand < 0.7 ? 'slow' : 'fast';
 }
+function recyclePlatform(p) {
+    const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
+    const type = getPlatformTypeByScore();
 
+    let vx = 0;
+    if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
+    if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
+
+    p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
+    p.y = maxPlatformY + gap;
+    p.type = type;
+    p.vx = vx;
+    p.used = false;
+    p.item = getItemForPlatform();
+
+    maxPlatformY = p.y; 
+}
 // =====================
 // SPAWN ENEMIES (оптимизированно)
 let lastEnemySpawn = 0;
@@ -300,22 +319,26 @@ function update(dt) {const now = performance.now();
     // обновляем врагов
     updateEnemies(dt);
 
-    // платформы
-    platforms.forEach((p, index) => {
-        if (p.temp && now - p.spawnTime > p.lifeTime) {
-            platforms.splice(index, 1);
-            return;
-        }
+ // =====================
+// PLATFORMS UPDATE (OPTIMIZED)
+for (let i = 0; i < platforms.length; i++) {
+    const p = platforms[i];
 
-        // collision with player
-        if (player.vy < 0 &&
-            player.y <= p.y + PLATFORM_HEIGHT &&
-            player.y >= p.y &&
-            player.x + PLAYER_SIZE > p.x &&
-            player.x < p.x + PLATFORM_WIDTH) {
+    // 👉 работаем только с платформами рядом с камерой
+    if (
+        p.y < player.y - canvas.height / 2 - 80 ||
+        p.y > player.y + canvas.height / 2 + 80
+    ) continue;
 
-            if (p.type === 'broken' && p.used) return;
-
+    // === collision with player ===
+    if (
+        player.vy < 0 &&
+        player.y <= p.y + PLATFORM_HEIGHT &&
+        player.y >= p.y &&
+        player.x + PLAYER_SIZE > p.x &&
+        player.x < p.x + PLATFORM_WIDTH
+    ) {
+        if (!(p.type === 'broken' && p.used)) {
             player.vy = player.jumpForce;
             if (p.type === 'broken') p.used = true;
 
@@ -332,29 +355,20 @@ function update(dt) {const now = performance.now();
                 p.item = null;
             }
         }
+    }
 
-        // движение платформ
-        if (p.type === 'moving_slow') {
-            let speed = Math.min(3.5, 1 + score * 0.00005);
-            p.vx = Math.sign(p.vx) * speed;
-            p.x += p.vx;
-        } else if (p.type === 'moving_fast') {
-            let speed = Math.min(9, 3.5 + score * 0.00012);
-            p.vx = Math.sign(p.vx) * speed;
-            p.x += p.vx;
-        }
+    // === movement ===
+    if (p.type === 'moving_slow' || p.type === 'moving_fast') {
+        p.x += p.vx;
         if (p.x < 0) p.vx = Math.abs(p.vx);
         if (p.x + PLATFORM_WIDTH > canvas.width) p.vx = -Math.abs(p.vx);
-    });
-
-    // камера
-    if (player.y > canvas.height / 2) {
-        const delta = (player.y - canvas.height / 2) * CAMERA_SPEED;
-        player.y = canvas.height / 2;
-        platforms.forEach(p => p.y -= delta);
-        activeEnemies.forEach(e => e.y -= delta);
-        score += Math.floor(delta);
     }
+
+    // === recycle ===
+    if (p.y < -PLATFORM_HEIGHT) {
+        recyclePlatform(p);
+    }
+}
 
     // респавн врагов
     spawnEnemies(score);
