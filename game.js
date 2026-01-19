@@ -522,7 +522,7 @@ function draw() {
     // HUD
     ctx.fillStyle = '#fff';
     ctx.font='20px Arial';
-    ctx.fillText(`Score: ${score}`, 20, 30);
+    ctx.fillText(`Score: ${Math.floor(score)}`, 20, 30);
     ctx.fillText(`HP: ${player.hp}`, canvas.width - 100, 30);
 }
 
