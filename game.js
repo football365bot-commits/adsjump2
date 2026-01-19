@@ -209,37 +209,64 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchend', () => inputX = 0, { passive: false });
 
 // =====================
-// GAME LOOP
+// GAME LOOP & CAMERA
+// =====================
+
+function initPlatforms() {
+    maxPlatformY = canvas.height;
+
+    platforms.forEach((p, i) => {
+        if (i === 0) {
+            // Первая платформа под игрока — статичная
+            const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
+            const y = canvas.height - 50; // чуть выше нижней границы
+            p.spawn(x, y, 'normal');
+
+            // ставим игрока на платформу
+            player.y = p.y - player.size;
+            player.lastY = player.y;
+
+            // Камера стартует от низа экрана
+            cameraY = 0;
+            maxPlatformY = p.y;
+        } else {
+            spawnPlatform(p);
+        }
+    });
+}
+
+// =====================
+// UPDATE с плавной камерой
 // =====================
 function update() {
-    // Игрок
-    player.update();
+    player.update(inputX);
 
-    // ===== ПЛАВНАЯ КАМЕРА =====
-    const screenAnchor = cameraY + canvas.height * 0.65;
-    if (player.y < screenAnchor) {
-        const targetCameraY = player.y - canvas.height * 0.65;
-        cameraY += (targetCameraY - cameraY) * 0.15;
-    }
-
-    // Платформы
     platforms.forEach(p => {
         p.update();
         p.checkCollision(player);
 
-        // Рецирклинг платформ
+        // респавн платформы, если ушла вниз
         if (!p.active) spawnPlatform(p);
     });
 
-    // Game Over
+    // ==== плавный скролл камеры ====
+    const screenAnchor = cameraY + canvas.height * 0.65;
+    if (player.y < screenAnchor) {
+        const targetCamY = player.y - canvas.height * 0.65;
+        cameraY += (targetCamY - cameraY) * 0.15;
+    }
+
+    // Game Over, если игрок упал ниже экрана
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
         player.reset();
         initPlatforms();
-        cameraY = 0;
     }
 }
 
+// =====================
+// DRAW с учетом камеры
+// =====================
 function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -249,7 +276,7 @@ function draw() {
 }
 
 // =====================
-// MAIN LOOP
+// LOOP
 // =====================
 function loop() {
     update();
