@@ -160,7 +160,7 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = maxPlatformY;
+    let currentY = cameraY - 100;
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -181,7 +181,7 @@ function generateInitialPlatforms(count) {
 // 
 createStartPlatform();
 
-let maxPlatformY = platforms[0].y;
+let maxPlatformY = cameraY;
 
 generateInitialPlatforms(20);
 
@@ -202,7 +202,8 @@ function recyclePlatform(p) {
     if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
 
     p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-    p.y = maxPlatformY - gap;
+	const cameraTOP = cameraY;
+    p.y = cameraTOP - gap;
     p.type = type;
     p.vx = vx;
     p.used = false;
@@ -391,9 +392,9 @@ for (let i = 0; i < platforms.length; i++) {
     }
 
     // === recycle ===
-    if (p.y < -PLATFORM_HEIGHT) {
-        recyclePlatform(p);
-    }
+    if (p.y > cameraY + canvas.height + PLATFORM_HEIGHT) {
+    	recyclePlatform(p);
+	}
 }
 
     // респавн врагов
