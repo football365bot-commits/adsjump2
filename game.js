@@ -32,7 +32,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
 // =====================
-// PLAYER
+// PLAYER (с пулом)
 // =====================
 class Player {
     constructor() {
@@ -66,9 +66,7 @@ class Player {
 // PLATFORM
 // =====================
 class Platform {
-    constructor() {
-        this.reset();
-    }
+    constructor() { this.reset(); }
 
     reset() {
         this.x = 0;
@@ -141,7 +139,9 @@ class Platform {
 // =====================
 // GLOBAL STATE
 // =====================
-let player = new Player();
+const playerPool = [new Player()]; // пул из одного игрока
+const player = playerPool[0];
+
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 let cameraY = 0;
 let maxPlatformY = canvas.height;
@@ -159,14 +159,14 @@ function spawnPlatform(p) {
     maxPlatformY = y;
 }
 
-// Инициализация платформ, начиная с нижнего края экрана
+// Инициализация платформ и первой платформы под игрока
 function initPlatforms() {
     maxPlatformY = canvas.height;
-    platforms.forEach(p => spawnPlatform(p));
 
-    // Перемещаем игрока на первую платформу
-    const firstPlatform = platforms[0];
-    player.y = firstPlatform.y - player.size;
+    platforms.forEach((p, i) => {
+        spawnPlatform(p);
+        if (i === 0) player.y = p.y - player.size; // первая платформа под игрока
+    });
 }
 initPlatforms();
 
@@ -189,19 +189,17 @@ function update() {
         p.update();
         p.checkCollision(player);
 
-        if (p.y - cameraY > canvas.height) {
-            spawnPlatform(p);
-        }
+        if (p.y - cameraY > canvas.height) spawnPlatform(p);
     });
 
     const targetCam = player.y - canvas.height * 0.6;
-    if (targetCam < cameraY) {
-        cameraY += (targetCam - cameraY) * 0.15;
-    }
+    if (targetCam < cameraY) cameraY += (targetCam - cameraY) * 0.15;
 
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
-        location.reload();
+        player.reset(); // сброс игрока из пула
+        initPlatforms(); // перезапуск платформ
+        cameraY = 0;
     }
 }
 
