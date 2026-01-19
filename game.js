@@ -56,6 +56,7 @@ const player = {
     jumpForce: BASE_JUMP_FORCE,
     hp: 100
 };
+let lastPlayerY = player.y; // важный момент для score
 let cameraY = player.y - canvas.height / 2; 
 // =====================
 // BULLETS POOL
@@ -229,7 +230,7 @@ function spawnEnemies(score) {
     // Позиция сверху камеры
     const cameraTopY = cameraY;
     const spawnOffsetY = Math.random() * 100; // чуть выше
-	enemy.y = cameraY - 50 - Math.random() * 100; // чуть выше экрана
+	enemy.y = cameraY - canvas.height - Math.random() * 100;
 
     // Случайная позиция по X
     enemy.x = Math.random() * (canvas.width - enemy.size);
