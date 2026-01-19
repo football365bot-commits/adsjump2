@@ -130,7 +130,7 @@ function getItemForPlatform() {
 // =====================
 // START PLATFORM
 function createStartPlatform() {
-	player.y = canvas.height - PLAYER_SIZE +5;
+	player.y = canvas.height - PLAYER_SIZE -10;
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
         y: player.y,
@@ -179,10 +179,12 @@ function generateInitialPlatforms(count) {
         currentY -= gap;
     }
 }
+// 
+createStartPlatform();
+
+let maxPlatformY = platforms[0].y;
+
 generateInitialPlatforms(20);
-// =====================
-// PLATFORM MAX Y (cache)
-let maxPlatformY = Math.max(...platforms.map(p => p.y));
 
 // =====================
 // UTILS
