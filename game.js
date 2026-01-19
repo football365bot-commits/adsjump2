@@ -356,7 +356,7 @@ for (let i = 0; i < platforms.length; i++) {
 	) continue;
     // === collision with player ===
     if (
-        player.vy < 0 &&
+        player.vy > 0 &&
         player.y <= p.y + PLATFORM_HEIGHT &&
         player.y >= p.y &&
         player.x + PLAYER_SIZE > p.x &&
