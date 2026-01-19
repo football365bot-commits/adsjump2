@@ -130,10 +130,11 @@ function getItemForPlatform() {
 // =====================
 // START PLATFORM
 function createStartPlatform() {
-	player.y = canvas.height - PLAYER_SIZE -10;
+    const startY = cameraY + canvas.height - PLATFORM_HEIGHT - 10; // чуть выше низа видимой зоны
+    player.y = startY - PLAYER_SIZE; // игрок стоит на платформе
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
-        y: player.y,
+        y: startY,
         type: 'normal',
         vx: 0,
         used: false,
@@ -160,7 +161,7 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = player.y - 150; // начнем чуть выше игрока
+    let currentY = cameraY; // или cameraY + canvas.height / 2, чтобы спавнить чуть выше экрана
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -168,17 +169,15 @@ function generateInitialPlatforms(count) {
         if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
         if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
         const itemType = getItemForPlatform();
-        const platform = {
+        platforms.push({
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-            y: currentY,
-            type,
-            vx,
+            y: currentY - gap, // платформы «идут вверх» от текущей позиции
+            type: type,
+            vx: vx,
             used: false,
             item: itemType
-        };
-        platforms.push(platform);
-        currentY -= gap; // координата по мировой оси Y
-        maxPlatformY = Math.min(maxPlatformY, currentY); // обновляем самую верхнюю платформу
+        });
+        currentY -= gap; 
     }
 }
 // 
