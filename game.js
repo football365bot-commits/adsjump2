@@ -409,7 +409,7 @@ for (let i = 0; i < platforms.length; i++) {
 
 
     // Game over
-    if (player.hp <= 0 || player.y < -200) {
+    if (player.hp <= 0 || player.y < +200) {
         alert('Game Over');
         location.reload();
     }
