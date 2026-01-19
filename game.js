@@ -130,8 +130,9 @@ function getItemForPlatform() {
 // =====================
 // START PLATFORM
 function createStartPlatform() {
-    const startY = cameraY + canvas.height - PLATFORM_HEIGHT - 10; // чуть выше низа видимой зоны
-    player.y = startY - PLAYER_SIZE; // игрок стоит на платформе
+    const startY = canvas.height - PLATFORM_HEIGHT - 10; // чуть выше низа экрана
+    player.y = startY - PLAYER_SIZE; // ставим игрока на платформу
+
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
         y: startY,
@@ -143,6 +144,9 @@ function createStartPlatform() {
         lifeTime: 2000,
         spawnTime: performance.now()
     });
+
+    // Обновляем верхнюю границу мира для респауна новых платформ
+    maxPlatformY = startY;
 }
 
 // =====================
