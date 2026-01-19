@@ -363,7 +363,7 @@ for (let i = 0; i < platforms.length; i++) {
         player.x < p.x + PLATFORM_WIDTH
     ) {
         if (!(p.type === 'broken' && p.used)) {
-            player.vy = player.jumpForce;
+            player.vy = -player.jumpForce;
             if (p.type === 'broken') p.used = true;
 
             if (p.item) {
