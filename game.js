@@ -312,8 +312,16 @@ function update(dt) {
     lastPlayerY = player.y;
 
     // ===== ПЛАВНАЯ КАМЕРА =====
-    const targetCameraY = player.y - canvas.height * 0.6; 
-    cameraY += (targetCameraY - cameraY) * 0.6;
+    let targetCameraY;
+
+    // если игрок поднимается или движется вверх — камера следует
+    if (player.vy < 0 || player.y < cameraY + canvas.height * 0.6) {
+        targetCameraY = player.y - canvas.height * 0.6;
+        cameraY += (targetCameraY - cameraY) * 0.6; // плавное следование
+    }
+    // если игрок падает вниз — камера фиксируется
+    // просто не изменяем cameraY
+    
 
     updateBullets();
 
