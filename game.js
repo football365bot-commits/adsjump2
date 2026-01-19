@@ -45,13 +45,15 @@ class Player {
         this.x = canvas.width / 2;
         this.y = canvas.height - 50;
         this.vy = 0;
+        this.lastY = this.y;
     }
 
     update(inputX) {
         this.x += inputX * 8;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
-
+        
+        this.lastY = this.y;
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
     }
@@ -121,19 +123,25 @@ class Platform {
     }
 
     checkCollision(player) {
-        if (!this.active) return false;
-        if (
-            player.vy > 0 &&
-            player.y + player.size <= this.y + 10 &&
-            player.y + player.size >= this.y &&
-            player.x + player.size > this.x &&
-            player.x < this.x + CONFIG.PLATFORM_WIDTH
-        ) {
-            player.vy = -player.jumpForce;
-            return true;
-        }
-        return false;
+    if (!this.active) return false;
+
+    // предыдущая позиция игрока
+    const prevBottom = player.lastY + player.size;
+    const currBottom = player.y + player.size;
+
+    // пересечение с платформой
+    if (
+        player.vy > 0 &&
+        prevBottom <= this.y &&
+        currBottom >= this.y &&
+        player.x + player.size > this.x &&
+        player.x < this.x + CONFIG.PLATFORM_WIDTH
+    ) {
+        player.vy = -player.jumpForce;
+        return true;
     }
+    return false;
+}
 }
 
 // =====================
