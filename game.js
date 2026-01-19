@@ -35,7 +35,6 @@ const MAX_ENEMIES = 5; // уменьшили пул
 // =====================
 let lastTime = 0;
 let score = 0;
-let lastPlayerY = player.y; // важный момент для score
 
 // =====================
 // DIFFICULTY SCALE
