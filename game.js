@@ -190,7 +190,8 @@ function initPlatforms() {
             const y = canvas.height - 50;
             p.spawn(x, y, 'normal');
             player.y = p.y - player.size;
-            maxPlatformY = y;
+            cameraY = player.y - canvas.height * 0.6; // камера стартует чуть выше низа экрана
+            maxPlatformY = canvas.height - 50;        // верхняя граница для респавна платформ
         } else {
             spawnPlatform(p);
         }
