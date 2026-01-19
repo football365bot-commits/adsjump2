@@ -273,11 +273,29 @@ function update(dt) {const now = performance.now();
     updateBullets();
 	
 					
-    // авто-выстрел игрока (по врагам на экране)
-    if (activeEnemies.some(e => e.y < player.y + canvas.height && e.y > player.y - canvas.height) && now - lastShotTime > FIRE_RATE) {
-        spawnBullet(player.x + PLAYER_SIZE/2, player.y, 0, BULLET_SPEED, 10, 'player');
-        lastShotTime = now;
-    }
+    // авто-выстрел игрока по врагам с прицелом
+	if (now - lastShotTime > FIRE_RATE) {
+    // ищем врага на экране
+    	let target = null;
+    	for (const e of activeEnemies) {
+        	if (e.y > player.y - canvas.height / 2 && e.y < player.y + canvas.height / 2) {
+            	target = e;
+            	break;
+        	}
+    	}
+
+    	if (target) {
+        	const dx = (target.x + target.size/2) - (player.x + PLAYER_SIZE/2);
+        	const dy = (target.y + target.size/2) - (player.y + PLAYER_SIZE/2);
+        	const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+        	const vx = (dx / dist) * BULLET_SPEED;
+        	const vy = (dy / dist) * BULLET_SPEED;
+
+        	spawnBullet(player.x + PLAYER_SIZE/2, player.y + PLAYER_SIZE/2, vx, vy, 10, 'player');
+        	lastShotTime = now;
+    	}
+	}
 
     // обновляем врагов
     updateEnemies(dt);
