@@ -316,7 +316,7 @@ function update(dt) {const now = performance.now();
 	let minDist = Infinity;
 
 	for (const e of activeEnemies) {
-    	if (e.y < player.y - canvas.height / 2 || e.y > player.y + canvas.height / 2) continue;
+    	if (e.y < cameraY || e.y > cameraY + canvas.height) continue;
 
     	const dx = e.x - player.x;
     	const dy = e.y - player.y;
@@ -415,7 +415,7 @@ function updateBullets() {
 
         // проверка выхода за экран относительно камеры
         if (
-    		b.x < 0  b.x > canvas.width 
+    		b.x < 0 || b.x > canvas.width 
     		b.y < cameraY || b.y > cameraY + canvas.height
 		) {
     		b.active = false;
