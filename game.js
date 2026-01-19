@@ -37,6 +37,15 @@ let lastTime = 0;
 let score = 0;
 
 // =====================
+// DIFFICULTY SCALE
+// =====================
+function getDifficulty(score) {
+    // Базовая сложность растет с score, плавно
+    // min 1, max 3
+    return 1 + Math.min(score / 30000, 2);
+}
+
+// =====================
 // PLAYER
 // =====================
 const player = {
@@ -214,6 +223,8 @@ function spawnEnemies(score) {
 
     const enemy = inactiveEnemies.find(e => !e.active);
     if (!enemy) return;
+	
+	const difficulty = getDifficulty(score);
 
     // Тип врага
     enemy.type = getEnemyTypeByScore(score);
@@ -226,12 +237,21 @@ function spawnEnemies(score) {
     // Случайная позиция по X
     enemy.x = Math.random() * (canvas.width - enemy.size);
 
-    // Настройка скорости по типу
-    if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed + score * 0.0001);
-    else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed + score * 0.0002);
-    else enemy.vx = 0;
-    enemy.vy = 0;
+    const difficulty = getDifficulty(score);
 
+	// Настройка скорости по типу с учетом difficulty
+	if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed * difficulty);
+	else if (enemy.type === 'fast') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['fast'].speed * difficulty);
+	else enemy.vx = 0;
+	enemy.vy = 0;
+
+	// Характеристики врага с учетом difficulty
+	enemy.hp = ENEMY_MAX[enemy.type].hp * difficulty;
+	enemy.maxHp = ENEMY_MAX[enemy.type].hp * difficulty;
+	enemy.damage = ENEMY_MAX[enemy.type].damage * difficulty;
+
+	enemy.lastShot = now;
+	enemy.bullets = [];
     // Характеристики
     enemy.hp = ENEMY_MAX[enemy.type].hp;
     enemy.maxHp = ENEMY_MAX[enemy.type].hp;
