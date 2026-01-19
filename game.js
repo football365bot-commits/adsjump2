@@ -163,9 +163,11 @@ function getPlatformTypeByScore() {
     if (rand < normalChance + brokenChance + movingSlowChance) return 'moving_slow';
     return 'moving_fast';
 }
+let maxPlatformY;
+createStartPlatform();
 
 function generateInitialPlatforms(count) {
-    let currentY = canvas.height - PLATFORM_HEIGHT - 10; // начинаем от нижней границы экрана (или стартовой платформы)
+    let currentY = maxPlatformY; // от стартовой платформы
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -173,23 +175,22 @@ function generateInitialPlatforms(count) {
         if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
         if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
         const itemType = getItemForPlatform();
+
+        currentY -= gap; // поднимаемся вверх от стартовой платформы
+
         platforms.push({
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-            y: currentY - gap,
+            y: currentY,
             type: type,
             vx: vx,
             used: false,
             item: itemType
         });
-        currentY -= gap;
     }
 
-    // обновляем maxPlatformY
     maxPlatformY = Math.min(...platforms.map(p => p.y));
 }
 
-let maxPlatformY = canvas.height - PLATFORM_HEIGHT - 10;
-createStartPlatform();
 generateInitialPlatforms(20);
 // =====================
 // UTILS
