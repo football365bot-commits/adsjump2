@@ -71,7 +71,7 @@ class Player {
     }
 
     update(inputX) {
-        this.x += inputX * 8;
+        this.x += inputX * 12;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
@@ -274,7 +274,7 @@ function update() {
     // ===== ПЛАВНАЯ КАМЕРА сверху =====
     const screenAnchor = cameraY + canvas.height * 0.70;
     if (player.y < screenAnchor) {
-        const targetCameraY = player.y - canvas.height * 0.20;
+        const targetCameraY = player.y - canvas.height * 0.15;
         cameraY += (targetCameraY - cameraY) * 0.50;
     }
 
