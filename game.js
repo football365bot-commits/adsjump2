@@ -373,20 +373,6 @@ for (let i = 0; i < platforms.length; i++) {
     // респавн врагов
     spawnEnemies(score);
 
-    // recycle платформ
-    let maxY = Math.max(...platforms.map(p => p.y));
-    platforms.forEach((p, i) => {
-        if (p.y < -PLATFORM_HEIGHT) {
-            const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
-            const type = getPlatformTypeByScore();
-            let vx = 0;
-            if (type === 'moving_slow') vx = Math.random() < 0.5 ? 1 : -1;
-            if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
-            const itemType = getItemForPlatform();
-            platforms[i] = { x: Math.random()*(canvas.width-PLATFORM_WIDTH), y:maxY+gap, type, vx, used:false, item:itemType };
-            maxY = platforms[i].y;
-        }
-    });
 
     // Game over
     if (player.hp <= 0 || player.y < -200) {
