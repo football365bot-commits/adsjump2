@@ -296,12 +296,20 @@ function update(dt) {const now = performance.now();
 	if (now - lastShotTime > FIRE_RATE) {
     // ищем врага на экране
     	let target = null;
-    	for (const e of activeEnemies) {
-        	if (e.y > player.y - canvas.height / 2 && e.y < player.y + canvas.height / 2) {
-            	target = e;
-            	break;
-        	}
+	let minDist = Infinity;
+
+	for (const e of activeEnemies) {
+    	if (e.y < player.y - canvas.height / 2 || e.y > player.y + canvas.height / 2) continue;
+
+    	const dx = e.x - player.x;
+    	const dy = e.y - player.y;
+    	const dist = dx*dx + dy*dy;
+
+    	if (dist < minDist) {
+        	minDist = dist;
+        	target = e;
     	}
+	}
 
     	if (target) {
         	const dx = (target.x + target.size/2) - (player.x + PLAYER_SIZE/2);
@@ -371,7 +379,9 @@ for (let i = 0; i < platforms.length; i++) {
 }
 
     // респавн врагов
-    spawnEnemies(score);
+    if (activeEnemies.length < MAX_ENEMIES) {
+    	spawnEnemies(score);
+	}
 
 
     // Game over
