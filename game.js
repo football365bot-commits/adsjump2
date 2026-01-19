@@ -132,7 +132,7 @@ function getItemForPlatform() {
 function createStartPlatform() {
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
-        y: player.y = PLAYER_SIZE + 5
+        y: player.y = PLAYER_SIZE + 5;
         type: 'normal',
         vx: 0,
         used: false,
@@ -175,7 +175,7 @@ function generateInitialPlatforms(count) {
             vx: vx,
             used: false,item: itemType
         });
-        currentY += gap;
+        currentY -= gap;
     }
 }
 generateInitialPlatforms(20);
@@ -200,7 +200,7 @@ function recyclePlatform(p) {
     if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
 
     p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-    p.y = maxPlatformY + gap;
+    p.y = maxPlatformY - gap;
     p.type = type;
     p.vx = vx;
     p.used = false;
@@ -230,7 +230,7 @@ function spawnEnemies(score) {
     enemy.type = getEnemyTypeByScore(score);
 
     // Позиция сверху камеры
-    const cameraTopY = player.y + canvas.height / 2; // верх камеры
+    const cameraTopY = cameraY;
     const spawnOffsetY = Math.random() * 100; // чуть выше
 	enemy.y = cameraY - 50 - Math.random() * 100; // чуть выше экрана
 
