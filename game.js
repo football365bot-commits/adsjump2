@@ -79,7 +79,6 @@ class Player {
     }
 }
 
-// =====================
 // PLATFORM
 // =====================
 class Platform {
@@ -88,13 +87,14 @@ class Platform {
     reset() {
         this.x = 0;
         this.y = 0;
-        this.prevY = 0; // прошлое положение для коллизии
+        this.prevY = 0;          // прошлое положение для коллизии
         this.baseY = 0;
-        this.type = 'normal';
+        this.type = 'normal';     // normal, moving_slow, moving_fast, moving_vertical, broken
         this.vx = 0;
         this.vy = 0;
         this.amplitude = 0;
         this.active = false;
+        this.used = false;        // для ломаемой платформы
     }
 
     spawn(x, y, type) {
@@ -112,6 +112,7 @@ class Platform {
             this.vy = 1;
             this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
         }
+        if (type === 'broken') this.used = false;
     }
 
     update() {
@@ -128,9 +129,7 @@ class Platform {
         // Вертикальное движение
         if (this.type === 'moving_vertical') {
             this.y += this.vy;
-            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) {
-                this.vy *= -1;
-            }
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
         // Если платформа ушла за экран вниз → деактивируем
@@ -142,10 +141,11 @@ class Platform {
     draw() {
         if (!this.active) return;
         ctx.fillStyle =
+            this.type === 'broken'   ? '#ff4444' :
             this.type === 'moving_vertical' ? '#8888ff' :
-            this.type === 'moving_fast' ? '#ff00ff' :
-            this.type === 'moving_slow' ? '#00ffff' :
-            '#00ff88';
+            this.type === 'moving_fast'     ? '#ff00ff' :
+            this.type === 'moving_slow'     ? '#00ffff' :
+            '#00ff88'; // normal
 
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
@@ -156,7 +156,7 @@ class Platform {
         const prevBottom = player.lastY + player.size;
         const currBottom = player.y + player.size;
 
-        // стандартная проверка коллизии с учетом прошлого кадра
+        // Коллизия учитывается только если платформа не сломана или еще не использована
         if (
             player.vy > 0 &&
             prevBottom <= this.prevY + CONFIG.PLATFORM_HEIGHT &&
@@ -164,6 +164,12 @@ class Platform {
             player.x + player.size > this.x &&
             player.x < this.x + CONFIG.PLATFORM_WIDTH
         ) {
+            // Ломаемая платформа срабатывает один раз
+            if (this.type === 'broken') {
+                if (this.used) return false;
+                this.used = true;
+            }
+
             player.vy = -player.jumpForce;
             return true;
         }
