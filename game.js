@@ -165,7 +165,7 @@ function getPlatformTypeByScore() {
 }
 
 function generateInitialPlatforms(count) {
-    let currentY = cameraY; // или cameraY + canvas.height / 2, чтобы спавнить чуть выше экрана
+    let currentY = canvas.height - PLATFORM_HEIGHT - 10; // начинаем от нижней границы экрана (или стартовой платформы)
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -175,19 +175,18 @@ function generateInitialPlatforms(count) {
         const itemType = getItemForPlatform();
         platforms.push({
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-            y: currentY - gap, // платформы «идут вверх» от текущей позиции
+            y: currentY - gap,
             type: type,
             vx: vx,
             used: false,
             item: itemType
         });
-        currentY -= gap; 
+        currentY -= gap;
     }
-}
-// 
-createStartPlatform();
 
-let maxPlatformY = cameraY;
+    // обновляем maxPlatformY
+    maxPlatformY = Math.min(...platforms.map(p => p.y));
+}
 
 generateInitialPlatforms(20);
 
