@@ -58,7 +58,7 @@ function getDifficulty(score) {
 // =====================
 // BULLETS POOL
 // =====================
-const MAX_BULLETS = 1000; // пул для всех пуль
+const MAX_BULLETS = 500; // пул для всех пуль
 const bulletPool = Array.from({ length: MAX_BULLETS }, () => ({
     active: false,
     x: 0, y: 0,
@@ -212,7 +212,7 @@ function spawnEnemies(score) {
     if (now - lastEnemySpawn < 500) return; // спавн раз в 0.5 секунды
     lastEnemySpawn = now;
 
-    const spawnChance = 0.005 + Math.min(score / 30000, 0.03);
+    const spawnChance = 0.005 + Math.min(score / 30000, 0.05);
 
     // Проверяем, сработал ли спавн
     if (Math.random() > spawnChance) return;
@@ -372,9 +372,9 @@ for (let i = 0; i < platforms.length; i++) {
 
             if (p.item) {
                 switch (p.item) {
-                    case 'trampoline': player.vy += 5; break;
-                    case 'drone': player.vy += 35; break;
-                    case 'rocket': player.vy += 75; break;
+                    case 'trampoline': player.vy -= 10; break;
+                    case 'drone': player.vy -= 35; break;
+                    case 'rocket': player.vy -= 75; break;
                     case 'spikes': player.hp -= 1; break;
                     case 'bomb': player.hp -= 5; break;
                     case 'medkit': player.hp = Math.min(player.hp + 1, 100); break;
