@@ -143,7 +143,6 @@ function createStartPlatform() {
         spawnTime: performance.now()
     });
 }
-createStartPlatform();
 
 // =====================
 // PLATFORM GENERATION
