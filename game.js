@@ -30,12 +30,21 @@ const ENEMY_MAX = {
 };
 const MAX_ENEMIES = 5; // уменьшили пул
 
+const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 3,
+    vy: 0,
+    jumpForce: BASE_JUMP_FORCE,
+    hp: 100
+};
+
 // =====================
 // GAME STATE
 // =====================
 let lastTime = 0;
 let score = 0;
-
+let lastPlayerY = player.y; // важный момент для score
+let cameraY = player.y - canvas.height / 2; 
 // =====================
 // DIFFICULTY SCALE
 // =====================
@@ -45,18 +54,6 @@ function getDifficulty(score) {
     return 1 + Math.min(score / 30000, 2);
 }
 
-// =====================
-// PLAYER
-// =====================
-const player = {
-    x: canvas.width / 2,
-    y: canvas.height / 3,
-    vy: 0,
-    jumpForce: BASE_JUMP_FORCE,
-    hp: 100
-};
-let lastPlayerY = player.y; // важный момент для score
-let cameraY = player.y - canvas.height / 2; 
 // =====================
 // BULLETS POOL
 // =====================
