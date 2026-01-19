@@ -32,7 +32,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
 // =====================
-// PLAYER (с пулом)
+// PLAYER
 // =====================
 class Player {
     constructor() {
@@ -45,7 +45,7 @@ class Player {
         this.x = canvas.width / 2;
         this.y = canvas.height - 50;
         this.vy = 0;
-        this.lastY = this.y; // для коллизии
+        this.lastY = this.y;
     }
 
     update(inputX) {
@@ -53,12 +53,12 @@ class Player {
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
-        this.lastY = this.y; // запоминаем прошлую позицию
+        this.lastY = this.y;
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
     }
 
-    draw() {
+    draw(cameraY) {
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
@@ -103,7 +103,6 @@ class Platform {
 
     update() {
         if (!this.active) return;
-
         this.prevY = this.y;
 
         if (this.type === 'moving_slow' || this.type === 'moving_fast') {
@@ -119,7 +118,7 @@ class Platform {
         if (this.y - cameraY > canvas.height) this.active = false;
     }
 
-    draw() {
+    draw(cameraY) {
         if (!this.active) return;
         ctx.fillStyle =
             this.type === 'broken' ? '#ff4444' :
@@ -127,11 +126,13 @@ class Platform {
             this.type === 'moving_fast' ? '#ff00ff' :
             this.type === 'moving_slow' ? '#00ffff' :
             '#00ff88';
+
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
 
     checkCollision(player) {
         if (!this.active) return false;
+
         const prevBottom = player.lastY + player.size;
         const currBottom = player.y + player.size;
 
@@ -142,8 +143,11 @@ class Platform {
             player.x + player.size > this.x &&
             player.x < this.x + CONFIG.PLATFORM_WIDTH
         ) {
-            if (this.type === 'broken' && this.used) return false;
-            if (this.type === 'broken') this.used = true;
+            if (this.type === 'broken') {
+                if (this.used) return false;
+                this.used = true;
+            }
+
             player.vy = -player.jumpForce;
             return true;
         }
@@ -158,6 +162,8 @@ const playerPool = [new Player()];
 const player = playerPool[0];
 
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
+
+// Плавная камера
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 
@@ -168,27 +174,28 @@ function spawnPlatform(p) {
     const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
     const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
     const y = maxPlatformY - gap;
-    const type = pick(['normal', 'moving_slow', 'moving_fast', 'moving_vertical', 'broken']);
+    const type = pick(['normal', 'moving_slow', 'moving_fast', 'moving_vertical']);
+
     p.spawn(x, y, type);
     maxPlatformY = y;
 }
 
 // =====================
-// Инициализация платформ и первой платформы под игрока
+// INIT PLATFORMS
 // =====================
 function initPlatforms() {
     maxPlatformY = canvas.height;
+
     platforms.forEach((p, i) => {
         if (i === 0) {
             const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
             const y = canvas.height - 50;
             p.spawn(x, y, 'normal');
             player.y = p.y - player.size;
-            player.lastY = player.y;
             maxPlatformY = y;
-            // камера сразу ставим вниз экрана
-            cameraY = player.y - canvas.height * 0.6;
-        } else spawnPlatform(p);
+        } else {
+            spawnPlatform(p);
+        }
     });
 }
 initPlatforms();
@@ -198,33 +205,58 @@ initPlatforms();
 // =====================
 let inputX = 0;
 canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
     inputX = e.touches[0].clientX < canvas.width / 2 ? -1 : 1;
 }, { passive: false });
-canvas.addEventListener('touchend', e => { inputX = 0; }, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    inputX = 0;
+}, { passive: false });
 
 // =====================
 // GAME LOOP
 // =====================
+let score = 0;
+let lastPlayerY = player.y;
+let startedJump = false;
+
 function update() {
     player.update(inputX);
 
+    // Платформы
     platforms.forEach(p => {
         p.update();
         p.checkCollision(player);
+
         if (!p.active) spawnPlatform(p);
     });
 
-    // ===== ПЛАВНАЯ КАМЕРА =====
+    // Score
+    if (!startedJump && player.vy < 0) {
+        startedJump = true;
+        lastPlayerY = player.y;
+    }
+    if (startedJump && player.y < lastPlayerY) {
+        score += (lastPlayerY - player.y);
+    }
+    lastPlayerY = player.y;
+
+    // ===== ПЛАВНАЯ КАМЕРА сверху =====
     const screenAnchor = cameraY + canvas.height * 0.65;
     if (player.y < screenAnchor) {
-        const targetCam = player.y - canvas.height * 0.65;
-        cameraY += (targetCam - cameraY) * 0.15;
+        const targetCameraY = player.y - canvas.height * 0.65;
+        cameraY += (targetCameraY - cameraY) * 0.15;
     }
 
+    // Game Over
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
         player.reset();
         initPlatforms();
+        cameraY = canvas.height - 50; // стартуем от низа экрана
+        startedJump = false;
+        score = 0;
     }
 }
 
@@ -232,8 +264,12 @@ function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    platforms.forEach(p => p.draw());
-    player.draw();
+    platforms.forEach(p => p.draw(cameraY));
+    player.draw(cameraY);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${Math.floor(score)}`, 20, 30);
 }
 
 function loop() {
