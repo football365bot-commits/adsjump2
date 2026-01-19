@@ -408,11 +408,12 @@ for (let i = 0; i < platforms.length; i++) {
 	}
 
 
-    // Game over
-    if (player.hp <= 0 || player.y < +200) {
-        alert('Game Over');
-        location.reload();
-    }
+   const FALL_LIMIT = canvas.height + 200; // если игрок падает ниже экрана на 200px — конец игры
+
+	if (player.hp <= 0 || player.y > FALL_LIMIT) {
+    	alert('Game Over');
+    	location.reload();
+	}
 }
 
 function updateBullets() {
