@@ -127,27 +127,6 @@ function getItemForPlatform() {
     return null;
 }
 
-// =====================
-// START PLATFORM
-function createStartPlatform() {
-    const startY = canvas.height - PLATFORM_HEIGHT - 10; // чуть выше низа экрана
-    player.y = startY - PLAYER_SIZE; // ставим игрока на платформу
-
-    platforms.push({
-        x: canvas.width / 2 - PLATFORM_WIDTH / 2,
-        y: startY,
-        type: 'normal',
-        vx: 0,
-        used: false,
-        item: null,
-        temp: true,
-        lifeTime: 2000,
-        spawnTime: performance.now()
-    });
-
-    // Обновляем верхнюю границу мира для респауна новых платформ
-    maxPlatformY = startY;
-}
 
 // =====================
 // PLATFORM GENERATION
@@ -164,10 +143,9 @@ function getPlatformTypeByScore() {
     return 'moving_fast';
 }
 let maxPlatformY;
-createStartPlatform();
 
 function generateInitialPlatforms(count) {
-    let currentY = maxPlatformY; // от стартовой платформы
+    let currentY = canvas.height; // старт снизу
     for (let i = 0; i < count; i++) {
         const gap = MIN_GAP + Math.random() * (MAX_GAP - MIN_GAP);
         const type = getPlatformTypeByScore();
@@ -176,7 +154,7 @@ function generateInitialPlatforms(count) {
         if (type === 'moving_fast') vx = Math.random() < 0.5 ? 3 : -3;
         const itemType = getItemForPlatform();
 
-        currentY -= gap; // поднимаемся вверх от стартовой платформы
+        currentY -= gap; // поднимаемся вверх
 
         platforms.push({
             x: Math.random() * (canvas.width - PLATFORM_WIDTH),
@@ -186,6 +164,12 @@ function generateInitialPlatforms(count) {
             used: false,
             item: itemType
         });
+
+        // если это первая платформа — ставим игрока на неё
+        if (i === 0) {
+            player.x = platforms[0].x + PLATFORM_WIDTH/2 - PLAYER_SIZE/2;
+            player.y = currentY - PLAYER_SIZE;
+        }
     }
 
     maxPlatformY = Math.min(...platforms.map(p => p.y));
