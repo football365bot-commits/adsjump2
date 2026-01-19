@@ -404,7 +404,7 @@ for (let i = 0; i < platforms.length; i++) {
 	}
 
 
-    const FALL_LIMIT = cameraY + canvas.height;; // нижняя граница видимой зоны + небольшой буфер
+    const FALL_LIMIT = canvas.height; // нижняя граница видимой зоны + небольшой буфер
     
     if (player.hp <= 0 || player.y > FALL_LIMIT) {
         alert('Game Over');
