@@ -415,7 +415,7 @@ function updateBullets() {
 
         // проверка выхода за экран относительно камеры
         if (
-    		b.x < 0 || b.x > canvas.width 
+    		b.x < 0 || b.x > canvas.width ||
     		b.y < cameraY || b.y > cameraY + canvas.height
 		) {
     		b.active = false;
@@ -477,7 +477,7 @@ function draw() {
 
         if (p.item) {
             const itemX = p.x + PLATFORM_WIDTH / 2 - 10;
-            const itemY = canvas.height - p.y - 20;
+            const itemY = p.y - cameraY - 20;
             switch (p.item) {
                 case 'trampoline': ctx.fillStyle = '#ffff00'; break;
                 case 'drone': ctx.fillStyle = '#ff8800'; break;
@@ -487,7 +487,7 @@ function draw() {
                 case 'medkit': ctx.fillStyle = '#00ff00'; break;
                 case 'adrenaline': ctx.fillStyle = '#ff00ff'; break;
             }
-            ctx.fillRect(itemX, p.y - cameraY - 20, 20, 20);
+            ctx.fillRect(itemX, itemY, 20, 20);
         }
     });
 
