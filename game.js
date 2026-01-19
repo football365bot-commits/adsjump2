@@ -33,7 +33,6 @@ const MAX_ENEMIES = 5; // уменьшили пул
 // =====================
 // GAME STATE
 // =====================
-let cameraY = player.y - canvas.height / 2; 
 let lastTime = 0;
 let score = 0;
 
@@ -56,7 +55,7 @@ const player = {
     jumpForce: BASE_JUMP_FORCE,
     hp: 100
 };
-
+let cameraY = player.y - canvas.height / 2; 
 // =====================
 // BULLETS POOL
 // =====================
