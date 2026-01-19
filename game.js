@@ -188,8 +188,9 @@ function generateInitialPlatforms(count) {
     maxPlatformY = Math.min(...platforms.map(p => p.y));
 }
 
+let maxPlatformY = canvas.height - PLATFORM_HEIGHT - 10;
+createStartPlatform();
 generateInitialPlatforms(20);
-
 // =====================
 // UTILS
 function getEnemyTypeByScore(score) {
