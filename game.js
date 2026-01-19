@@ -130,9 +130,10 @@ function getItemForPlatform() {
 // =====================
 // START PLATFORM
 function createStartPlatform() {
+	y: player.y = PLAYER_SIZE + 5;
     platforms.push({
         x: canvas.width / 2 - PLATFORM_WIDTH / 2,
-        y: player.y = PLAYER_SIZE + 5,
+        y: player.y,
         type: 'normal',
         vx: 0,
         used: false,
