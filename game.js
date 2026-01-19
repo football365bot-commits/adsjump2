@@ -164,12 +164,18 @@ function initPlatforms() {
     maxPlatformY = canvas.height;
 
     platforms.forEach((p, i) => {
-        spawnPlatform(p);
-        if (i === 0) player.y = p.y - player.size; // первая платформа под игрока
+        if (i === 0) {
+            // Первая платформа под игрока — статичная
+            const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
+            const y = canvas.height - 50; // чуть выше нижней границы
+            p.spawn(x, y, 'normal');
+            player.y = p.y - player.size;
+            maxPlatformY = y;
+        } else {
+            spawnPlatform(p);
+        }
     });
 }
-initPlatforms();
-
 // =====================
 // INPUT
 // =====================
