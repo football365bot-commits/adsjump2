@@ -237,7 +237,6 @@ function spawnEnemies(score) {
     // Случайная позиция по X
     enemy.x = Math.random() * (canvas.width - enemy.size);
 
-    const difficulty = getDifficulty(score);
 
 	// Настройка скорости по типу с учетом difficulty
 	if (enemy.type === 'slow') enemy.vx = (Math.random() < 0.5 ? 1 : -1) * (ENEMY_MAX['slow'].speed * difficulty);
@@ -252,15 +251,7 @@ function spawnEnemies(score) {
 
 	enemy.lastShot = now;
 	enemy.bullets = [];
-    // Характеристики
-    enemy.hp = ENEMY_MAX[enemy.type].hp;
-    enemy.maxHp = ENEMY_MAX[enemy.type].hp;
-    enemy.damage = ENEMY_MAX[enemy.type].damage;
-    enemy.lastShot = now;
-    enemy.bullets = [];
-
-    enemy.active = true;
-    activeEnemies.push(enemy);
+    
 }
 // =====================
 // UPDATE ENEMIES
