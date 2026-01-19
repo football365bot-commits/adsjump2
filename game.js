@@ -312,8 +312,8 @@ function update(dt) {
     lastPlayerY = player.y;
 
     // ===== ПЛАВНАЯ КАМЕРА =====
-    const targetCameraY = player.y - canvas.height * 0.8; 
-    cameraY += (targetCameraY - cameraY) * 0.5;
+    const targetCameraY = player.y - canvas.height * 0.6; 
+    cameraY += (targetCameraY - cameraY) * 0.6;
 
     updateBullets();
 
@@ -404,7 +404,7 @@ for (let i = 0; i < platforms.length; i++) {
 	}
 
 
-    const FALL_LIMIT = cameraY + canvas.height + 20; // нижняя граница видимой зоны + небольшой буфер
+    const FALL_LIMIT = cameraY + canvas.height;; // нижняя граница видимой зоны + небольшой буфер
     
     if (player.hp <= 0 || player.y > FALL_LIMIT) {
         alert('Game Over');
