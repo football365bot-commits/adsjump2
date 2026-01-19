@@ -33,6 +33,7 @@ const MAX_ENEMIES = 5; // уменьшили пул
 // =====================
 // GAME STATE
 // =====================
+let cameraY = player.y - canvas.height / 2; 
 let lastTime = 0;
 let score = 0;
 
@@ -232,7 +233,7 @@ function spawnEnemies(score) {
     // Позиция сверху камеры
     const cameraTopY = player.y + canvas.height / 2; // верх камеры
     const spawnOffsetY = Math.random() * 100; // чуть выше
-    enemy.y = cameraTopY + spawnOffsetY;
+	enemy.y = cameraY - 50 - Math.random() * 100; // чуть выше экрана
 
     // Случайная позиция по X
     enemy.x = Math.random() * (canvas.width - enemy.size);
@@ -263,8 +264,8 @@ function updateEnemies(dt) {
 
         // проверка, на экране ли враг
         const onScreen =
-            e.y > player.y - canvas.height / 2 &&
-            e.y < player.y + canvas.height / 2;
+    		e.y > cameraY &&
+    		e.y < cameraY + canvas.height;
 
         if (!onScreen) continue;
 
@@ -296,11 +297,15 @@ function updateEnemies(dt) {
 function update(dt) {const now = performance.now();
 
     // движение игрока
-    player.x += inputX * 8;
-    if (player.x < -PLAYER_SIZE) player.x = canvas.width;
-    if (player.x > canvas.width) player.x = -PLAYER_SIZE;
-    player.vy += GRAVITY;
-    player.y += player.vy;
+	player.x += inputX * 8;
+	if (player.x < -PLAYER_SIZE) player.x = canvas.width;
+	if (player.x > canvas.width) player.x = -PLAYER_SIZE;
+	player.vy += GRAVITY;
+	player.y += player.vy;
+
+	// ===== ПЛАВНАЯ КАМЕРА =====
+	const targetCameraY = player.y - canvas.height / 2; // хотим центр камеры на игроке
+	cameraY += (targetCameraY - cameraY) * 0.1; // 0.1 - сглаживание
 
     updateBullets();
 	
@@ -347,10 +352,9 @@ for (let i = 0; i < platforms.length; i++) {
 
     // 👉 работаем только с платформами рядом с камерой
     if (
-        p.y < player.y - canvas.height / 2 - 80 ||
-        p.y > player.y + canvas.height / 2 + 80
-    ) continue;
-
+    	p.y < cameraY - 80 || 
+    	p.y > cameraY + canvas.height + 80
+	) continue;
     // === collision with player ===
     if (
         player.vy < 0 &&
@@ -412,12 +416,12 @@ function updateBullets() {
 
         // проверка выхода за экран относительно камеры
         if (
-            b.x < 0 || b.x > canvas.width ||
-            b.y < player.y - canvas.height / 2 || b.y > player.y + canvas.height / 2
-        ) {
-            b.active = false;
-            continue;
-        }
+    		b.x < 0  b.x > canvas.width 
+    		b.y < cameraY || b.y > cameraY + canvas.height
+		) {
+    		b.active = false;
+    		continue;
+		}
 
         // попадание в игрока
         if (b.owner === 'enemy') {
@@ -459,7 +463,7 @@ function draw() {
 
    // player
     ctx.fillStyle = '#00ff00'; // цвет квадрата, можно любой
-    ctx.fillRect(player.x, canvas.height - player.y, PLAYER_SIZE, PLAYER_SIZE);
+    ctx.fillRect(player.x, player.y - cameraY, PLAYER_SIZE, PLAYER_SIZE);
 
     // platforms
     platforms.forEach(p => {
@@ -470,7 +474,7 @@ function draw() {
             case 'moving_slow': ctx.fillStyle = '#00ffff'; break;
             case 'moving_fast': ctx.fillStyle = '#ff00ff'; break;
         }
-        ctx.fillRect(p.x, canvas.height - p.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        ctx.fillRect(p.x, p.y - cameraY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
 
         if (p.item) {
             const itemX = p.x + PLATFORM_WIDTH / 2 - 10;
@@ -484,7 +488,7 @@ function draw() {
                 case 'medkit': ctx.fillStyle = '#00ff00'; break;
                 case 'adrenaline': ctx.fillStyle = '#ff00ff'; break;
             }
-            ctx.fillRect(itemX, itemY, 20, 20);
+            ctx.fillRect(itemX, p.y - cameraY - 20, 20, 20);
         }
     });
 
@@ -495,21 +499,21 @@ function draw() {
             case 'slow': ctx.fillStyle='#ff8800'; break;
             case 'fast': ctx.fillStyle='#ffff00'; break;
         }
-        ctx.fillRect(e.x, canvas.height - e.y - e.size, e.size, e.size);
+        ctx.fillRect(e.x, e.y - cameraY, e.size, e.size);
 
         // HP bar
         const hpPercent = e.hp / e.maxHp;
         ctx.fillStyle = '#000';
-        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size, 4);
+        ctx.fillRect(e.x, e.y - cameraY - 6, e.size, 4);
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(e.x, canvas.height - e.y - e.size - 6, e.size * hpPercent, 4);
+        ctx.fillRect(e.x, e.y - cameraY - 6, e.size * hpPercent, 4);
     	
     });
 
 	for (const b of bulletPool) {
         	if (!b.active) continue;
         	ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff00ff';
-        	ctx.fillRect(b.x - b.size/2, canvas.height - b.y - b.size/2, b.size, b.size);
+        	ctx.fillRect(b.x - b.size/2, b.y - cameraY - b.size/2, b.size, b.size);
 	}
     // HUD
     ctx.fillStyle = '#fff';
