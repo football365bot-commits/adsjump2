@@ -165,7 +165,15 @@ class Enemy {
         this.active = false;
         this.hp = 50;
     }
-
+    
+    spawn(x, y, type) {
+        this.reset();
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.type = type;
+        this.active = true;
+        this.hp = 50;
 
     update() {
         if (!this.active) return;
