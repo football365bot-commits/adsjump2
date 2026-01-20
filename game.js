@@ -264,18 +264,15 @@ function updateCamera() {
 }
 
 // =====================
-// GAME LOOP
+// SCORE MANAGER
 // =====================
-let cameraY = 0;           
-let maxPlatformY = canvas.height;
-
 const ScoreManager = {
     value: 0,
     lastPlayerY: player.y,
     startedJump: false,
 
     update(player) {
-        // Начисляем очки только при движении вверх
+        // начисление очков только при движении вверх
         if (player.y < this.lastPlayerY) {
             this.value += this.lastPlayerY - player.y;
         }
@@ -289,9 +286,24 @@ const ScoreManager = {
     },
 
     difficultyFactor() {
-        return Math.min(this.value / 500, 1); // фактор сложности 0 → 1
+        return Math.min(this.value / 500, 1);
     }
 };
+
+// =====================
+// GAME LOOP
+// =====================
+function update() {
+    player.update(inputX);
+
+    platforms.forEach(p => {
+        p.update();
+        p.checkCollision(player);
+        if (!p.active) spawnPlatform(p);
+    });
+
+    ScoreManager.update(player);
+    updateCamera();
 
     // Game Over
     if (player.y - cameraY > canvas.height) {
@@ -302,6 +314,7 @@ const ScoreManager = {
         ScoreManager.reset();
     }
 }
+
 
 function draw() {
     ctx.fillStyle = '#111';
