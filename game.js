@@ -15,10 +15,10 @@ window.addEventListener('resize', resize);
 // CONFIG
 // =====================
 const CONFIG = {
-    GRAVITY: 0.6,
-    BASE_JUMP_FORCE: 15,
+    GRAVITY: 0.7,
+    BASE_JUMP_FORCE: 13,
     PLAYER_SIZE: 40,
-    PLATFORM_WIDTH: 65,
+    PLATFORM_WIDTH: 60,
     PLATFORM_HEIGHT: 15,
     MIN_GAP: 120,
     MAX_GAP: 160,
