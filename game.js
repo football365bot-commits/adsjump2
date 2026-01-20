@@ -170,21 +170,20 @@ let maxPlatformY = canvas.height;
 // =====================
 const ScoreManager = {
     value: 0,
-    lastPlayerY: player.y,
-    startedJump: false,
+    maxY: null, // самая высокая точка игрока
 
     update(player) {
-    // начисление очков только если игрок прыгает (vy < 0) и движется вверх
-        if (player.vy < 0 && player.y < this.lastPlayerY) {
-            this.value += this.lastPlayerY - player.y;
+        if (this.maxY === null || player.y < this.maxY) {
+            if (this.maxY !== null) {
+                this.value += this.maxY - player.y;
+            }
+            this.maxY = player.y;
         }
-        this.lastPlayerY = player.y;
     },
 
     reset() {
         this.value = 0;
-        this.lastPlayerY = player.y;
-        this.startedJump = false;
+        this.maxY = null;
     },
 
     difficultyFactor() {
