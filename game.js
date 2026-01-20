@@ -75,7 +75,8 @@ class Platform {
         this.y = 0;
         this.prevY = 0;
         this.baseY = 0;
-        this.type = 'normal';
+        this.movementType = 'static'; // 'static', 'horizontal', 'vertical'
+        this.isBroken = false;
         this.vx = 0;
         this.vy = 0;
         this.amplitude = 0;
@@ -83,22 +84,21 @@ class Platform {
         this.used = false; // для сломанных платформ
     }
 
-    spawn(x, y, type) {
+    spawn(x, y, movementType = 'static', isBroken = false) {
         this.reset();
         this.x = x;
         this.y = y;
         this.prevY = y;
         this.baseY = y;
-        this.type = type;
+        this.movementType = movementType;
+        this.isBroken = isBroken;
         this.active = true;
 
-        if (type === 'moving_slow') this.vx = Math.random() < 0.5 ? 1 : -1;
-        if (type === 'moving_fast') this.vx = Math.random() < 0.5 ? 3 : -3;
-        if (type === 'moving_vertical') {
-            this.vy = 1;
+        if (movementType === 'horizontal') this.vx = rand(1,3) * (Math.random()<0.5?-1:1);
+        if (movementType === 'vertical') {
+            this.vy = rand(1,2);
             this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
         }
-        if (type === 'broken') this.used = false;
     }
 
     update() {
@@ -106,12 +106,12 @@ class Platform {
         this.prevY = this.y;
 
         // движение платформ
-        if (this.type === 'moving_slow' || this.type === 'moving_fast') {
+        if (this.movementType === 'horizontal') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
 
-        if (this.type === 'moving_vertical') {
+        if (this.movementType === 'vertical') {
             this.y += this.vy;
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
@@ -122,11 +122,9 @@ class Platform {
 
     draw(cameraY) {
         if (!this.active) return;
-        ctx.fillStyle =
-            this.type === 'broken' ? '#ff4444' :
-            this.type === 'moving_vertical' ? '#8888ff' :
-            this.type === 'moving_fast' ? '#ff00ff' :
-            this.type === 'moving_slow' ? '#00ffff' :
+        ctx.fillStyle = this.isBroken ? '#ff4444' :
+            this.movementType === 'vertical' ? '#8888ff' :
+            this.movementType === 'horizontal' ? '#00ffff' :
             '#00ff88';
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
@@ -144,10 +142,10 @@ class Platform {
             player.x + player.size > this.x &&
             player.x < this.x + CONFIG.PLATFORM_WIDTH
         ) {
-            if (this.type === 'broken') {
-                if (this.used) return false; // если уже сломана
-                this.used = true; // сломалась
-                this.active = false; // исчезает
+            if (this.isBroken) {
+                if (this.used) return false;
+                this.used = true;
+                this.active = false;
             }
 
             player.vy = -player.jumpForce;
@@ -196,19 +194,21 @@ const ScoreManager = {
 function spawnPlatform(p) {
     const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
     const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
-
-    // выбор типа платформы на основе score
-    const factor = ScoreManager.difficultyFactor();
-    const types = ['normal'];
-    if (Math.random() < 0.3 + 0.7 * factor) types.push('moving_slow');
-    if (Math.random() < 0.2 * factor) types.push('moving_fast');
-    if (Math.random() < 0.2 * factor) types.push('moving_vertical');
-    if (Math.random() < 0.1 * factor) types.push('broken');
-
-    const type = pick(types);
-
     const y = maxPlatformY - gap;
-    p.spawn(x, y, type);
+
+    // --- новый блок вместо types ---
+    // Сначала выбираем движение
+    const movementTypes = ['static'];
+    if (Math.random() < 0.3 + 0.7 * ScoreManager.difficultyFactor()) movementTypes.push('horizontal');
+    if (Math.random() < 0.2 * ScoreManager.difficultyFactor()) movementTypes.push('vertical');
+    const movementType = pick(movementTypes);
+
+    // Случайно определяем, будет ли платформа ломаться
+    const isBroken = Math.random() < 0.1;
+
+    // Вызываем spawn с новыми параметрами
+    p.spawn(x, y, movementType, isBroken);
+
     maxPlatformY = y;
 }
 
