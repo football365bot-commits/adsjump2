@@ -266,27 +266,32 @@ function updateCamera() {
 // =====================
 // GAME LOOP
 // =====================
-let score = 0;
-let maxY = player.y;
+let cameraY = 0;           
+let maxPlatformY = canvas.height;
 
-function update() {
-    player.update(inputX);
+const ScoreManager = {
+    value: 0,
+    lastPlayerY: player.y,
+    startedJump: false,
 
-    platforms.forEach(p => {
-        p.update();
-        p.checkCollision(player);
-
-        if (!p.active) spawnPlatform(p);
-        
-        // ===== Начисление очков по пикселям вверх =====
-        if (player.y < maxY) {              
-            score += Math.floor(maxY - player.y); // начисляем очки за каждый пиксель
-            maxY = player.y;                // обновляем максимальную точку
+    update(player) {
+        // Начисляем очки только при движении вверх
+        if (player.y < this.lastPlayerY) {
+            this.value += this.lastPlayerY - player.y;
         }
-    });
+        this.lastPlayerY = player.y;
+    },
 
-    ScoreManager.update(player);
-    updateCamera();
+    reset() {
+        this.value = 0;
+        this.lastPlayerY = player.y;
+        this.startedJump = false;
+    },
+
+    difficultyFactor() {
+        return Math.min(this.value / 500, 1); // фактор сложности 0 → 1
+    }
+};
 
     // Game Over
     if (player.y - cameraY > canvas.height) {
