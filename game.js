@@ -265,46 +265,66 @@ const ScoreManager = {
 };
 
 // =====================
-// PLATFORM SPAWN
+// UNIVERSAL SPAWN FUNCTION
 // =====================
-function spawnPlatform(p) {
-    const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
-    const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
-    const y = maxPlatformY - gap;
-
-    const movementTypes = ['static'];
-    if (Math.random() < 0.3 + 0.7*ScoreManager.difficultyFactor()) movementTypes.push('horizontal');
-    if (Math.random() < 0.2*ScoreManager.difficultyFactor()) movementTypes.push('vertical');
-    const movementType = pick(movementTypes);
-
-    const isBroken = Math.random() < 0.1;
-
-    p.spawn(x, y, movementType, isBroken);
-    maxPlatformY = y;
-}
-
-// =====================
-// ENEMY SPAWN
-// =====================
-function trySpawnEnemy() {
+function spawnEntities() {
     const factor = ScoreManager.difficultyFactor();
-    if (Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003*factor) {
-        const enemy = enemyPool.find(e => !e.active);
-        if (!enemy) return;
 
-        const type = pick(['static','horizontal','vertical']);
-        const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
-        const y = cameraY - CONFIG.ENEMY_SIZE;
-        enemy.spawn(x, y, type);
-    }
+    // ----- SPAWN PLATFORMS -----
+    platforms.forEach(p => {
+        if (!p.active) {
+            const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
+            const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
+            const y = maxPlatformY - gap;
+
+            // Определяем движение платформы
+            const movementTypes = ['static'];
+            if (Math.random() < 0.3 + 0.7 * factor) movementTypes.push('horizontal');
+            if (Math.random() < 0.2 * factor) movementTypes.push('vertical');
+            const movementType = pick(movementTypes);
+
+            // Ломка платформы
+            const isBroken = Math.random() < 0.1;
+
+            p.spawn(x, y, movementType, isBroken);
+            maxPlatformY = y;
+        }
+    });
+
+    // ----- SPAWN ENEMIES -----
+    enemyPool.forEach(e => {
+        if (!e.active) {
+            // шанс появления врага растёт с score
+            if (Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003 * factor) {
+                const type = pick(['static', 'horizontal', 'vertical']);
+                const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
+                const y = cameraY - CONFIG.ENEMY_SIZE; // спавн сверху экрана
+                e.spawn(x, y, type);
+            }
+        }
+    });
 }
 
 // =====================
-// RESET ENEMIES
+// UNIVERSAL RESET FUNCTION
 // =====================
-function resetEnemies() {
+function resetEntities() {
+    // Сбрасываем платформы
+    platforms.forEach((p, i) => {
+        p.reset();
+        if (i === 0) {
+            const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
+            const y = canvas.height - 50;
+            p.spawn(x, y, 'static');
+            player.y = p.y - player.size;
+            maxPlatformY = y;
+        }
+    });
+
+    // Сбрасываем врагов
     enemyPool.forEach(e => e.reset());
 }
+
 
 // =====================
 // INIT PLATFORMS
@@ -354,11 +374,10 @@ function update() {
     platforms.forEach(p=>{
         p.update();
         p.checkCollision(player);
-        if(!p.active) spawnPlatform(p);
     });
 
     enemyPool.forEach(e=>e.update());
-    trySpawnEnemy();
+    spawnEntities();
 
     ScoreManager.update(player);
     updateCamera();
