@@ -156,6 +156,133 @@ class Platform {
 }
 
 // =====================
+// ENEMY CLASS
+// =====================
+class Enemy {
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.amplitude = 0;
+        this.type = 'static'; // 'static', 'horizontal', 'vertical'
+        this.active = false;
+        this.hp = 50; // базовый HP врага
+        this.baseY = 0; // для вертикального движения
+    }
+
+    spawn(x, y, type) {
+        this.reset();
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.type = type;
+        this.active = true;
+        this.hp = 50;
+
+        // Скорость движения по типу
+        const factor = ScoreManager.difficultyFactor();
+        if (type === 'horizontal') {
+            this.vx = rand(1, 2) + 2 * factor; // скорость увеличивается с score
+            if (Math.random() < 0.5) this.vx *= -1;
+        }
+        if (type === 'vertical') {
+            this.vy = rand(1, 2) + 2 * factor;
+            this.amplitude = rand(50, 120); // вертикальная амплитуда
+        }
+    }
+
+    update() {
+        if (!this.active) return;
+
+        // движение врага
+        if (this.type === 'horizontal') {
+            this.x += this.vx;
+            if (this.x < 0 || this.x + CONFIG.ENEMY_SIZE > canvas.width) this.vx *= -1;
+        }
+
+        if (this.type === 'vertical') {
+            this.y += this.vy;
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+        }
+
+        // если враг ушёл за экран вниз — деактивируем
+        if (this.y - cameraY > canvas.height || this.hp <= 0) {
+            this.active = false;
+        }
+    }
+
+    draw(cameraY) {
+        if (!this.active) return;
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
+
+        // Можно нарисовать HP над врагом
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px Arial';
+        ctx.fillText(this.hp, this.x, this.y - cameraY - 5);
+    }
+
+    takeDamage(amount) {
+        this.hp -= amount;
+        if (this.hp <= 0) this.active = false;
+    }
+
+    checkCollision(player) {
+        if (!this.active) return false;
+
+        const px = player.x;
+        const py = player.y;
+        const ps = player.size;
+
+        if (
+            px < this.x + CONFIG.ENEMY_SIZE &&
+            px + ps > this.x &&
+            py < this.y + CONFIG.ENEMY_SIZE &&
+            py + ps > this.y
+        ) {
+            return true; // игрок столкнулся с врагом
+        }
+        return false;
+    }
+}
+
+// =====================
+// ENEMY POOL
+// =====================
+const enemyPool = Array.from({ length: 10 }, () => new Enemy());
+
+// =====================
+// ENEMY SPAWN FUNCTION
+// =====================
+function trySpawnEnemy() {
+    const factor = ScoreManager.difficultyFactor();
+
+    // шанс спавна врага растёт с score
+    if (Math.random() < 0.002 + 0.003 * factor) {
+        const enemy = enemyPool.find(e => !e.active);
+        if (!enemy) return;
+
+        const type = pick(['static', 'horizontal', 'vertical']);
+        const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
+        const y = cameraY - CONFIG.ENEMY_SIZE; // сверху экрана
+        enemy.spawn(x, y, type);
+    }
+}
+
+// =====================
+// RESET ENEMIES
+// =====================
+function resetEnemies() {
+    enemyPool.forEach(e => e.reset());
+}
+
+
+// =====================
 // GLOBAL STATE
 // =====================
 const player = new Player();
