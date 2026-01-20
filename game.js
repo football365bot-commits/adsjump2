@@ -272,11 +272,20 @@ function update() {
     lastPlayerY = player.y;
 
     // ===== ПЛАВНАЯ КАМЕРА сверху =====
-    const screenAnchor = cameraY + canvas.height * 0.65;
+    // Плавная камера с разной скоростью вверх и вниз
+function updateCamera() {
+    const screenAnchor = cameraY + canvas.height * 0.65; // линия, выше которой камера начинает идти вверх
+
     if (player.y < screenAnchor) {
+        // игрок поднимается — камера следует
         const targetCameraY = player.y - canvas.height * 0.65;
-        cameraY += (targetCameraY - cameraY) * 0.12;
+        cameraY += (targetCameraY - cameraY) * 0.18; // скорость подъёма
+    } else if (player.y - cameraY > canvas.height * 0.75) {
+        // игрок падает — камера почти не идёт вниз
+        const targetCameraY = player.y - canvas.height * 0.75;
+        cameraY += (targetCameraY - cameraY) * 0.03; // маленькая скорость вниз
     }
+}
 
     // Game Over
     if (player.y - cameraY > canvas.height) {
