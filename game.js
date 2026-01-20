@@ -20,8 +20,8 @@ const CONFIG = {
     PLAYER_SIZE: 40,
     PLATFORM_WIDTH: 50,
     PLATFORM_HEIGHT: 14,
-    MIN_GAP: 150,
-    MAX_GAP: 210,
+    MIN_GAP: 85,
+    MAX_GAP: 105,
     MAX_PLATFORMS: 18
 };
 
