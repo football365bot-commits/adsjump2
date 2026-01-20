@@ -87,7 +87,6 @@ class Platform {
         this.used = false; // для сломанных платформ
     }
 
-    
 
     update() {
         if (!this.active) return;
@@ -291,23 +290,6 @@ function resetEntities() {
     enemyPool.forEach(e => e.reset());
 }
 
-
-// =====================
-// INIT PLATFORMS
-// =====================
-function initPlatforms() {
-    maxPlatformY = canvas.height;
-    platforms.forEach((p,i)=>{
-        if(i===0){
-            const x = canvas.width/2 - CONFIG.PLATFORM_WIDTH/2;
-            const y = canvas.height-50;
-            p.spawn(x, y, 'static');
-            player.y = p.y - player.size;
-            maxPlatformY = y;
-        } else spawnPlatform(p);
-    });
-}
-spawnEntities() 
 
 // =====================
 // INPUT
