@@ -86,7 +86,15 @@ class Platform {
         this.active = false;
         this.used = false; // для сломанных платформ
     }
-
+    spawn(x, y, movementType = 'static', isBroken = false) {
+        this.reset();
+        this.x = x;
+        this.y = y;
+        this.prevY = y;
+        this.baseY = y;
+        this.movementType = movementType;
+        this.isBroken = isBroken;
+        this.active = true;
 
     update() {
         if (!this.active) return;
