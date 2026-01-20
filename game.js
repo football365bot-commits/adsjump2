@@ -272,10 +272,10 @@ function update() {
     lastPlayerY = player.y;
 
     // ===== ПЛАВНАЯ КАМЕРА сверху =====
-    const screenAnchor = cameraY + canvas.height * 0.70;
+    const screenAnchor = cameraY + canvas.height * 0.65;
     if (player.y < screenAnchor) {
         const targetCameraY = player.y - canvas.height * 0.65;
-        cameraY += (targetCameraY - cameraY) * 0.50;
+        cameraY += (targetCameraY - cameraY) * 0.12;
     }
 
     // Game Over
