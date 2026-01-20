@@ -24,7 +24,7 @@ const CONFIG = {
     MAX_GAP: 105,
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
-    MAX_ENEMIES: 10,
+    MAX_ENEMIES: 5,
     ENEMY_BASE_CHANCE: 0.002
 };
 
