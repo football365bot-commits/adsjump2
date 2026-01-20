@@ -31,28 +31,6 @@ const CONFIG = {
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-// Универсальная функция для очистки объектов за экраном
-function recycleIfOffScreen(obj) {
-    if (!obj.active) return false;
-
-    const top = cameraY;
-    const bottom = cameraY + canvas.height;
-
-    if (obj.y + (obj.height || CONFIG.PLATFORM_HEIGHT) < top ||
-        obj.y > bottom ||
-        obj.x + (obj.width || CONFIG.PLATFORM_WIDTH) < 0 ||
-        obj.x > canvas.width) {
-
-        obj.active = false;
-
-        if ('prevY' in obj) obj.prevY = obj.y;
-        if ('used' in obj) obj.used = false;
-
-        return true;
-    }
-    return false;
-}
-
 // =====================
 // PLAYER
 // =====================
@@ -137,7 +115,10 @@ class Platform {
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
-        if (this.y - cameraY > canvas.height) this.active = false;
+        // Если платформа ушла за экран вниз — сразу деактивируем
+        if (this.y - cameraY > canvas.height) {
+            this.active = false;
+        }
     }
 
     draw(cameraY) {
@@ -148,7 +129,6 @@ class Platform {
             this.type === 'moving_fast' ? '#ff00ff' :
             this.type === 'moving_slow' ? '#00ffff' :
             '#00ff88';
-
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
 
@@ -185,8 +165,7 @@ const player = playerPool[0];
 
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 
-// Плавная камера
-let cameraY = 0;
+let cameraY = canvas.height - 50; // старт от низа экрана
 let maxPlatformY = canvas.height;
 
 // =====================
@@ -237,6 +216,21 @@ canvas.addEventListener('touchend', e => {
 }, { passive: false });
 
 // =====================
+// CAMERA UPDATE
+// =====================
+function updateCamera() {
+    const screenAnchor = cameraY + canvas.height * 0.65;
+
+    if (player.y < screenAnchor) {
+        const targetCameraY = player.y - canvas.height * 0.65;
+        cameraY += (targetCameraY - cameraY) * 0.18; // вверх быстро
+    } else if (player.y - cameraY > canvas.height * 0.75) {
+        const targetCameraY = player.y - canvas.height * 0.75;
+        cameraY += (targetCameraY - cameraY) * 0.03; // вниз медленно
+    }
+}
+
+// =====================
 // GAME LOOP
 // =====================
 let score = 0;
@@ -246,19 +240,12 @@ let startedJump = false;
 function update() {
     player.update(inputX);
 
-        // Платформы
-        platforms.forEach(p => {
-        // обновляем платформу
+    platforms.forEach(p => {
         p.update();
-
-        // проверка коллизии только если платформа активна
         p.checkCollision(player);
 
-        // если платформа ушла за экран вниз — сразу деактивируем и рециклим
-        if (p.y - cameraY > canvas.height) {
-            p.active = false;      // деактивируем
-            spawnPlatform(p);      // создаём новую платформу сверху
-        }
+        // сразу рецикл для ушедших платформ
+        if (!p.active) spawnPlatform(p);
     });
 
     // Score
@@ -271,28 +258,14 @@ function update() {
     }
     lastPlayerY = player.y;
 
-    // ===== ПЛАВНАЯ КАМЕРА сверху =====
-    // Плавная камера с разной скоростью вверх и вниз
-function updateCamera() {
-    const screenAnchor = cameraY + canvas.height * 0.65; // линия, выше которой камера начинает идти вверх
-
-    if (player.y < screenAnchor) {
-        // игрок поднимается — камера следует
-        const targetCameraY = player.y - canvas.height * 0.65;
-        cameraY += (targetCameraY - cameraY) * 0.18; // скорость подъёма
-    } else if (player.y - cameraY > canvas.height * 0.75) {
-        // игрок падает — камера почти не идёт вниз
-        const targetCameraY = player.y - canvas.height * 0.75;
-        cameraY += (targetCameraY - cameraY) * 0.03; // маленькая скорость вниз
-    }
-}
+    updateCamera();
 
     // Game Over
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
         player.reset();
         initPlatforms();
-        cameraY = canvas.height - 50; // стартуем от низа экрана
+        cameraY = canvas.height - 50;
         startedJump = false;
         score = 0;
     }
