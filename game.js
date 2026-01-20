@@ -261,16 +261,16 @@ function spawnEntities(isReset = false) {
             const y = maxPlatformY - gap;
 
             const types = ['static'];
-            if (Math.random() < 0.3 + 0.7 * factor) types.push('horizontal');
+            if (Math.random() < 0.2 + 0.7 * factor) types.push('horizontal');
             if (Math.random() < 0.2 * factor) types.push('vertical');
 
-            p.spawn(x, y, pick(types), Math.random() < 0.1);
+            p.spawn(x, y, pick(types), Math.random() < 0.2);
             maxPlatformY = y;
         }
     });
 
     enemies.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003 * factor) {
+        if (!e.active && Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.002 * factor) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
             const y = cameraY - CONFIG.ENEMY_SIZE;
             e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
