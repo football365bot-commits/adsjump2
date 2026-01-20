@@ -265,7 +265,7 @@ function update() {
         alert('Game Over');
         player.reset();
         initPlatforms();
-        cameraY = canvas.height - 50;
+        cameraY = player.y - canvas.height * 0.65; // старт камеры по позиции игрока
         startedJump = false;
         score = 0;
     }
