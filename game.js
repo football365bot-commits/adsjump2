@@ -165,38 +165,6 @@ let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform(
 let cameraY = 0;           
 let maxPlatformY = canvas.height;
 
-// =====================
-// SCORE MANAGER (для прогрессии сложности)
-// =====================
-const ScoreManager = {
-    value: 0,
-    lastPlayerY: player.y,
-    startedJump: false,
-
-    update(player) {
-        // ===== Начисление очков по пикселям вверх =====
-        if (player.y < maxY) {              
-            score += Math.floor(maxY - player.y); // начисляем очки за каждый пиксель
-            maxY = player.y;                // обновляем максимальную точку
-        }
-
-        if (this.startedJump && player.y < this.lastPlayerY) {
-            this.value += (this.lastPlayerY - player.y);
-        }
-
-        this.lastPlayerY = player.y;
-    },
-
-    reset() {
-        this.value = 0;
-        this.lastPlayerY = player.y;
-        this.startedJump = false;
-    },
-
-    difficultyFactor() {
-        return Math.min(this.value / 500, 1); // 0 → 1
-    }
-};
 
 // =====================
 // PLATFORM SPAWN
