@@ -16,12 +16,12 @@ window.addEventListener('resize', resize);
 // =====================
 const CONFIG = {
     GRAVITY: 0.85,
-    BASE_JUMP_FORCE: 16,
-    PLAYER_SIZE: 36,
-    PLATFORM_WIDTH: 50,
+    BASE_JUMP_FORCE: 13.5,
+    PLAYER_SIZE: 40,
+    PLATFORM_WIDTH: 45,
     PLATFORM_HEIGHT: 14,
     MIN_GAP: 150,
-    MAX_GAP: 190,
+    MAX_GAP: 210,
     MAX_PLATFORMS: 18
 };
 
