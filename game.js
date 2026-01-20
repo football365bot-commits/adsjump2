@@ -74,32 +74,27 @@ class Platform {
     constructor() { this.reset(); }
 
     reset() {
-        this.x = 0;
-        this.y = 0;
-        this.prevY = 0;
-        this.baseY = 0;
+        this.x = this.y = this.prevY = this.baseY = 0;
         this.movementType = 'static';
         this.isBroken = false;
-        this.vx = 0;
-        this.vy = 0;
-        this.amplitude = 0;
+        this.vx = this.vy = this.amplitude = 0;
         this.active = false;
         this.used = false;
     }
 
-    spawn(x, y, movementType = 'static', isBroken = false) {
+    spawn(x, y, movementType, isBroken) {
         this.reset();
         this.x = x;
-        this.y = y;
-        this.prevY = y;
-        this.baseY = y;
+        this.y = this.prevY = this.baseY = y;
         this.movementType = movementType;
         this.isBroken = isBroken;
         this.active = true;
 
-        if (movementType === 'horizontal') this.vx = rand(1,3) * (Math.random() < 0.5 ? -1 : 1);
+        if (movementType === 'horizontal')
+            this.vx = rand(1, 3) * (Math.random() < 0.5 ? -1 : 1);
+
         if (movementType === 'vertical') {
-            this.vy = rand(1,2);
+            this.vy = rand(1, 2);
             this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
         }
     }
@@ -112,9 +107,11 @@ class Platform {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
+
         if (this.movementType === 'vertical') {
             this.y += this.vy;
-            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude)
+                this.vy *= -1;
         }
 
         if (this.y - cameraY > canvas.height) this.active = false;
@@ -122,7 +119,8 @@ class Platform {
 
     draw(cameraY) {
         if (!this.active) return;
-        ctx.fillStyle = this.isBroken ? '#ff4444' :
+        ctx.fillStyle =
+            this.isBroken ? '#ff4444' :
             this.movementType === 'vertical' ? '#8888ff' :
             this.movementType === 'horizontal' ? '#00ffff' :
             '#00ff88';
@@ -161,12 +159,7 @@ class Enemy {
     constructor() { this.reset(); }
 
     reset() {
-        this.x = 0;
-        this.y = 0;
-        this.vx = 0;
-        this.vy = 0;
-        this.amplitude = 0;
-        this.baseY = 0;
+        this.x = this.y = this.vx = this.vy = this.amplitude = this.baseY = 0;
         this.type = 'static';
         this.active = false;
         this.hp = 50;
@@ -175,33 +168,32 @@ class Enemy {
     spawn(x, y, type) {
         this.reset();
         this.x = x;
-        this.y = y;
-        this.baseY = y;
+        this.y = this.baseY = y;
         this.type = type;
         this.active = true;
-        this.hp = 50;
 
-        const factor = ScoreManager.difficultyFactor();
-        if (type === 'horizontal') {
-            this.vx = rand(1,2) + 2*factor;
-            if (Math.random() < 0.5) this.vx *= -1;
-        }
+        const f = ScoreManager.difficultyFactor();
+        if (type === 'horizontal') this.vx = (rand(1, 2) + 2 * f) * (Math.random() < 0.5 ? -1 : 1);
         if (type === 'vertical') {
-            this.vy = rand(1,2) + 2*factor;
+            this.vy = rand(1, 2) + 2 * f;
             this.amplitude = rand(50, 120);
         }
     }
 
     update() {
         if (!this.active) return;
+
         if (this.type === 'horizontal') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.ENEMY_SIZE > canvas.width) this.vx *= -1;
         }
+
         if (this.type === 'vertical') {
             this.y += this.vy;
-            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude)
+                this.vy *= -1;
         }
+
         if (this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
     }
 
@@ -209,21 +201,6 @@ class Enemy {
         if (!this.active) return;
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Arial';
-        ctx.fillText(this.hp, this.x, this.y - cameraY - 5);
-    }
-
-    takeDamage(amount) {
-        this.hp -= amount;
-        if (this.hp <= 0) this.active = false;
-    }
-
-    checkCollision(player) {
-        if (!this.active) return false;
-        const px = player.x, py = player.y, ps = player.size;
-        return px < this.x + CONFIG.ENEMY_SIZE && px + ps > this.x &&
-               py < this.y + CONFIG.ENEMY_SIZE && py + ps > this.y;
     }
 }
 
@@ -231,21 +208,22 @@ class Enemy {
 // GLOBAL STATE
 // =====================
 const player = new Player();
-let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
+const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
+const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
+
 let cameraY = 0;
 let maxPlatformY = canvas.height;
-const enemyPool = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
 
 // =====================
-// SCORE MANAGER
+// SCORE
 // =====================
 const ScoreManager = {
     value: 0,
     maxY: null,
-    update(player) {
-        if (this.maxY === null || player.y < this.maxY) {
-            if (this.maxY !== null) this.value += this.maxY - player.y;
-            this.maxY = player.y;
+    update(p) {
+        if (this.maxY === null || p.y < this.maxY) {
+            if (this.maxY !== null) this.value += this.maxY - p.y;
+            this.maxY = p.y;
         }
     },
     reset() {
@@ -258,53 +236,46 @@ const ScoreManager = {
 };
 
 // =====================
-// UNIVERSAL SPAWN & RESET
+// UNIVERSAL SPAWN / RESET
 // =====================
-function spawnEntities() {
+function spawnEntities(isReset = false) {
     const factor = ScoreManager.difficultyFactor();
 
-    // Платформы
+    if (isReset) {
+        maxPlatformY = canvas.height;
+        platforms.forEach(p => p.reset());
+        enemies.forEach(e => e.reset());
+
+        const start = platforms[0];
+        const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
+        const y = canvas.height - 50;
+        start.spawn(x, y, 'static', false);
+        player.y = y - player.size;
+        maxPlatformY = y;
+    }
+
     platforms.forEach(p => {
         if (!p.active) {
             const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
             const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
             const y = maxPlatformY - gap;
 
-            const movementTypes = ['static'];
-            if (Math.random() < 0.3 + 0.7*factor) movementTypes.push('horizontal');
-            if (Math.random() < 0.2*factor) movementTypes.push('vertical');
-            const movementType = pick(movementTypes);
+            const types = ['static'];
+            if (Math.random() < 0.3 + 0.7 * factor) types.push('horizontal');
+            if (Math.random() < 0.2 * factor) types.push('vertical');
 
-            const isBroken = Math.random() < 0.1;
-
-            p.spawn(x, y, movementType, isBroken);
+            p.spawn(x, y, pick(types), Math.random() < 0.1);
             maxPlatformY = y;
         }
     });
 
-    // Враги
-    enemyPool.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003*factor) {
-            const type = pick(['static','horizontal','vertical']);
+    enemies.forEach(e => {
+        if (!e.active && Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003 * factor) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
             const y = cameraY - CONFIG.ENEMY_SIZE;
-            e.spawn(x, y, type);
+            e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
         }
     });
-}
-
-function resetEntities() {
-    platforms.forEach((p,i) => {
-        p.reset();
-        if(i===0) {
-            const x = canvas.width/2 - CONFIG.PLATFORM_WIDTH/2;
-            const y = canvas.height-50;
-            p.spawn(x,y,'static');
-            player.y = p.y - player.size;
-            maxPlatformY = y;
-        }
-    });
-    enemyPool.forEach(e => e.reset());
 }
 
 // =====================
@@ -313,54 +284,61 @@ function resetEntities() {
 let inputX = 0;
 canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    inputX = e.touches[0].clientX < canvas.width/2 ? -1 : 1;
-},{passive:false});
+    inputX = e.touches[0].clientX < canvas.width / 2 ? -1 : 1;
+}, { passive: false });
 canvas.addEventListener('touchend', e => {
     e.preventDefault();
     inputX = 0;
-},{passive:false});
+}, { passive: false });
 
 // =====================
 // CAMERA
 // =====================
 function updateCamera() {
     const minY = canvas.height * 0.65;
-    const targetY = Math.min(player.y - minY, cameraY);
-    cameraY += (targetY - cameraY) * 0.18;
+    const target = Math.min(player.y - minY, cameraY);
+    cameraY += (target - cameraY) * 0.18;
 }
 
 // =====================
 // GAME LOOP
 // =====================
+spawnEntities(true);
+
 function update() {
     player.update(inputX);
-    platforms.forEach(p => { p.update(); p.checkCollision(player); });
-    enemyPool.forEach(e => e.update());
+
+    platforms.forEach(p => {
+        p.update();
+        p.checkCollision(player);
+    });
+
+    enemies.forEach(e => e.update());
     spawnEntities();
 
     ScoreManager.update(player);
     updateCamera();
 
-    if(player.y - cameraY > canvas.height){
+    if (player.y - cameraY > canvas.height) {
         alert('Game Over');
         player.reset();
-        resetEntities();
-        cameraY = 0;
         ScoreManager.reset();
+        cameraY = 0;
+        spawnEntities(true);
     }
 }
 
 function draw() {
     ctx.fillStyle = '#111';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     platforms.forEach(p => p.draw(cameraY));
+    enemies.forEach(e => e.draw(cameraY));
     player.draw(cameraY);
-    enemyPool.forEach(e => e.draw(cameraY));
 
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20,30);
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
 }
 
 function loop() {
@@ -368,7 +346,4 @@ function loop() {
     draw();
     requestAnimationFrame(loop);
 }
-
-// Начинаем игру
-spawnEntities();
 loop();
