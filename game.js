@@ -87,22 +87,7 @@ class Platform {
         this.used = false; // для сломанных платформ
     }
 
-    spawn(x, y, movementType = 'static', isBroken = false) {
-        this.reset();
-        this.x = x;
-        this.y = y;
-        this.prevY = y;
-        this.baseY = y;
-        this.movementType = movementType;
-        this.isBroken = isBroken;
-        this.active = true;
-
-        if (movementType === 'horizontal') this.vx = rand(1,3) * (Math.random()<0.5?-1:1);
-        if (movementType === 'vertical') {
-            this.vy = rand(1,2);
-            this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
-        }
-    }
+    
 
     update() {
         if (!this.active) return;
@@ -174,25 +159,6 @@ class Enemy {
         this.hp = 50;
     }
 
-    spawn(x, y, type) {
-        this.reset();
-        this.x = x;
-        this.y = y;
-        this.baseY = y;
-        this.type = type;
-        this.active = true;
-        this.hp = 50;
-
-        const factor = ScoreManager.difficultyFactor();
-        if (type === 'horizontal') {
-            this.vx = rand(1,2) + 2*factor;
-            if (Math.random() < 0.5) this.vx *= -1;
-        }
-        if (type === 'vertical') {
-            this.vy = rand(1,2) + 2*factor;
-            this.amplitude = rand(50, 120);
-        }
-    }
 
     update() {
         if (!this.active) return;
@@ -341,7 +307,7 @@ function initPlatforms() {
         } else spawnPlatform(p);
     });
 }
-initPlatforms();
+spawnEntities() 
 
 // =====================
 // INPUT
@@ -386,8 +352,7 @@ function update() {
     if(player.y - cameraY > canvas.height){
         alert('Game Over');
         player.reset();
-        initPlatforms();
-        resetEnemies();
+        resetEntities()
         cameraY = 0;
         ScoreManager.reset();
     }
