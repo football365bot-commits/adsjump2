@@ -266,6 +266,9 @@ function updateCamera() {
 // =====================
 // GAME LOOP
 // =====================
+let score = 0;
+let maxY = player.y;
+
 function update() {
     player.update(inputX);
 
@@ -274,6 +277,12 @@ function update() {
         p.checkCollision(player);
 
         if (!p.active) spawnPlatform(p);
+        
+        // ===== Начисление очков по пикселям вверх =====
+        if (player.y < maxY) {              
+            score += Math.floor(maxY - player.y); // начисляем очки за каждый пиксель
+            maxY = player.y;                // обновляем максимальную точку
+        }
     });
 
     ScoreManager.update(player);
