@@ -174,9 +174,10 @@ const ScoreManager = {
     startedJump: false,
 
     update(player) {
-        if (!this.startedJump && player.vy < 0) {
-            this.startedJump = true;
-            this.lastPlayerY = player.y;
+        // ===== Начисление очков по пикселям вверх =====
+        if (player.y < maxY) {              
+            score += Math.floor(maxY - player.y); // начисляем очки за каждый пиксель
+            maxY = player.y;                // обновляем максимальную точку
         }
 
         if (this.startedJump && player.y < this.lastPlayerY) {
