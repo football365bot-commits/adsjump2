@@ -22,7 +22,10 @@ const CONFIG = {
     PLATFORM_HEIGHT: 12,
     MIN_GAP: 85,
     MAX_GAP: 105,
-    MAX_PLATFORMS: 18
+    MAX_PLATFORMS: 18,
+    ENEMY_SIZE: 30,
+    MAX_ENEMIES: 10,
+    ENEMY_BASE_CHANCE: 0.002 // базовая вероятность спавна врага на кадр
 };
 
 // =====================
@@ -105,7 +108,6 @@ class Platform {
         if (!this.active) return;
         this.prevY = this.y;
 
-        // движение платформ
         if (this.movementType === 'horizontal') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
@@ -116,7 +118,6 @@ class Platform {
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
-        // если ушла за экран вниз — деактивируем
         if (this.y - cameraY > canvas.height) this.active = false;
     }
 
@@ -156,12 +157,10 @@ class Platform {
 }
 
 // =====================
-// ENEMY CLASS
+// ENEMY
 // =====================
 class Enemy {
-    constructor() {
-        this.reset();
-    }
+    constructor() { this.reset(); }
 
     reset() {
         this.x = 0;
@@ -169,10 +168,10 @@ class Enemy {
         this.vx = 0;
         this.vy = 0;
         this.amplitude = 0;
+        this.baseY = 0;
         this.type = 'static'; // 'static', 'horizontal', 'vertical'
         this.active = false;
-        this.hp = 50; // базовый HP врага
-        this.baseY = 0; // для вертикального движения
+        this.hp = 50;
     }
 
     spawn(x, y, type) {
@@ -184,36 +183,30 @@ class Enemy {
         this.active = true;
         this.hp = 50;
 
-        // Скорость движения по типу
         const factor = ScoreManager.difficultyFactor();
         if (type === 'horizontal') {
-            this.vx = rand(1, 2) + 2 * factor; // скорость увеличивается с score
+            this.vx = rand(1,2) + 2*factor;
             if (Math.random() < 0.5) this.vx *= -1;
         }
         if (type === 'vertical') {
-            this.vy = rand(1, 2) + 2 * factor;
-            this.amplitude = rand(50, 120); // вертикальная амплитуда
+            this.vy = rand(1,2) + 2*factor;
+            this.amplitude = rand(50, 120);
         }
     }
 
     update() {
         if (!this.active) return;
 
-        // движение врага
         if (this.type === 'horizontal') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.ENEMY_SIZE > canvas.width) this.vx *= -1;
         }
-
         if (this.type === 'vertical') {
             this.y += this.vy;
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
-        // если враг ушёл за экран вниз — деактивируем
-        if (this.y - cameraY > canvas.height || this.hp <= 0) {
-            this.active = false;
-        }
+        if (this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
     }
 
     draw(cameraY) {
@@ -221,7 +214,6 @@ class Enemy {
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
 
-        // Можно нарисовать HP над врагом
         ctx.fillStyle = '#fff';
         ctx.font = '12px Arial';
         ctx.fillText(this.hp, this.x, this.y - cameraY - 5);
@@ -234,42 +226,75 @@ class Enemy {
 
     checkCollision(player) {
         if (!this.active) return false;
-
-        const px = player.x;
-        const py = player.y;
-        const ps = player.size;
-
-        if (
-            px < this.x + CONFIG.ENEMY_SIZE &&
-            px + ps > this.x &&
-            py < this.y + CONFIG.ENEMY_SIZE &&
-            py + ps > this.y
-        ) {
-            return true; // игрок столкнулся с врагом
-        }
-        return false;
+        const px = player.x, py = player.y, ps = player.size;
+        return px < this.x + CONFIG.ENEMY_SIZE && px + ps > this.x &&
+               py < this.y + CONFIG.ENEMY_SIZE && py + ps > this.y;
     }
 }
 
 // =====================
-// ENEMY POOL
+// GLOBAL STATE
 // =====================
-const enemyPool = Array.from({ length: 10 }, () => new Enemy());
+const player = new Player();
+let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
+let cameraY = 0;
+let maxPlatformY = canvas.height;
+
+// Пул врагов
+const enemyPool = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
 
 // =====================
-// ENEMY SPAWN FUNCTION
+// SCORE MANAGER
+// =====================
+const ScoreManager = {
+    value: 0,
+    maxY: null,
+    update(player) {
+        if (this.maxY === null || player.y < this.maxY) {
+            if (this.maxY !== null) this.value += this.maxY - player.y;
+            this.maxY = player.y;
+        }
+    },
+    reset() {
+        this.value = 0;
+        this.maxY = null;
+    },
+    difficultyFactor() {
+        return Math.min(this.value / 500, 1);
+    }
+};
+
+// =====================
+// PLATFORM SPAWN
+// =====================
+function spawnPlatform(p) {
+    const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
+    const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
+    const y = maxPlatformY - gap;
+
+    const movementTypes = ['static'];
+    if (Math.random() < 0.3 + 0.7*ScoreManager.difficultyFactor()) movementTypes.push('horizontal');
+    if (Math.random() < 0.2*ScoreManager.difficultyFactor()) movementTypes.push('vertical');
+    const movementType = pick(movementTypes);
+
+    const isBroken = Math.random() < 0.1;
+
+    p.spawn(x, y, movementType, isBroken);
+    maxPlatformY = y;
+}
+
+// =====================
+// ENEMY SPAWN
 // =====================
 function trySpawnEnemy() {
     const factor = ScoreManager.difficultyFactor();
-
-    // шанс спавна врага растёт с score
-    if (Math.random() < 0.002 + 0.003 * factor) {
+    if (Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003*factor) {
         const enemy = enemyPool.find(e => !e.active);
         if (!enemy) return;
 
-        const type = pick(['static', 'horizontal', 'vertical']);
+        const type = pick(['static','horizontal','vertical']);
         const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
-        const y = cameraY - CONFIG.ENEMY_SIZE; // сверху экрана
+        const y = cameraY - CONFIG.ENEMY_SIZE;
         enemy.spawn(x, y, type);
     }
 }
@@ -281,80 +306,19 @@ function resetEnemies() {
     enemyPool.forEach(e => e.reset());
 }
 
-
-// =====================
-// GLOBAL STATE
-// =====================
-const player = new Player();
-let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
-let cameraY = 0;           
-let maxPlatformY = canvas.height;
-
-// =====================
-// SCORE MANAGER
-// =====================
-const ScoreManager = {
-    value: 0,
-    maxY: null, // самая высокая точка игрока
-
-    update(player) {
-        if (this.maxY === null || player.y < this.maxY) {
-            if (this.maxY !== null) {
-                this.value += this.maxY - player.y;
-            }
-            this.maxY = player.y;
-        }
-    },
-
-    reset() {
-        this.value = 0;
-        this.maxY = null;
-    },
-
-    difficultyFactor() {
-        return Math.min(this.value / 500, 1);
-    }
-};
-// =====================
-// PLATFORM SPAWN
-// =====================
-function spawnPlatform(p) {
-    const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
-    const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
-    const y = maxPlatformY - gap;
-
-    // --- новый блок вместо types ---
-    // Сначала выбираем движение
-    const movementTypes = ['static'];
-    if (Math.random() < 0.3 + 0.7 * ScoreManager.difficultyFactor()) movementTypes.push('horizontal');
-    if (Math.random() < 0.2 * ScoreManager.difficultyFactor()) movementTypes.push('vertical');
-    const movementType = pick(movementTypes);
-
-    // Случайно определяем, будет ли платформа ломаться
-    const isBroken = Math.random() < 0.1;
-
-    // Вызываем spawn с новыми параметрами
-    p.spawn(x, y, movementType, isBroken);
-
-    maxPlatformY = y;
-}
-
 // =====================
 // INIT PLATFORMS
 // =====================
 function initPlatforms() {
     maxPlatformY = canvas.height;
-
-    platforms.forEach((p, i) => {
-        if (i === 0) {
-            const x = canvas.width / 2 - CONFIG.PLATFORM_WIDTH / 2;
-            const y = canvas.height - 50;
-            p.spawn(x, y, 'normal');
+    platforms.forEach((p,i)=>{
+        if(i===0){
+            const x = canvas.width/2 - CONFIG.PLATFORM_WIDTH/2;
+            const y = canvas.height-50;
+            p.spawn(x, y, 'static');
             player.y = p.y - player.size;
             maxPlatformY = y;
-        } else {
-            spawnPlatform(p);
-        }
+        } else spawnPlatform(p);
     });
 }
 initPlatforms();
@@ -363,26 +327,23 @@ initPlatforms();
 // INPUT
 // =====================
 let inputX = 0;
-canvas.addEventListener('touchstart', e => {
+canvas.addEventListener('touchstart', e=>{
     e.preventDefault();
-    inputX = e.touches[0].clientX < canvas.width / 2 ? -1 : 1;
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
+    inputX = e.touches[0].clientX < canvas.width/2 ? -1 : 1;
+},{passive:false});
+canvas.addEventListener('touchend', e=>{
     e.preventDefault();
     inputX = 0;
-}, { passive: false });
+},{passive:false});
 
 // =====================
-// CAMERA UPDATE
+// CAMERA
 // =====================
 function updateCamera() {
     const minY = canvas.height * 0.65;
     const targetY = Math.min(player.y - minY, cameraY);
-    cameraY += (targetY - cameraY) * 0.18; // всегда плавно вверх
+    cameraY += (targetY - cameraY) * 0.18;
 }
-
-
 
 // =====================
 // GAME LOOP
@@ -390,36 +351,40 @@ function updateCamera() {
 function update() {
     player.update(inputX);
 
-    platforms.forEach(p => {
+    platforms.forEach(p=>{
         p.update();
         p.checkCollision(player);
-        if (!p.active) spawnPlatform(p);
+        if(!p.active) spawnPlatform(p);
     });
+
+    enemyPool.forEach(e=>e.update());
+    trySpawnEnemy();
 
     ScoreManager.update(player);
     updateCamera();
 
     // Game Over
-    if (player.y - cameraY > canvas.height) {
+    if(player.y - cameraY > canvas.height){
         alert('Game Over');
         player.reset();
         initPlatforms();
+        resetEnemies();
         cameraY = 0;
         ScoreManager.reset();
     }
 }
 
-
 function draw() {
     ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    platforms.forEach(p => p.draw(cameraY));
+    platforms.forEach(p=>p.draw(cameraY));
     player.draw(cameraY);
+    enemyPool.forEach(e=>e.draw(cameraY));
 
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20,30);
 }
 
 function loop() {
