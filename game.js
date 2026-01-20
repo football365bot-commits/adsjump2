@@ -80,7 +80,7 @@ class Platform {
         this.vy = 0;
         this.amplitude = 0;
         this.active = false;
-        this.used = false;
+        this.used = false; // для сломанных платформ
     }
 
     spawn(x, y, type) {
@@ -105,6 +105,7 @@ class Platform {
         if (!this.active) return;
         this.prevY = this.y;
 
+        // движение платформ
         if (this.type === 'moving_slow' || this.type === 'moving_fast') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
@@ -115,9 +116,8 @@ class Platform {
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
-        if (this.y - cameraY > canvas.height) {
-            this.active = false;
-        }
+        // если ушла за экран вниз — деактивируем
+        if (this.y - cameraY > canvas.height) this.active = false;
     }
 
     draw(cameraY) {
@@ -145,9 +145,9 @@ class Platform {
             player.x < this.x + CONFIG.PLATFORM_WIDTH
         ) {
             if (this.type === 'broken') {
-                if (this.used) return false;
-                this.used = true;
-                this.active = false; 
+                if (this.used) return false; // если уже сломана
+                this.used = true; // сломалась
+                this.active = false; // исчезает
             }
 
             player.vy = -player.jumpForce;
@@ -162,8 +162,40 @@ class Platform {
 // =====================
 const player = new Player();
 let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
-let cameraY = 0;           // единое значение камеры
+let cameraY = 0;           
 let maxPlatformY = canvas.height;
+
+// =====================
+// SCORE MANAGER (для прогрессии сложности)
+// =====================
+const ScoreManager = {
+    value: 0,
+    lastPlayerY: player.y,
+    startedJump: false,
+
+    update(player) {
+        if (!this.startedJump && player.vy < 0) {
+            this.startedJump = true;
+            this.lastPlayerY = player.y;
+        }
+
+        if (this.startedJump && player.y < this.lastPlayerY) {
+            this.value += (this.lastPlayerY - player.y);
+        }
+
+        this.lastPlayerY = player.y;
+    },
+
+    reset() {
+        this.value = 0;
+        this.lastPlayerY = player.y;
+        this.startedJump = false;
+    },
+
+    difficultyFactor() {
+        return Math.min(this.value / 500, 1); // 0 → 1
+    }
+};
 
 // =====================
 // PLATFORM SPAWN
@@ -171,9 +203,18 @@ let maxPlatformY = canvas.height;
 function spawnPlatform(p) {
     const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
     const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
-    const y = maxPlatformY - gap;
-    const type = pick(['normal', 'moving_slow', 'moving_fast', 'moving_vertical', 'broken']);
 
+    // выбор типа платформы на основе score
+    const factor = ScoreManager.difficultyFactor();
+    const types = ['normal'];
+    if (Math.random() < 0.3 + 0.7 * factor) types.push('moving_slow');
+    if (Math.random() < 0.2 * factor) types.push('moving_fast');
+    if (Math.random() < 0.2 * factor) types.push('moving_vertical');
+    if (Math.random() < 0.1 * factor) types.push('broken');
+
+    const type = pick(types);
+
+    const y = maxPlatformY - gap;
     p.spawn(x, y, type);
     maxPlatformY = y;
 }
@@ -216,19 +257,14 @@ canvas.addEventListener('touchend', e => {
 // CAMERA UPDATE
 // =====================
 function updateCamera() {
-    // Камера всегда следует за игроком вверх, вниз почти не двигается
     const minY = canvas.height * 0.65;
     const targetY = Math.min(player.y - minY, cameraY);
-    cameraY += (targetY - cameraY) * 0.18;
+    cameraY += (targetY - cameraY) * 0.18; // всегда плавно вверх
 }
 
 // =====================
 // GAME LOOP
 // =====================
-let score = 0;
-let lastPlayerY = player.y;
-let startedJump = false;
-
 function update() {
     player.update(inputX);
 
@@ -239,16 +275,7 @@ function update() {
         if (!p.active) spawnPlatform(p);
     });
 
-    // Score
-    if (!startedJump && player.vy < 0) {
-        startedJump = true;
-        lastPlayerY = player.y;
-    }
-    if (startedJump && player.y < lastPlayerY) {
-        score += (lastPlayerY - player.y);
-    }
-    lastPlayerY = player.y;
-
+    ScoreManager.update(player);
     updateCamera();
 
     // Game Over
@@ -256,9 +283,8 @@ function update() {
         alert('Game Over');
         player.reset();
         initPlatforms();
-        cameraY = 0;  // камера всегда одно и то же значение при рестарте
-        startedJump = false;
-        score = 0;
+        cameraY = 0;
+        ScoreManager.reset();
     }
 }
 
@@ -271,7 +297,7 @@ function draw() {
 
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${Math.floor(score)}`, 20, 30);
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
 }
 
 function loop() {
