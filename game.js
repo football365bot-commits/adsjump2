@@ -165,7 +165,32 @@ let platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform(
 let cameraY = 0;           
 let maxPlatformY = canvas.height;
 
+// =====================
+// SCORE MANAGER
+// =====================
+const ScoreManager = {
+    value: 0,
+    lastPlayerY: player.y,
+    startedJump: false,
 
+    update(player) {
+        // начисление очков только при движении вверх
+        if (player.y < this.lastPlayerY) {
+            this.value += this.lastPlayerY - player.y;
+        }
+        this.lastPlayerY = player.y;
+    },
+
+    reset() {
+        this.value = 0;
+        this.lastPlayerY = player.y;
+        this.startedJump = false;
+    },
+
+    difficultyFactor() {
+        return Math.min(this.value / 500, 1);
+    }
+};
 // =====================
 // PLATFORM SPAWN
 // =====================
@@ -231,32 +256,7 @@ function updateCamera() {
     cameraY += (targetY - cameraY) * 0.18; // всегда плавно вверх
 }
 
-// =====================
-// SCORE MANAGER
-// =====================
-const ScoreManager = {
-    value: 0,
-    lastPlayerY: player.y,
-    startedJump: false,
 
-    update(player) {
-        // начисление очков только при движении вверх
-        if (player.y < this.lastPlayerY) {
-            this.value += this.lastPlayerY - player.y;
-        }
-        this.lastPlayerY = player.y;
-    },
-
-    reset() {
-        this.value = 0;
-        this.lastPlayerY = player.y;
-        this.startedJump = false;
-    },
-
-    difficultyFactor() {
-        return Math.min(this.value / 500, 1);
-    }
-};
 
 // =====================
 // GAME LOOP
