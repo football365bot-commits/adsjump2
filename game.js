@@ -147,6 +147,7 @@ class Platform {
             if (this.type === 'broken') {
                 if (this.used) return false;
                 this.used = true;
+                this.active = false; 
             }
 
             player.vy = -player.jumpForce;
