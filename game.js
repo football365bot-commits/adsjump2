@@ -174,8 +174,8 @@ const ScoreManager = {
     startedJump: false,
 
     update(player) {
-        // начисление очков только при движении вверх
-        if (player.y < this.lastPlayerY) {
+    // начисление очков только если игрок прыгает (vy < 0) и движется вверх
+        if (player.vy < 0 && player.y < this.lastPlayerY) {
             this.value += this.lastPlayerY - player.y;
         }
         this.lastPlayerY = player.y;
