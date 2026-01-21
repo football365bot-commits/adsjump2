@@ -177,9 +177,11 @@ class Player {
         
         this.updateTarget();
 
-        else if (this.target) {
+        if (this.shootCooldown <= 0 && this.target) {
             ShootingSystem.requestShot('player', this, this.target);
             this.shootCooldown = 10; // 6 выстрелов в секунду при 60 FPS
+        } else if (this.shootCooldown > 0) {
+            this.shootCooldown--;
         }
     }
 
@@ -408,13 +410,7 @@ function updateCamera() {
 spawnEntities(true);
 
 function update() {
-    player.update(inputX);
-
-    platforms.forEach(p => { p.update(); p.checkCollision(player); });
-    enemies.forEach(e => e.update());
-
-    spawnEntities();
-    function update() {
+    
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
