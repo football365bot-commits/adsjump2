@@ -115,6 +115,7 @@ class Player {
     constructor() {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
+        this.shootCooldown = 0;
         this.reset();
     }
 
@@ -134,9 +135,15 @@ class Player {
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
 
-        // автоматическая стрельба по ближайшему врагу
-        const target = enemies.find(e => e.active);
-        if (target) this.shootAt(target);
+        if (this.shootCooldown > 0) {
+            this.shootCooldown--;
+        } else {
+            const target = enemies.find(e => e.active);
+            if (target) {
+                this.shootAt(target);
+                this.shootCooldown = 10; // 6 выстрелов в секунду при 60 FPS
+            }
+        }
     }
 
     shootAt(target) {
