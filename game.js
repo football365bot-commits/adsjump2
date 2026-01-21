@@ -93,7 +93,7 @@ function updateBullets() {
         if (b.owner === 'enemy') {
             if (b.x > player.x && b.x < player.x + CONFIG.PLAYER_SIZE &&
                 b.y > player.y && b.y < player.y + CONFIG.PLAYER_SIZE) {
-                player.vy = -CONFIG.BASE_JUMP_FORCE; // игрок получает отскок при попадании
+                player.hp -= b.damage;
                 b.active = false;
             }
         }
@@ -408,6 +408,7 @@ function update() {
         player.reset();
         ScoreManager.reset();
         cameraY = 0;
+        bulletPool.forEach(b => b.active = false);
         spawnEntities(true);
     }
 }
