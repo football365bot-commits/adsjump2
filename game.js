@@ -38,6 +38,10 @@ const CONFIG = {
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
+function isOnScreen(obj) {
+    return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 && obj.y - cameraY < canvas.height;
+}
+
 // =====================
 // GLOBAL STATE
 // =====================
@@ -141,23 +145,8 @@ class Player {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
-        this.target = null;
-        this.targetCooldown = 0;
         this.reset();
     }
-    updateTarget() {
-        
-        if (this.target && this.target.active) return;
-
-        if (this.targetCooldown > 0) {
-            this.targetCooldown--;
-            return;
-        }
-
-        this.target = enemies.find(e => e.active) || null;
-        this.targetCooldown = 15; // проверяем раз в 15 кадров (~4 раза в секунду)
-    }
-
 
     reset() {
         this.x = canvas.width / 2;
@@ -174,13 +163,16 @@ class Player {
         this.lastY = this.y;
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
-        
-        this.updateTarget();
 
-        if (this.shootCooldown <= 0 && this.target) {
-            ShootingSystem.requestShot('player', this, this.target);
-            this.shootCooldown = 10; // 6 выстрелов в секунду при 60 FPS
-        } else if (this.shootCooldown > 0) {
+        // ---- Fire Logic ----
+        if (this.shootCooldown <= 0) {
+            // находим активного врага на экране
+            const target = enemies.find(e => e.active && isOnScreen(e));
+            if (target && isOnScreen(this)) {
+                ShootingSystem.requestShot('player', this, target);
+                this.shootCooldown = 10; // 6 выстрелов в секунду
+            }
+        } else {
             this.shootCooldown--;
         }
     }
@@ -196,7 +188,7 @@ class Player {
 // =====================
 class Enemy {
     constructor() {
-        this.shootCooldown = 0; // кадры до следующего выстрела
+        this.shootCooldown = 0;
         this.reset();
     }
 
@@ -226,6 +218,7 @@ class Enemy {
     update() {
         if (!this.active) return;
 
+        // движение
         if (this.type === 'horizontal') {
             this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.ENEMY_SIZE > canvas.width) this.vx *= -1;
@@ -236,19 +229,17 @@ class Enemy {
                 this.vy *= -1;
         }
 
-        // стрельба по игроку
+        // ---- Fire Logic ----
         if (this.shootCooldown <= 0) {
-            this.shootAtPlayer();
-            this.shootCooldown = CONFIG.ENEMY_SHOOT_INTERVAL;
+            if (isOnScreen(this) && isOnScreen(player)) {
+                ShootingSystem.requestShot('enemy', this, player);
+                this.shootCooldown = CONFIG.ENEMY_SHOOT_INTERVAL;
+            }
         } else {
             this.shootCooldown--;
         }
 
         if (this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
-    }
-
-    shootAtPlayer() {
-        ShootingSystem.requestShot('enemy', this, player);
     }
 
     draw(cameraY) {
