@@ -25,7 +25,10 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 10,
-    ENEMY_BASE_CHANCE: 0.002
+    ENEMY_BASE_CHANCE: 0.002,
+    BULLET_POOL_SIZE: 500,
+    BULLET_SPEED: 12,
+    BULLET_DAMAGE: 10
 };
 
 // =====================
@@ -33,6 +36,69 @@ const CONFIG = {
 // =====================
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+// =====================
+// BULLET POOL
+// =====================
+const bulletPool = Array.from({ length: CONFIG.BULLET_POOL_SIZE }, () => ({
+    active: false,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    owner: null,
+    damage: CONFIG.BULLET_DAMAGE
+}));
+
+function getBullet() {
+    return bulletPool.find(b => !b.active) || null;
+}
+
+function updateBullets() {
+    for (const b of bulletPool) {
+        if (!b.active) continue;
+
+        // движение
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // сразу возвращаем пулю в пул, если вышла за экран
+        if (b.x < 0 || b.x > canvas.width || b.y - cameraY < 0 || b.y - cameraY > canvas.height) {
+            b.active = false;
+            continue;
+        }
+
+        // попадание игрока по врагам
+        if (b.owner === 'player') {
+            for (const e of enemies) {
+                if (!e.active) continue;
+                if (b.x > e.x && b.x < e.x + CONFIG.ENEMY_SIZE &&
+                    b.y > e.y && b.y < e.y + CONFIG.ENEMY_SIZE) {
+                    e.hp -= b.damage;
+                    b.active = false; // сразу в пул
+                    break;
+                }
+            }
+        }
+
+        // попадание врага по игроку
+        if (b.owner === 'enemy') {
+            if (b.x > player.x && b.x < player.x + player.size &&
+                b.y > player.y && b.y < player.y + player.size) {
+                player.hp -= b.damage;
+                b.active = false; // сразу в пул
+            }
+        }
+    }
+}
+
+function drawBullets() {
+    for (const b of bulletPool) {
+        if (!b.active) continue;
+        ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff8800';
+        ctx.fillRect(b.x - 4, b.y - cameraY - 4, 8, 8);
+    }
+}
 
 // =====================
 // PLAYER
@@ -49,6 +115,7 @@ class Player {
         this.y = canvas.height - 50;
         this.vy = 0;
         this.lastY = this.y;
+        this.hp = 100;
     }
 
     update(inputX) {
@@ -65,90 +132,21 @@ class Player {
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
-}
 
-// =====================
-// PLATFORM
-// =====================
-class Platform {
-    constructor() { this.reset(); }
+    shoot(target) {
+        const bullet = getBullet();
+        if (!bullet) return;
 
-    reset() {
-        this.x = this.y = this.prevY = this.baseY = 0;
-        this.movementType = 'static';
-        this.isBroken = false;
-        this.vx = this.vy = this.amplitude = 0;
-        this.active = false;
-        this.used = false;
-    }
+        const dx = (target.x + CONFIG.ENEMY_SIZE / 2) - (this.x + this.size / 2);
+        const dy = (target.y + CONFIG.ENEMY_SIZE / 2) - (this.y + this.size / 2);
+        const dist = Math.hypot(dx, dy) || 1;
 
-    spawn(x, y, movementType, isBroken) {
-        this.reset();
-        this.x = x;
-        this.y = this.prevY = this.baseY = y;
-        this.movementType = movementType;
-        this.isBroken = isBroken;
-        this.active = true;
-
-        if (movementType === 'horizontal')
-            this.vx = rand(1, 3) * (Math.random() < 0.5 ? -1 : 1);
-
-        if (movementType === 'vertical') {
-            this.vy = rand(1, 2);
-            this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP);
-        }
-    }
-
-    update() {
-        if (!this.active) return;
-        this.prevY = this.y;
-
-        if (this.movementType === 'horizontal') {
-            this.x += this.vx;
-            if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
-        }
-
-        if (this.movementType === 'vertical') {
-            this.y += this.vy;
-            if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude)
-                this.vy *= -1;
-        }
-
-        if (this.y - cameraY > canvas.height) this.active = false;
-    }
-
-    draw(cameraY) {
-        if (!this.active) return;
-        ctx.fillStyle =
-            this.isBroken ? '#ff4444' :
-            this.movementType === 'vertical' ? '#8888ff' :
-            this.movementType === 'horizontal' ? '#00ffff' :
-            '#00ff88';
-        ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
-    }
-
-    checkCollision(player) {
-        if (!this.active) return false;
-
-        const prevBottom = player.lastY + player.size;
-        const currBottom = player.y + player.size;
-
-        if (
-            player.vy > 0 &&
-            prevBottom <= this.prevY + CONFIG.PLATFORM_HEIGHT &&
-            currBottom >= this.prevY &&
-            player.x + player.size > this.x &&
-            player.x < this.x + CONFIG.PLATFORM_WIDTH
-        ) {
-            if (this.isBroken) {
-                if (this.used) return false;
-                this.used = true;
-                this.active = false;
-            }
-            player.vy = -player.jumpForce;
-            return true;
-        }
-        return false;
+        bullet.active = true;
+        bullet.owner = 'player';
+        bullet.x = this.x + this.size / 2;
+        bullet.y = this.y + this.size / 2;
+        bullet.vx = dx / dist * CONFIG.BULLET_SPEED;
+        bullet.vy = dy / dist * CONFIG.BULLET_SPEED;
     }
 }
 
@@ -194,6 +192,11 @@ class Enemy {
                 this.vy *= -1;
         }
 
+        // стрельба по игроку
+        if (this.active && Math.random() < 0.02) { // пример: 2% шанс на кадр
+            this.shoot(player);
+        }
+
         if (this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
     }
 
@@ -201,6 +204,23 @@ class Enemy {
         if (!this.active) return;
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
+    }
+
+    shoot(target) {
+        const bullet = getBullet();
+        if (!bullet) return;
+
+        const dx = (target.x + target.size / 2) - (this.x + CONFIG.ENEMY_SIZE / 2);
+        const dy = (target.y + target.size / 2) - (this.y + CONFIG.ENEMY_SIZE / 2);
+        const dist = Math.hypot(dx, dy) || 1;
+
+        bullet.active = true;
+        bullet.owner = 'enemy';
+        bullet.x = this.x + CONFIG.ENEMY_SIZE / 2;
+        bullet.y = this.y + CONFIG.ENEMY_SIZE / 2;
+        bullet.vx = dx / dist * CONFIG.BULLET_SPEED;
+        bullet.vy = dy / dist * CONFIG.BULLET_SPEED;
+        bullet.damage = 10;
     }
 }
 
@@ -210,7 +230,6 @@ class Enemy {
 const player = new Player();
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
-
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 
@@ -236,7 +255,7 @@ const ScoreManager = {
 };
 
 // =====================
-// UNIVERSAL SPAWN / RESET
+// SPAWN / RESET
 // =====================
 function spawnEntities(isReset = false) {
     const factor = ScoreManager.difficultyFactor();
@@ -316,6 +335,11 @@ function update() {
     enemies.forEach(e => e.update());
     spawnEntities();
 
+    // авто-выстрел игрока по первому активному врагу
+    const target = enemies.find(e => e.active);
+    if (target) player.shoot(target);
+
+    updateBullets();
     ScoreManager.update(player);
     updateCamera();
 
@@ -324,6 +348,7 @@ function update() {
         player.reset();
         ScoreManager.reset();
         cameraY = 0;
+        bulletPool.forEach(b => b.active = false); // обнулить пул
         spawnEntities(true);
     }
 }
@@ -335,6 +360,7 @@ function draw() {
     platforms.forEach(p => p.draw(cameraY));
     enemies.forEach(e => e.draw(cameraY));
     player.draw(cameraY);
+    drawBullets();
 
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
