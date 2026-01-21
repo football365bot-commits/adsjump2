@@ -25,12 +25,21 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 10,
-    ENEMY_BASE_CHANCE: 0.002,
+
+    // --- враги ---
+    ENEMY_SPAWN_CHANCE: 0.005,
+    ENEMY_SHOOT_INTERVAL: 80,   // кадры между выстрелами врага
+    ENEMY_DAMAGE: 10,            // урон врага
+    ENEMY_HP: 50,                // здоровье врага
+
+    // --- игрок ---
+    PLAYER_BULLET_DAMAGE: 10,    // урон игрока
+    PLAYER_SHOOT_COOLDOWN: 10,   // кадры между выстрелами
+
+    // --- пули ---
     BULLET_POOL_SIZE: 500,
-    BULLET_SPEED: 12,
-    BULLET_DAMAGE: 10,
-    ENEMY_SHOOT_INTERVAL: 80 // кадры между выстрелами врага
-};
+    BULLET_SPEED: 20,
+}; 
 
 // =====================
 // UTILS
@@ -86,8 +95,9 @@ function updateBullets() {
                 if (!e.active) continue;
                 if (b.x > e.x && b.x < e.x + CONFIG.ENEMY_SIZE &&
                     b.y > e.y && b.y < e.y + CONFIG.ENEMY_SIZE) {
-                    e.hp -= b.damage;
+                    e.hp -= CONFIG.PLAYER_BULLET_DAMAGE;
                     b.active = false;
+                    if (e.hp <= 0) e.active = false;
                     break;
                 }
             }
@@ -97,7 +107,7 @@ function updateBullets() {
         if (b.owner === 'enemy') {
             if (b.x > player.x && b.x < player.x + CONFIG.PLAYER_SIZE &&
                 b.y > player.y && b.y < player.y + CONFIG.PLAYER_SIZE) {
-                player.hp -= b.damage;
+                player.hp -= CONFIG.ENEMY_DAMAGE;
                 b.active = false;
             }
         }
@@ -108,7 +118,7 @@ function drawBullets() {
     for (const b of bulletPool) {
         if (!b.active) continue;
         ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff8800';
-        ctx.fillRect(b.x - 4, b.y - cameraY - 4, 8, 8);
+        ctx.fillRect(b.x - 2, b.y - cameraY - 4, 8, 8);
     }
 }
 const ShootingSystem = {
@@ -145,6 +155,7 @@ class Player {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
+        this.hp = 100;
         this.reset();
     }
 
@@ -153,6 +164,7 @@ class Player {
         this.y = canvas.height - 50;
         this.vy = 0;
         this.lastY = this.y;
+        this.hp = 100;
     }
 
     update(inputX) {
@@ -365,10 +377,11 @@ function spawnEntities(isReset = false) {
     });
 
     enemies.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_BASE_CHANCE + 0.003 * factor) {
+        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.003 * ScoreManager.difficultyFactor()) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
-            const y = cameraY - CONFIG.ENEMY_SIZE;
+            const y = cameraY - CONFIG.ENEMY_SIZE; // спаун сверху экрана
             e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
+            e.hp = CONFIG.ENEMY_HP; // задаем HP из конфига
         }
     });
 }
