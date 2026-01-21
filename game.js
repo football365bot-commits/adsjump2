@@ -25,6 +25,7 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 10,
+    MAX_ITEMS: 30;
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.005,
@@ -318,13 +319,94 @@ class Platform {
         return false;
     }
 }
+// =====================
+// ITEM CLASS (с пулом)
+// =====================
+class Item {
+    constructor() {
+        this.active = false;
+        this.x = 0;
+        this.y = 0;
+        this.size = 20;
+        this.type = null;
+        this.platform = null; // платформа, на которой висит
+    }
 
+    spawn(platform) {
+        if (!platform) return;
+
+        const rand = Math.random();
+        if (rand < 0.004) this.type = 'rocket';
+        else if (rand < 0.008) this.type = 'drone';
+        else if (rand < 0.015) this.type = 'trampoline';
+        else if (rand < 0.025) this.type = 'bomb';
+        else if (rand < 0.040) this.type = 'spikes';
+        else if (rand < 0.050) this.type = 'adrenaline';
+        else if (rand < 0.075) this.type = 'medkit';
+        else return; // не спавним, если шанс не прошёл
+
+        this.active = true;
+        this.platform = platform;
+        this.x = platform.x + PLATFORM_WIDTH / 2 - this.size / 2;
+        this.y = platform.y + PLATFORM_HEIGHT + 5;
+    }
+
+    update() {
+        if (!this.active) return;
+        if (!this.platform || !this.platform.active) {
+            this.active = false;
+            this.platform = null;
+            return;
+        }
+
+        // предмет двигается вместе с платформой
+        this.x = this.platform.x + PLATFORM_WIDTH / 2 - this.size / 2;
+        this.y = this.platform.y + PLATFORM_HEIGHT + 5;
+
+        // проверка столкновения с игроком
+        if (
+            player.x + PLAYER_SIZE > this.x &&
+            player.x < this.x + this.size &&
+            player.y + PLAYER_SIZE > this.y &&
+            player.y < this.y + this.size
+        ) {
+            switch(this.type) {
+                case 'trampoline': player.vy += 5; break;
+                case 'drone': player.vy += 35; break;
+                case 'rocket': player.vy += 75; break;
+                case 'spikes': player.hp -= 1; break;
+                case 'bomb': player.hp -= 5; break;
+                case 'medkit': player.hp = Math.min(player.hp + 1, 100); break;
+                case 'adrenaline': player.hp = Math.min(player.hp + 5, 100); break;
+            }
+            this.active = false;
+            this.platform = null;
+        }
+    }
+
+    draw() {
+        if (!this.active) return;
+        let color = '#fff';
+        switch(this.type) {
+            case 'trampoline': color = '#ffff00'; break;
+            case 'drone': color = '#ff8800'; break;
+            case 'rocket': color = '#ff0000'; break;
+            case 'spikes': color = '#888888'; break;
+            case 'bomb': color = '#000000'; break;
+            case 'medkit': color = '#00ff00'; break;
+            case 'adrenaline': color = '#ff00ff'; break;
+        }
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x, canvas.height - this.y - this.size, this.size, this.size);
+    }
+}
 // =====================
 // GAME STATE
 // =====================
 const player = new Player();
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
+const itemPool = Array.from({ length: MAX_ITEMS }, () => new Item());
 
 // =====================
 // SCORE
@@ -387,6 +469,12 @@ function spawnEntities(isReset = false) {
 }
 
 // =====================
+// СПАВН ПРЕДМЕТОВ НА ПЛАТФОРМАХ
+function spawnItem(platform) {
+    const item = getItemFromPool();
+    if (item) item.spawn(platform);
+}
+// =====================
 // INPUT
 // =====================
 let inputX = 0;
@@ -439,6 +527,8 @@ function update() {
         spawnEntities(true);
     }
 }
+function updateItems() { itemPool.forEach(i => i.update()); }
+
 
 function draw() {
     ctx.fillStyle = '#111';
@@ -454,6 +544,7 @@ function draw() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
 }
+function drawItems() { itemPool.forEach(i => i.draw()); }
 
 function loop() {
     update();
