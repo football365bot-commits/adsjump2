@@ -107,7 +107,32 @@ function drawBullets() {
         ctx.fillRect(b.x - 4, b.y - cameraY - 4, 8, 8);
     }
 }
+const ShootingSystem = {
+    requests: [], // очередь выстрелов
+    requestShot(owner, shooter, target) {
+        // просто сохраняем запрос на выстрел
+        this.requests.push({ owner, shooter, target });
+    },
+    processShots() {
+        // обрабатываем все запросы и создаем пули
+        this.requests.forEach(req => {
+            const bullet = getBullet();
+            if (!bullet) return;
 
+            const dx = (req.target.x + CONFIG.ENEMY_SIZE / 2) - (req.shooter.x + CONFIG.PLAYER_SIZE / 2);
+            const dy = (req.target.y + CONFIG.ENEMY_SIZE / 2) - (req.shooter.y + CONFIG.PLAYER_SIZE / 2);
+            const dist = Math.hypot(dx, dy) || 1;
+
+            bullet.active = true;
+            bullet.owner = req.owner;
+            bullet.x = req.shooter.x + CONFIG.PLAYER_SIZE / 2;
+            bullet.y = req.shooter.y + CONFIG.PLAYER_SIZE / 2;
+            bullet.vx = dx / dist * bullet.speed;
+            bullet.vy = dy / dist * bullet.speed;
+        });
+        this.requests = []; // чистим очередь
+    }
+};
 // =====================
 // PLAYER
 // =====================
@@ -116,8 +141,23 @@ class Player {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
+        this.target = null;
+        this.targetCooldown = 0;
         this.reset();
     }
+    updateTarget() {
+        
+        if (this.target && this.target.active) return;
+
+        if (this.targetCooldown > 0) {
+            this.targetCooldown--;
+            return;
+        }
+
+        this.target = enemies.find(e => e.active) || null;
+        this.targetCooldown = 15; // проверяем раз в 15 кадров (~4 раза в секунду)
+    }
+
 
     reset() {
         this.x = canvas.width / 2;
@@ -134,32 +174,13 @@ class Player {
         this.lastY = this.y;
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
+        
+        this.updateTarget();
 
-        if (this.shootCooldown > 0) {
-            this.shootCooldown--;
-        } else {
-            const target = enemies.find(e => e.active);
-            if (target) {
-                this.shootAt(target);
-                this.shootCooldown = 10; // 6 выстрелов в секунду при 60 FPS
-            }
+        else if (this.target) {
+            ShootingSystem.requestShot('player', this, this.target);
+            this.shootCooldown = 10; // 6 выстрелов в секунду при 60 FPS
         }
-    }
-
-    shootAt(target) {
-        const bullet = getBullet();
-        if (!bullet) return;
-
-        const dx = (target.x + CONFIG.ENEMY_SIZE / 2) - (this.x + this.size / 2);
-        const dy = (target.y + CONFIG.ENEMY_SIZE / 2) - (this.y + this.size / 2);
-        const dist = Math.hypot(dx, dy) || 1;
-
-        bullet.active = true;
-        bullet.owner = 'player';
-        bullet.x = this.x + this.size / 2;
-        bullet.y = this.y + this.size / 2;
-        bullet.vx = dx / dist * bullet.speed;
-        bullet.vy = dy / dist * bullet.speed;
     }
 
     draw(cameraY) {
@@ -225,19 +246,7 @@ class Enemy {
     }
 
     shootAtPlayer() {
-        const bullet = getBullet();
-        if (!bullet) return;
-
-        const dx = (player.x + CONFIG.PLAYER_SIZE / 2) - (this.x + CONFIG.ENEMY_SIZE / 2);
-        const dy = (player.y + CONFIG.PLAYER_SIZE / 2) - (this.y + CONFIG.ENEMY_SIZE / 2);
-        const dist = Math.hypot(dx, dy) || 1;
-
-        bullet.active = true;
-        bullet.owner = 'enemy';
-        bullet.x = this.x + CONFIG.ENEMY_SIZE / 2;
-        bullet.y = this.y + CONFIG.ENEMY_SIZE / 2;
-        bullet.vx = dx / dist * bullet.speed;
-        bullet.vy = dy / dist * bullet.speed;
+        ShootingSystem.requestShot('enemy', this, player);
     }
 
     draw(cameraY) {
@@ -405,6 +414,25 @@ function update() {
     enemies.forEach(e => e.update());
 
     spawnEntities();
+    function update() {
+    player.update(inputX);
+    platforms.forEach(p => { p.update(); p.checkCollision(player); });
+    enemies.forEach(e => e.update());
+    spawnEntities();
+    ShootingSystem.processShots();
+    updateBullets();
+    ScoreManager.update(player);
+    updateCamera();
+
+    if (player.y - cameraY > canvas.height) {
+        alert('Game Over');
+        player.reset();
+        ScoreManager.reset();
+        cameraY = 0;
+        bulletPool.forEach(b => b.active = false);
+        spawnEntities(true);
+    }
+}
 
     updateBullets();
     ScoreManager.update(player);
