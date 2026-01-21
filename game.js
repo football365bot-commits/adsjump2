@@ -25,7 +25,7 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 5,
-    MAX_ITEMS: 30;
+    MAX_ITEMS: 30,
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.005,
@@ -329,7 +329,7 @@ class Item {
         this.y = 0;
         this.size = 20;
         this.type = null;
-        this.platform = null; // платформа, на которой висит
+        this.platform = null; // платформа, на которой предмет "висит"
     }
 
     spawn(platform) {
@@ -343,7 +343,7 @@ class Item {
         else if (rand < 0.040) this.type = 'spikes';
         else if (rand < 0.050) this.type = 'adrenaline';
         else if (rand < 0.075) this.type = 'medkit';
-        else return; // не спавним, если шанс не прошёл
+        else return; // шанс не прошёл — предмет не создаём
 
         this.active = true;
         this.platform = platform;
@@ -359,7 +359,7 @@ class Item {
             return;
         }
 
-        // предмет двигается вместе с платформой
+        // движемся вместе с платформой
         this.x = this.platform.x + PLATFORM_WIDTH / 2 - this.size / 2;
         this.y = this.platform.y + PLATFORM_HEIGHT + 5;
 
@@ -406,8 +406,7 @@ class Item {
 const player = new Player();
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
-const itemPool = Array.from({ length: MAX_ITEMS }, () => new Item());
-
+const itemPool = Array.from({ length: CONFIG.MAX_ITEMS }, () => new Item());
 // =====================
 // SCORE
 // =====================
@@ -423,7 +422,9 @@ const ScoreManager = {
     reset() { this.value = 0; this.maxY = null; },
     difficultyFactor() { return Math.min(this.value / 500, 1); }
 };
-
+function getItemFromPool() {
+    return itemPool.find(item => !item.active) || null;
+}
 // =====================
 // SPAWN ENTITIES
 // =====================
@@ -469,12 +470,6 @@ function spawnEntities(isReset = false) {
 }
 
 // =====================
-// СПАВН ПРЕДМЕТОВ НА ПЛАТФОРМАХ
-function spawnItem(platform) {
-    const item = getItemFromPool();
-    if (item) item.spawn(platform);
-}
-// =====================
 // INPUT
 // =====================
 let inputX = 0;
@@ -506,6 +501,7 @@ function update() {
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
     spawnEntities();
+    updateItems();
 
     // обработка выстрелов через систему
     ShootingSystem.processShots();
@@ -528,6 +524,7 @@ function update() {
     }
 }
 function updateItems() { itemPool.forEach(i => i.update()); }
+
 
 
 function draw() {
