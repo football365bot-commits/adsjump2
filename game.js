@@ -40,60 +40,67 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 // =====================
 // BULLET POOL
 // =====================
-const bulletPool = Array.from({ length: CONFIG.BULLET_POOL_SIZE }, () => ({
+let bulletPool = Array.from({ length: CONFIG.BULLET_POOL_SIZE }, () => ({
     active: false,
     x: 0,
     y: 0,
     vx: 0,
     vy: 0,
-    owner: null,
-    damage: CONFIG.BULLET_DAMAGE
+    speed: CONFIG.BULLET_SPEED,
+    damage: CONFIG.BULLET_DAMAGE,
+    owner: null
 }));
 
 function getBullet() {
-    return bulletPool.find(b => !b.active) || null;
+    for (let i = 0; i < bulletPool.length; i++) {
+        if (!bulletPool[i].active) return bulletPool[i];
+    }
+    return null;
 }
 
 function updateBullets() {
-    for (const b of bulletPool) {
+    for (let b of bulletPool) {
         if (!b.active) continue;
 
-        // движение
         b.x += b.vx;
         b.y += b.vy;
 
-        // сразу возвращаем пулю в пул, если вышла за экран
-        if (b.x < 0 || b.x > canvas.width || b.y - cameraY < 0 || b.y - cameraY > canvas.height) {
+        // Сразу возвращаем пулю, если она вышла за экран
+        if (b.x < 0 || b.x > canvas.width || b.y - cameraY > canvas.height || b.y - cameraY < 0) {
             b.active = false;
             continue;
         }
 
-        // попадание игрока по врагам
+        // Попадание по врагам
         if (b.owner === 'player') {
             for (const e of enemies) {
                 if (!e.active) continue;
-                if (b.x > e.x && b.x < e.x + CONFIG.ENEMY_SIZE &&
-                    b.y > e.y && b.y < e.y + CONFIG.ENEMY_SIZE) {
+                if (
+                    b.x > e.x && b.x < e.x + CONFIG.ENEMY_SIZE &&
+                    b.y > e.y && b.y < e.y + CONFIG.ENEMY_SIZE
+                ) {
                     e.hp -= b.damage;
-                    b.active = false; // сразу в пул
+                    b.active = false;
                     break;
                 }
             }
         }
 
-        // попадание врага по игроку
+        // Попадание по игроку
         if (b.owner === 'enemy') {
-            if (b.x > player.x && b.x < player.x + player.size &&
-                b.y > player.y && b.y < player.y + player.size) {
-                player.hp -= b.damage;
-                b.active = false; // сразу в пул
+            if (
+                b.x > player.x && b.x < player.x + CONFIG.PLAYER_SIZE &&
+                b.y > player.y && b.y < player.y + CONFIG.PLAYER_SIZE
+            ) {
+                // Тут можно уменьшать здоровье игрока
+                b.active = false;
             }
         }
     }
 }
 
 function drawBullets() {
-    for (const b of bulletPool) {
+    for (let b of bulletPool) {
         if (!b.active) continue;
         ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff8800';
         ctx.fillRect(b.x - 4, b.y - cameraY - 4, 8, 8);
@@ -115,7 +122,6 @@ class Player {
         this.y = canvas.height - 50;
         this.vy = 0;
         this.lastY = this.y;
-        this.hp = 100;
     }
 
     update(inputX) {
@@ -133,20 +139,20 @@ class Player {
         ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
 
-    shoot(target) {
+    shoot(targetX, targetY) {
         const bullet = getBullet();
         if (!bullet) return;
 
-        const dx = (target.x + CONFIG.ENEMY_SIZE / 2) - (this.x + this.size / 2);
-        const dy = (target.y + CONFIG.ENEMY_SIZE / 2) - (this.y + this.size / 2);
+        const dx = targetX - (this.x + this.size / 2);
+        const dy = targetY - (this.y + this.size / 2);
         const dist = Math.hypot(dx, dy) || 1;
 
         bullet.active = true;
         bullet.owner = 'player';
         bullet.x = this.x + this.size / 2;
         bullet.y = this.y + this.size / 2;
-        bullet.vx = dx / dist * CONFIG.BULLET_SPEED;
-        bullet.vy = dy / dist * CONFIG.BULLET_SPEED;
+        bullet.vx = (dx / dist) * bullet.speed;
+        bullet.vy = (dy / dist) * bullet.speed;
     }
 }
 
@@ -154,7 +160,9 @@ class Player {
 // ENEMY
 // =====================
 class Enemy {
-    constructor() { this.reset(); }
+    constructor() {
+        this.reset();
+    }
 
     reset() {
         this.x = this.y = this.vx = this.vy = this.amplitude = this.baseY = 0;
@@ -192,12 +200,10 @@ class Enemy {
                 this.vy *= -1;
         }
 
-        // стрельба по игроку
-        if (this.active && Math.random() < 0.02) { // пример: 2% шанс на кадр
-            this.shoot(player);
-        }
-
         if (this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
+
+        // Авто-стрельба по игроку
+        this.tryShootAtPlayer();
     }
 
     draw(cameraY) {
@@ -206,21 +212,21 @@ class Enemy {
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
     }
 
-    shoot(target) {
-        const bullet = getBullet();
-        if (!bullet) return;
-
-        const dx = (target.x + target.size / 2) - (this.x + CONFIG.ENEMY_SIZE / 2);
-        const dy = (target.y + target.size / 2) - (this.y + CONFIG.ENEMY_SIZE / 2);
-        const dist = Math.hypot(dx, dy) || 1;
-
-        bullet.active = true;
-        bullet.owner = 'enemy';
-        bullet.x = this.x + CONFIG.ENEMY_SIZE / 2;
-        bullet.y = this.y + CONFIG.ENEMY_SIZE / 2;
-        bullet.vx = dx / dist * CONFIG.BULLET_SPEED;
-        bullet.vy = dy / dist * CONFIG.BULLET_SPEED;
-        bullet.damage = 10;
+    tryShootAtPlayer() {
+        if (!this.active) return;
+        const dx = (player.x + CONFIG.PLAYER_SIZE / 2) - (this.x + CONFIG.ENEMY_SIZE / 2);
+        const dy = (player.y + CONFIG.PLAYER_SIZE / 2) - (this.y + CONFIG.ENEMY_SIZE / 2);
+        const dist = Math.hypot(dx, dy);
+        if (dist < 400) { // радиус стрельбы
+            const bullet = getBullet();
+            if (!bullet) return;
+            bullet.active = true;
+            bullet.owner = 'enemy';
+            bullet.x = this.x + CONFIG.ENEMY_SIZE / 2;
+            bullet.y = this.y + CONFIG.ENEMY_SIZE / 2;
+            bullet.vx = (dx / dist) * bullet.speed;
+            bullet.vy = (dy / dist) * bullet.speed;
+        }
     }
 }
 
@@ -230,6 +236,7 @@ class Enemy {
 const player = new Player();
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
+
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 
@@ -255,7 +262,7 @@ const ScoreManager = {
 };
 
 // =====================
-// SPAWN / RESET
+// UNIVERSAL SPAWN / RESET
 // =====================
 function spawnEntities(isReset = false) {
     const factor = ScoreManager.difficultyFactor();
@@ -333,13 +340,10 @@ function update() {
     });
 
     enemies.forEach(e => e.update());
+
     spawnEntities();
-
-    // авто-выстрел игрока по первому активному врагу
-    const target = enemies.find(e => e.active);
-    if (target) player.shoot(target);
-
     updateBullets();
+
     ScoreManager.update(player);
     updateCamera();
 
@@ -348,8 +352,10 @@ function update() {
         player.reset();
         ScoreManager.reset();
         cameraY = 0;
-        bulletPool.forEach(b => b.active = false); // обнулить пул
         spawnEntities(true);
+
+        // Сброс пулей
+        bulletPool.forEach(b => b.active = false);
     }
 }
 
