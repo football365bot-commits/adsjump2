@@ -410,30 +410,22 @@ function updateCamera() {
 spawnEntities(true);
 
 function update() {
-    
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
     spawnEntities();
+
+    // обработка выстрелов через систему
     ShootingSystem.processShots();
+
+    // обновление пуль
     updateBullets();
+
+    // обновление счета и камеры
     ScoreManager.update(player);
     updateCamera();
 
-    if (player.y - cameraY > canvas.height) {
-        alert('Game Over');
-        player.reset();
-        ScoreManager.reset();
-        cameraY = 0;
-        bulletPool.forEach(b => b.active = false);
-        spawnEntities(true);
-    }
-}
-
-    updateBullets();
-    ScoreManager.update(player);
-    updateCamera();
-
+    // проверка падения игрока
     if (player.y - cameraY > canvas.height) {
         alert('Game Over');
         player.reset();
