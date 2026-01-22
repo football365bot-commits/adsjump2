@@ -364,7 +364,7 @@ class Item {
 
         // движемся вместе с платформой
         this.x = this.platform.x + CONFIG.PLATFORM_WIDTH / 2 - this.size / 2;
-        this.y = this.platform.y + CONFIG.PLATFORM_HEIGHT + 5;
+        this.y = this.platform.y - this.size;
 
         // проверка столкновения с игроком
         if (
