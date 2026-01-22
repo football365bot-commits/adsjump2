@@ -570,21 +570,6 @@ function spawnEntities(isReset = false) {
     });
 }
 
-// =====================
-// INPUT
-// =====================
-let inputX = 0;
-canvas.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if (gameState !== GameState.PLAYING) return; // <<< блокируем движение на паузе
-    inputX = e.touches[0].clientX < canvas.width / 2 ? -1 : 1;
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-    e.preventDefault();
-    if (gameState !== GameState.PLAYING) return; // <<< блокируем движение на паузе
-    inputX = 0;
-}, { passive: false });
 
 // =====================
 // CAMERA
