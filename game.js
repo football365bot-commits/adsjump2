@@ -122,25 +122,22 @@ let cameraY = 0;
 let maxPlatformY = canvas.height;
 let startTime = Date.now();
 let gameState = GameState.PLAYING;  // состояние игры
-let pausedTime = 0;    // для корректного таймера
+let displayedTime = 0;
 let inputX = 0;
 
-
-function formatElapsedTime() {
-    if (gameState === GameState.PAUSED) {
-        // если пауза, показываем то же самое время, что и до паузы
-        return _pausedTimeStr || '00:00';
+function updateDisplayedTime() {
+    if (gameState === GameState.PLAYING) {
+        displayedTime = Date.now() - startTime;
     }
+}
 
-    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+function formatElapsedTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`
 
-    _pausedTimeStr = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-    return _pausedTimeStr;
 }
-let _pausedTimeStr = '00:00';
-
 // =====================
 // BULLET POOL
 // =====================
@@ -654,7 +651,7 @@ function draw() {
 
     // Время — просто число, в формате mm:ss
     ctx.textAlign = 'right';
-    ctx.fillText(formatElapsedTime(), canvas.width - 20, 30);
+    ctx.fillText(formatElapsedTime(displayedTime), canvas.width - 20, 30);
 }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
@@ -665,6 +662,7 @@ function loop() {
 
     draw();
     pauseUI.draw(gameState);
+    updateDisplayedTime(); 
 
     requestAnimationFrame(loop);
 }
