@@ -68,7 +68,7 @@ const bulletPool = Array.from({ length: CONFIG.BULLET_POOL_SIZE }, () => ({
     vx: 0,
     vy: 0,
     speed: CONFIG.BULLET_SPEED,
-    damage: CONFIG.BULLET_DAMAGE,
+    damage: CONFIG.PLAYER_BULLET_DAMAGE,
     owner: null
 }));
 
