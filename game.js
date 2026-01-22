@@ -99,17 +99,14 @@ let startTime = Date.now();
 let gameState = GameState.PLAYING;  // состояние игры
 let pausedTime = 0;                  // для корректного таймера
 
-
 function formatElapsedTime() {
     const totalSeconds = Math.floor((Date.now() - startTime - pausedTime) / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
-    const mm = minutes.toString().padStart(2, '0');
-    const ss = seconds.toString().padStart(2, '0');
-
-    return `${mm}:${ss}`;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
+
 // =====================
 // BULLET POOL
 // =====================
