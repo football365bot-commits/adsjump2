@@ -28,7 +28,7 @@ const CONFIG = {
     MAX_ITEMS: 10,
 
     // --- враги ---
-    ENEMY_SPAWN_CHANCE: 0.005,
+    ENEMY_SPAWN_CHANCE: 0.0003,
     ENEMY_SHOOT_INTERVAL: 80,   // кадры между выстрелами врага
     ENEMY_DAMAGE: 10,            // урон врага
     ENEMY_HP: 50,                // здоровье врага
@@ -284,6 +284,8 @@ class Platform {
         this.active = true;
         if (movementType === 'horizontal') this.vx = rand(1, 3) * (Math.random() < 0.5 ? -1 : 1);
         if (movementType === 'vertical') { this.vy = rand(1, 2); this.amplitude = rand(CONFIG.MIN_GAP * 0.5, CONFIG.MIN_GAP); }
+        const newItem = getItemFromPool();
+        if (newItem) newItem.spawn(this);
     }
     update() {
         if (!this.active) return;
@@ -461,8 +463,7 @@ function spawnEntities(isReset = false) {
 
             p.spawn(x, y, pick(types), Math.random() < 0.1);
             maxPlatformY = y;
-            const newItem = getItemFromPool();
-            if (newItem) newItem.spawn(p);
+            
         }
     });
 
