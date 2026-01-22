@@ -169,7 +169,7 @@ class Player {
     }
 
     update(inputX) {
-        this.x += inputX * 12;
+        this.x += inputX * 8;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
