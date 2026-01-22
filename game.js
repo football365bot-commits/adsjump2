@@ -479,8 +479,11 @@ function spawnEntities(isReset = false) {
 
             const factor = ScoreManager.difficultyFactor();
 
-            const minGap = 65 + factor * 15;
-            const maxGap = 100 + factor * 25;
+            const growth = 1 + factor * 0.08;
+            // ↑ 0.15 — скорость роста (очень медленно)
+
+            const minGap = Math.min(85 * growth, 95);
+            const maxGap = Math.min(100 * growth, 105);
 
             const gap = rand(minGap, maxGap);
 
