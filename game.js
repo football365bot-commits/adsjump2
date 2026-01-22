@@ -1,5 +1,4 @@
 
-
 import { PauseUI, GameState } from './pause.js';
 
 // =====================
@@ -647,11 +646,13 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
-    // draw всегда
-draw();
+    if (gameState === GameState.PLAYING) {
+        update();
+    }
 
-// рисуем кнопку паузы поверх всего
-pauseUI.draw(gameState);
+    draw();
+    pauseUI.draw(gameState);
+
     requestAnimationFrame(loop);
 }
 
