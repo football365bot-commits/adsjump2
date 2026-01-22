@@ -28,7 +28,7 @@ const CONFIG = {
     MAX_ITEMS: 10,
 
     // --- враги ---
-    ENEMY_SPAWN_CHANCE: 0.0003,
+    ENEMY_SPAWN_CHANCE: 0.0002,
     ENEMY_SHOOT_INTERVAL: 80,   // кадры между выстрелами врага
     ENEMY_DAMAGE: 10,            // урон врага
     ENEMY_HP: 50,                // здоровье врага
@@ -468,7 +468,7 @@ function spawnEntities(isReset = false) {
     });
 
     enemies.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.003 * ScoreManager.difficultyFactor()) {
+        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.0002 * ScoreManager.difficultyFactor()) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
             const y = cameraY - CONFIG.ENEMY_SIZE; // спаун сверху экрана
             e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
