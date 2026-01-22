@@ -21,7 +21,7 @@ const CONFIG = {
     PLATFORM_WIDTH: 50,
     PLATFORM_HEIGHT: 12,
     MIN_GAP: 85,
-    MAX_GAP: 105,
+    MAX_GAP: 100,
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 5,
@@ -29,7 +29,7 @@ const CONFIG = {
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.00005,
-    ENEMY_SHOOT_INTERVAL: 20,   // кадры между выстрелами врага
+    ENEMY_SHOOT_INTERVAL: 50,   // кадры между выстрелами врага
     ENEMY_DAMAGE: 1,            // урон врага
     ENEMY_HP: 25,                // здоровье врага
 
@@ -429,7 +429,7 @@ const ScoreManager = {
         }
     },
     reset() { this.value = 0; this.maxY = null; },
-    difficultyFactor() { return Math.min(this.value / 500, 1); }
+    difficultyFactor() { return this.value / 2000; }
 };
 
 // =====================
@@ -453,22 +453,28 @@ function spawnEntities(isReset = false) {
 
     platforms.forEach(p => {
         if (!p.active) {
-            const gap = rand(CONFIG.MIN_GAP, CONFIG.MAX_GAP);
+
+            const factor = ScoreManager.difficultyFactor();
+
+            const minGap = 65 + factor * 15;
+            const maxGap = 100 + factor * 25;
+
+            const gap = rand(minGap, maxGap);
+
             const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
             const y = maxPlatformY - gap;
-
+    
             const types = ['static'];
-            if (Math.random() < 0.3 + 0.7 * factor) types.push('horizontal');
-            if (Math.random() < 0.2 * factor) types.push('vertical');
+            if (Math.random() < 0.15 + 0.7 * factor) types.push('horizontal');
+            if (Math.random() < 0.12 * factor) types.push('vertical');
 
             p.spawn(x, y, pick(types), Math.random() < 0.1);
             maxPlatformY = y;
-            
         }
     });
 
     enemies.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.0002 * ScoreManager.difficultyFactor()) {
+        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.00002 * ScoreManager.difficultyFactor()) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
             const y = cameraY - CONFIG.ENEMY_SIZE; // спаун сверху экрана
             e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
