@@ -539,7 +539,7 @@ function update() {
     enemies.forEach(e => e.update());
     spawnEntities();
     updateItems();
-    startTime = Date.now();
+    
 
     // обработка выстрелов через систему
     ShootingSystem.processShots();
@@ -559,6 +559,7 @@ function update() {
         cameraY = 0;
         bulletPool.forEach(b => b.active = false);
         spawnEntities(true);
+        startTime = Date.now();
     }
 }
 function updateItems() { itemPool.forEach(i => i.update()); }
