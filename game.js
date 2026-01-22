@@ -408,6 +408,12 @@ const player = new Player();
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
 const itemPool = Array.from({ length: CONFIG.MAX_ITEMS }, () => new Item());
+function getItemFromPool() {
+    for (const item of itemPool) {
+        if (!item.active) return item;
+    }
+    return null;
+}
 // =====================
 // SCORE
 // =====================
