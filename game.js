@@ -25,7 +25,7 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 5,
-    MAX_ITEMS: 30,
+    MAX_ITEMS: 10,
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.005,
@@ -39,7 +39,7 @@ const CONFIG = {
 
     // --- пули ---
     BULLET_POOL_SIZE: 500,
-    BULLET_SPEED: 20,
+    BULLET_SPEED: 13,
 }; 
 
 // =====================
