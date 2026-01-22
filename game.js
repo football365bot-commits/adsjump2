@@ -340,12 +340,12 @@ class Item {
 
         const rand = Math.random();
         if (rand < 0.004) this.type = 'rocket';
-        else if (rand < 0.008) this.type = 'drone';
-        else if (rand < 0.015) this.type = 'trampoline';
-        else if (rand < 0.025) this.type = 'bomb';
-        else if (rand < 0.040) this.type = 'spikes';
-        else if (rand < 0.050) this.type = 'adrenaline';
-        else if (rand < 0.075) this.type = 'medkit';
+        else if (rand < 0.00008 this.type = 'drone';
+        else if (rand < 0.00015) this.type = 'trampoline';
+        else if (rand < 0.00025) this.type = 'bomb';
+        else if (rand < 0.0004) this.type = 'spikes';
+        else if (rand < 0.0005) this.type = 'adrenaline';
+        else if (rand < 0.0007) this.type = 'medkit';
         else return; // шанс не прошёл — предмет не создаём
 
         this.active = true;
