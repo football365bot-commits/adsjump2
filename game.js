@@ -30,14 +30,17 @@ const pauseUI = new PauseUI(canvas, ctx, {
 });
 
 canvas.addEventListener('click', e => {
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();   // видимая область на экране
+    const scaleX = canvas.width / rect.width;      // масштаб по X
+    const scaleY = canvas.height / rect.height;    // масштаб по Y
 
-    // нормализуем координаты клика в координаты canvas
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const x = (e.clientX - rect.left) * scaleX;   // координата клика внутри canvas
+    const y = (e.clientY - rect.top) * scaleY;
 
-    // проверяем паузу
+    // если клик по кнопке паузы, просто выходим
     if (pauseUI.handleClick(x, y, gameState)) return;
+
+    // остальная логика клика (если есть)
 
     // если игра не на PLAYING — игнорируем остальные клики
     if (gameState !== GameState.PLAYING) return;
