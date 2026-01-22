@@ -38,7 +38,7 @@ canvas.addEventListener('click', e => {
     const y = (e.clientY - rect.top) * scaleY;
 
     if (pauseUI.handleClick(x, y, gameState)) return;
-
+    if (gameState !== GameState.PLAYING) return;
     // Остальная логика клика по игре
 });
 
