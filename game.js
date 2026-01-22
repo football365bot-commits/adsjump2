@@ -584,7 +584,7 @@ function draw() {
 
     // Score — чуть левее центра
     ctx.textAlign = 'right';
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
+    ctx.fillText(` ${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
 
     // HP — чуть правее центра
     ctx.textAlign = 'left';
@@ -592,10 +592,10 @@ function draw() {
 
     // Время — в правом верхнем углу
     ctx.textAlign = 'right';
-    ctx.fillText(`Time: ${getElapsedTime()}s`, canvas.width - 20, 30);
+    ctx.fillText(` ${getElapsedTime()}s`, canvas.width - 20, 30);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`Time: ${formatElapsedTime()}`, canvas.width - 20, 30);
+    ctx.fillText(` ${formatElapsedTime()}`, canvas.width - 20, 30);
 }
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
