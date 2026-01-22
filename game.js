@@ -340,7 +340,7 @@ class Item {
 
         const rand = Math.random();
         if (rand < 0.004) this.type = 'rocket';
-        else if (rand < 0.00008 this.type = 'drone';
+        else if (rand < 0.00008) this.type = 'drone';
         else if (rand < 0.00015) this.type = 'trampoline';
         else if (rand < 0.00025) this.type = 'bomb';
         else if (rand < 0.0004) this.type = 'spikes';
