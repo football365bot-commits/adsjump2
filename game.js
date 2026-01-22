@@ -57,6 +57,7 @@ function isOnScreen(obj) {
 // =====================
 let cameraY = 0;
 let maxPlatformY = canvas.height;
+let startTime = Date.now();
 
 // =====================
 // BULLET POOL
@@ -257,8 +258,18 @@ class Enemy {
 
     draw(cameraY) {
         if (!this.active) return;
+
+        // тело врага
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
+
+        // HP-бар сверху
+        const barWidth = CONFIG.ENEMY_SIZE;
+        const barHeight = 4;
+        ctx.fillStyle = '#555'; // фон полоски
+        ctx.fillRect(this.x, this.y - cameraY - 6, barWidth, barHeight);
+        ctx.fillStyle = '#00ff00'; // сам HP
+        ctx.fillRect(this.x, this.y - cameraY - 6, barWidth * (this.hp / CONFIG.ENEMY_HP), barHeight);
     }
 }
 
@@ -516,6 +527,7 @@ function update() {
     enemies.forEach(e => e.update());
     spawnEntities();
     updateItems();
+    startTime = Date.now();
 
     // обработка выстрелов через систему
     ShootingSystem.processShots();
@@ -552,9 +564,17 @@ function draw() {
 
     drawBullets();
 
+    // ====== Score и HP игрока ======
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
+    // Score чуть левее центра
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, canvas.width / 2 - 60, canvas.height - 20);
+    // HP чуть правее центра
+    ctx.fillText(`HP: ${player.hp}`, canvas.width / 2 + 20, canvas.height - 20);
+
+    // ====== Время игры (правый верхний угол) ======
+    const elapsed = Math.floor((Date.now() - startTime) / 1000); // секунды
+    ctx.fillText(`Time: ${elapsed}s`, canvas.width - 100, 30);
 }
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
