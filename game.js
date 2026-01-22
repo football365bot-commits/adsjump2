@@ -25,21 +25,21 @@ const CONFIG = {
     MAX_PLATFORMS: 18,
     ENEMY_SIZE: 30,
     MAX_ENEMIES: 5,
-    MAX_ITEMS: 10,
+    MAX_ITEMS: 7,
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.0002,
-    ENEMY_SHOOT_INTERVAL: 80,   // кадры между выстрелами врага
-    ENEMY_DAMAGE: 10,            // урон врага
-    ENEMY_HP: 50,                // здоровье врага
+    ENEMY_SHOOT_INTERVAL: 20,   // кадры между выстрелами врага
+    ENEMY_DAMAGE: 1,            // урон врага
+    ENEMY_HP: 25,                // здоровье врага
 
     // --- игрок ---
-    PLAYER_BULLET_DAMAGE: 10,    // урон игрока
+    PLAYER_BULLET_DAMAGE: 1,    // урон игрока
     PLAYER_SHOOT_COOLDOWN: 10,   // кадры между выстрелами
 
     // --- пули ---
     BULLET_POOL_SIZE: 500,
-    BULLET_SPEED: 13,
+    BULLET_SPEED: 15,
 }; 
 
 // =====================
