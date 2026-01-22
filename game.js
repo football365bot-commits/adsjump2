@@ -127,12 +127,19 @@ let inputX = 0;
 
 
 function formatElapsedTime() {
-    const totalSeconds = Math.floor((Date.now() - startTime - pausedTime) / 1000);
+    if (gameState === GameState.PAUSED) {
+        // если пауза, показываем то же самое время, что и до паузы
+        return _pausedTimeStr || '00:00';
+    }
+
+    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    _pausedTimeStr = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    return _pausedTimeStr;
 }
+let _pausedTimeStr = '00:00';
 
 // =====================
 // BULLET POOL
