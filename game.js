@@ -1,8 +1,45 @@
+
+
+import { PauseUI, GameState } from './pause.js';
+
 // =====================
 // CANVAS SETUP
 // =====================
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+
+
+const pauseUI = new PauseUI(canvas, ctx, {
+    onPause() {
+        gameState = GameState.PAUSED;
+    },
+    onResume(delta) {
+        pausedTime += delta;   // учёт времени паузы
+        gameState = GameState.PLAYING;
+    },
+    onMenu() {
+        gameState = GameState.MENU;
+        // например, сбросить игру
+        player.reset();
+        ScoreManager.reset();
+        cameraY = 0;
+        bulletPool.forEach(b => b.active = false);
+        spawnEntities(true);
+        startTime = Date.now();
+    }
+});
+
+canvas.addEventListener('click', e => {
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+
+    // если клик по паузе или кнопкам паузы
+    if (pauseUI.handleClick(x, y, gameState)) return;
+
+    // остальные клики (если есть)
+});
+
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -42,6 +79,7 @@ const CONFIG = {
     BULLET_SPEED: 13,
 }; 
 
+
 // =====================
 // UTILS
 // =====================
@@ -58,12 +96,16 @@ function isOnScreen(obj) {
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 let startTime = Date.now();
+let gameState = GameState.PLAYING;  // состояние игры
+let pausedTime = 0;                  // для корректного таймера
 
 
 function formatElapsedTime() {
-    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const totalSeconds = Math.floor((Date.now() - startTime - pausedTime) / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+}
 
     // добавляем ведущий ноль, если нужно
     const mm = minutes.toString().padStart(2, '0');
@@ -598,8 +640,12 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
-    update();
-    draw();
+    if (gameState === GameState.PLAYING) {
+        update();  // обновляем только если игра не на паузе
+    }
+
+    draw();         // рисуем все элементы
+    pauseUI.draw(gameState);  // рисуем кнопку паузы / оверлей
+
     requestAnimationFrame(loop);
 }
-loop();
