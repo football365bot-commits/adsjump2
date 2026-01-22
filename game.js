@@ -35,11 +35,11 @@ const CONFIG = {
 
     // --- игрок ---
     PLAYER_BULLET_DAMAGE: 1,    // урон игрока
-    PLAYER_SHOOT_COOLDOWN: 10,   // кадры между выстрелами
+    PLAYER_SHOOT_COOLDOWN: 20,   // кадры между выстрелами
 
     // --- пули ---
     BULLET_POOL_SIZE: 500,
-    BULLET_SPEED: 15,
+    BULLET_SPEED: 13,
 }; 
 
 // =====================
@@ -119,7 +119,7 @@ function drawBullets() {
     for (const b of bulletPool) {
         if (!b.active) continue;
         ctx.fillStyle = b.owner === 'player' ? '#ffff00' : '#ff8800';
-        ctx.fillRect(b.x - 2, b.y - cameraY - 4, 8, 8);
+        ctx.fillRect(b.x - 2, b.y - cameraY - 1, 2, 2);
     }
 }
 const ShootingSystem = {
