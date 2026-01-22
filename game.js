@@ -28,23 +28,25 @@ const pauseUI = new PauseUI(canvas, ctx, {
     }
 });
 
-// === Новый универсальный обработчик клика и тача ===
+// Клик мышкой
 canvas.addEventListener('click', e => {
     handleInput(e.clientX, e.clientY);
 });
 
+// Touch start
 canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     const touch = e.touches[0];
     handleInput(touch.clientX, touch.clientY);
 }, { passive: false });
 
+// Touch end
 canvas.addEventListener('touchend', e => {
     e.preventDefault();
-    inputX = 0; // останавливаем движение игрока при отпускании
+    inputX = 0; // отпустил — останавливаем движение игрока
 }, { passive: false });
 
-// === Универсальная функция пересчёта координат и проверки кнопки ===
+// === функция обработки клика / тача ===
 function handleInput(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -53,15 +55,17 @@ function handleInput(clientX, clientY) {
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
 
-    // Проверяем клик по кнопке паузы
+    // Сначала проверяем кнопку паузы
     if (pauseUI.handleClick(x, y, gameState)) return;
 
-    // Если игра не PLAYING, дальше клики игнорируем
+    // Если игра не PLAYING — клики по игре игнорируем
     if (gameState !== GameState.PLAYING) return;
 
-    // Остальная логика клика по игре (если нужна)
+    // ---- движение игрока ----
+    // Допустим, левая половина экрана = влево, правая = вправо
+    if (x < canvas.width / 2) inputX = -1;
+    else inputX = 1;
 }
-
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -118,7 +122,9 @@ let cameraY = 0;
 let maxPlatformY = canvas.height;
 let startTime = Date.now();
 let gameState = GameState.PLAYING;  // состояние игры
-let pausedTime = 0;                  // для корректного таймера
+let pausedTime = 0;    // для корректного таймера
+let inputX = 0;
+
 
 function formatElapsedTime() {
     const totalSeconds = Math.floor((Date.now() - startTime - pausedTime) / 1000);
