@@ -323,7 +323,7 @@ class Platform {
 }
 
 // =====================
-// ITEM CLASS (с пулом)
+// ITEM 
 // =====================
 class Item {
     constructor() {
@@ -400,7 +400,7 @@ class Item {
             case 'adrenaline': color = '#ff00ff'; break;
         }
         ctx.fillStyle = color;
-        ctx.fillRect(this.x, canvas.height - this.y - this.size, this.size, this.size);
+        ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
 }
 // =====================
