@@ -29,13 +29,13 @@ const CONFIG = {
 
     // --- враги ---
     ENEMY_SPAWN_CHANCE: 0.00005,
-    ENEMY_SHOOT_INTERVAL: 50,   // кадры между выстрелами врага
+    ENEMY_SHOOT_INTERVAL: 25,   // кадры между выстрелами врага
     ENEMY_DAMAGE: 1,            // урон врага
-    ENEMY_HP: 25,                // здоровье врага
+    ENEMY_HP: 10,                // здоровье врага
 
     // --- игрок ---
     PLAYER_BULLET_DAMAGE: 1,    // урон игрока
-    PLAYER_SHOOT_COOLDOWN: 20,   // кадры между выстрелами
+    PLAYER_SHOOT_COOLDOWN: 15,   // кадры между выстрелами
 
     // --- пули ---
     BULLET_POOL_SIZE: 500,
@@ -362,13 +362,13 @@ class Item {
         if (!platform) return;
 
         const rand = Math.random();
-        if (rand < 0.00004) this.type = 'rocket';
-        else if (rand < 0.00008) this.type = 'drone';
-        else if (rand < 0.00015) this.type = 'trampoline';
-        else if (rand < 0.00025) this.type = 'bomb';
-        else if (rand < 0.0004) this.type = 'spikes';
-        else if (rand < 0.0005) this.type = 'adrenaline';
-        else if (rand < 0.0007) this.type = 'medkit';
+        if (rand < 0.0003) this.type = 'rocket';
+        else if (rand < 0.0007) this.type = 'drone';
+        else if (rand < 0.0014) this.type = 'trampoline';
+        else if (rand < 0.0018) this.type = 'bomb';
+        else if (rand < 0.0025) this.type = 'spikes';
+        else if (rand < 0.0040) this.type = 'adrenaline';
+        else if (rand < 0.0070) this.type = 'medkit';
         else return; // шанс не прошёл — предмет не создаём
 
         this.active = true;
