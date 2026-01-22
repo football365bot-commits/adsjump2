@@ -30,14 +30,16 @@ const pauseUI = new PauseUI(canvas, ctx, {
 });
 
 canvas.addEventListener('click', e => {
-    const r = canvas.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-    // если клик по паузе или кнопкам паузы
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
     if (pauseUI.handleClick(x, y, gameState)) return;
 
-    // остальные клики (если есть)
+    // Остальная логика клика по игре
 });
 
 
