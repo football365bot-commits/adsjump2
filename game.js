@@ -59,6 +59,18 @@ let cameraY = 0;
 let maxPlatformY = canvas.height;
 let startTime = Date.now();
 
+
+function formatElapsedTime() {
+    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    // добавляем ведущий ноль, если нужно
+    const mm = minutes.toString().padStart(2, '0');
+    const ss = seconds.toString().padStart(2, '0');
+
+    return `${mm}:${ss}`;
+}
 // =====================
 // BULLET POOL
 // =====================
@@ -564,17 +576,25 @@ function draw() {
 
     drawBullets();
 
-    // ====== Score и HP игрока ======
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    // Score чуть левее центра
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, canvas.width / 2 - 60, canvas.height - 20);
-    // HP чуть правее центра
-    ctx.fillText(`HP: ${player.hp}`, canvas.width / 2 + 20, canvas.height - 20);
 
-    // ====== Время игры (правый верхний угол) ======
-    const elapsed = Math.floor((Date.now() - startTime) / 1000); // секунды
-    ctx.fillText(`Time: ${elapsed}s`, canvas.width - 100, 30);
+    const centerX = canvas.width / 2;
+
+    // Score — чуть левее центра
+    ctx.textAlign = 'right';
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
+
+    // HP — чуть правее центра
+    ctx.textAlign = 'left';
+    ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
+
+    // Время — в правом верхнем углу
+    ctx.textAlign = 'right';
+    ctx.fillText(`Time: ${getElapsedTime()}s`, canvas.width - 20, 30);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`Time: ${formatElapsedTime()}`, canvas.width - 20, 30);
 }
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
