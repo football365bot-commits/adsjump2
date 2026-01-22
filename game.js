@@ -120,24 +120,10 @@ function isOnScreen(obj) {
 // =====================
 let cameraY = 0;
 let maxPlatformY = canvas.height;
-let startTime = Date.now();
 let gameState = GameState.PLAYING;  // состояние игры
-let displayedTime = 0;
 let inputX = 0;
 
-function updateDisplayedTime() {
-    if (gameState === GameState.PLAYING) {
-        displayedTime = Date.now() - startTime;
-    }
-}
 
-function formatElapsedTime(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`
-
-}
 // =====================
 // BULLET POOL
 // =====================
@@ -620,7 +606,6 @@ function update() {
         cameraY = 0;
         bulletPool.forEach(b => b.active = false);
         spawnEntities(true);
-        startTime = Date.now();
     }
 }
 
@@ -648,10 +633,6 @@ function draw() {
     // HP — чуть правее центра
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
-
-    // Время — просто число, в формате mm:ss
-    ctx.textAlign = 'right';
-    ctx.fillText(formatElapsedTime(displayedTime), canvas.width - 20, 30);
 }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
@@ -662,7 +643,6 @@ function loop() {
 
     draw();
     pauseUI.draw(gameState);
-    updateDisplayedTime(); 
 
     requestAnimationFrame(loop);
 }
