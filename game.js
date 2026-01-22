@@ -543,7 +543,7 @@ function draw() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
 }
-function drawItems() { itemPool.forEach(i => i.draw());j }
+function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
     update();
     draw();
