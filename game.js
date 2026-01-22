@@ -29,24 +29,39 @@ const pauseUI = new PauseUI(canvas, ctx, {
     }
 });
 
+// === Новый универсальный обработчик клика и тача ===
 canvas.addEventListener('click', e => {
-    const rect = canvas.getBoundingClientRect();   // видимая область на экране
-    const scaleX = canvas.width / rect.width;      // масштаб по X
-    const scaleY = canvas.height / rect.height;    // масштаб по Y
+    handleInput(e.clientX, e.clientY);
+});
 
-    const x = (e.clientX - rect.left) * scaleX;   // координата клика внутри canvas
-    const y = (e.clientY - rect.top) * scaleY;
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handleInput(touch.clientX, touch.clientY);
+}, { passive: false });
 
-    // если клик по кнопке паузы, просто выходим
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    inputX = 0; // останавливаем движение игрока при отпускании
+}, { passive: false });
+
+// === Универсальная функция пересчёта координат и проверки кнопки ===
+function handleInput(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    // Проверяем клик по кнопке паузы
     if (pauseUI.handleClick(x, y, gameState)) return;
 
-    // остальная логика клика (если есть)
-
-    // если игра не на PLAYING — игнорируем остальные клики
+    // Если игра не PLAYING, дальше клики игнорируем
     if (gameState !== GameState.PLAYING) return;
 
-    // здесь остальная логика клика по игре
-});
+    // Остальная логика клика по игре (если нужна)
+}
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -647,20 +662,11 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
-    if (gameState === GameState.PLAYING) {
-        update(); // обновление логики только в PLAYING
-    }
+    // draw всегда
+draw();
 
-    // draw всегда вызываем, чтобы отрисовать текущий кадр
-    draw();
-
-    // если пауза — рисуем overlay паузы
-    if (gameState === GameState.PAUSED) {
-        pauseUI.drawOverlay(); // отдельный метод для оверлея
-    } else {
-        pauseUI.draw(gameState); // обычная кнопка паузы
-    }
-
+// рисуем кнопку паузы поверх всего
+pauseUI.draw(gameState);
     requestAnimationFrame(loop);
 }
 
