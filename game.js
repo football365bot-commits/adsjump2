@@ -28,7 +28,7 @@ const CONFIG = {
     MAX_ITEMS: 7,
 
     // --- враги ---
-    ENEMY_SPAWN_CHANCE: 0.0002,
+    ENEMY_SPAWN_CHANCE: 0.00005,
     ENEMY_SHOOT_INTERVAL: 20,   // кадры между выстрелами врага
     ENEMY_DAMAGE: 1,            // урон врага
     ENEMY_HP: 25,                // здоровье врага
