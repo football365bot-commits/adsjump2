@@ -565,7 +565,6 @@ function update() {
 function updateItems() { itemPool.forEach(i => i.update()); }
 
 
-
 function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -574,7 +573,6 @@ function draw() {
     enemies.forEach(e => e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
-
     drawBullets();
 
     ctx.fillStyle = '#fff';
@@ -584,19 +582,17 @@ function draw() {
 
     // Score — чуть левее центра
     ctx.textAlign = 'right';
-    ctx.fillText(` ${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
+    ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
 
     // HP — чуть правее центра
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
 
-    // Время — в правом верхнем углу
+    // Время — просто число, в формате mm:ss
     ctx.textAlign = 'right';
-    ctx.fillText(` ${getElapsedTime()}s`, canvas.width - 20, 30);
-
-    ctx.textAlign = 'right';
-    ctx.fillText(` ${formatElapsedTime()}`, canvas.width - 20, 30);
+    ctx.fillText(formatElapsedTime(), canvas.width - 20, 30);
 }
+
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
     update();
