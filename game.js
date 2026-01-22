@@ -348,8 +348,8 @@ class Item {
 
         this.active = true;
         this.platform = platform;
-        this.x = platform.x + PLATFORM_WIDTH / 2 - this.size / 2;
-        this.y = platform.y + PLATFORM_HEIGHT + 5;
+        this.x = platform.x + CONFIG.PLATFORM_WIDTH / 2 - this.size / 2;
+        this.y = platform.y + CONFIG.PLATFORM_HEIGHT + 5;
     }
 
     update() {
@@ -361,14 +361,14 @@ class Item {
         }
 
         // движемся вместе с платформой
-        this.x = this.platform.x + PLATFORM_WIDTH / 2 - this.size / 2;
-        this.y = this.platform.y + PLATFORM_HEIGHT + 5;
+        this.x = this.platform.x + CONFIG.PLATFORM_WIDTH / 2 - this.size / 2;
+        this.y = this.platform.y + CONFIG.PLATFORM_HEIGHT + 5;
 
         // проверка столкновения с игроком
         if (
-            player.x + PLAYER_SIZE > this.x &&
+            player.x + CONFIG.PLAYER_SIZE > this.x &&
             player.x < this.x + this.size &&
-            player.y + PLAYER_SIZE > this.y &&
+            player.y + CONFIG.PLAYER_SIZE > this.y &&
             player.y < this.y + this.size
         ) {
             switch(this.type) {
