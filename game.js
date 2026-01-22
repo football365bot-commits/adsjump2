@@ -319,6 +319,7 @@ class Platform {
         return false;
     }
 }
+
 // =====================
 // ITEM CLASS (с пулом)
 // =====================
@@ -422,9 +423,7 @@ const ScoreManager = {
     reset() { this.value = 0; this.maxY = null; },
     difficultyFactor() { return Math.min(this.value / 500, 1); }
 };
-function getItemFromPool() {
-    return itemPool.find(item => !item.active) || null;
-}
+
 // =====================
 // SPAWN ENTITIES
 // =====================
@@ -456,6 +455,8 @@ function spawnEntities(isReset = false) {
 
             p.spawn(x, y, pick(types), Math.random() < 0.1);
             maxPlatformY = y;
+            const newItem = getItemFromPool();
+            if (newItem) newItem.spawn(p);
         }
     });
 
@@ -533,6 +534,7 @@ function draw() {
 
     platforms.forEach(p => p.draw(cameraY));
     enemies.forEach(e => e.draw(cameraY));
+    drawItems();
     player.draw(cameraY);
 
     drawBullets();
@@ -541,8 +543,7 @@ function draw() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, 20, 30);
 }
-function drawItems() { itemPool.forEach(i => i.draw()); }
-
+function drawItems() { itemPool.forEach(i => i.draw());j }
 function loop() {
     update();
     draw();
