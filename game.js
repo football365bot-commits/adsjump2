@@ -640,11 +640,18 @@ function draw() {
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
     if (gameState === GameState.PLAYING) {
-        update();  // обновляем только если игра не на паузе
+        update(); // обновление логики только в PLAYING
     }
 
-    draw();         // рисуем все элементы
-    pauseUI.draw(gameState);  // рисуем кнопку паузы / оверлей
+    // draw всегда вызываем, чтобы отрисовать текущий кадр
+    draw();
+
+    // если пауза — рисуем overlay паузы
+    if (gameState === GameState.PAUSED) {
+        pauseUI.drawOverlay(); // отдельный метод для оверлея
+    } else {
+        pauseUI.draw(gameState); // обычная кнопка паузы
+    }
 
     requestAnimationFrame(loop);
 }
