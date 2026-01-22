@@ -462,6 +462,9 @@ class Item {
         ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
 }
+
+
+function updateItems() { itemPool.forEach(i => i.update()); }
 // =====================
 // GAME STATE
 // =====================
@@ -601,7 +604,7 @@ function update() {
         startTime = Date.now();
     }
 }
-function updateItems() { itemPool.forEach(i => i.update()); }
+
 
 
 function draw() {
