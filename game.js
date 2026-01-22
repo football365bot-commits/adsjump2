@@ -374,9 +374,9 @@ class Item {
             player.y < this.y + this.size
         ) {
             switch(this.type) {
-                case 'trampoline': player.vy += 5; break;
-                case 'drone': player.vy += 35; break;
-                case 'rocket': player.vy += 75; break;
+                case 'trampoline': player.vy -= 5; break;
+                case 'drone': player.vy -= 35; break;
+                case 'rocket': player.vy -= 75; break;
                 case 'spikes': player.hp -= 1; break;
                 case 'bomb': player.hp -= 5; break;
                 case 'medkit': player.hp = Math.min(player.hp + 1, 100); break;
