@@ -31,17 +31,19 @@ const pauseUI = new PauseUI(canvas, ctx, {
 
 canvas.addEventListener('click', e => {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
 
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    // нормализуем координаты клика в координаты canvas
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
+    // проверяем паузу
     if (pauseUI.handleClick(x, y, gameState)) return;
-    if (gameState !== GameState.PLAYING) return;
-    // Остальная логика клика по игре
-});
 
+    // если игра не на PLAYING — игнорируем остальные клики
+    if (gameState !== GameState.PLAYING) return;
+
+    // здесь остальная логика клика по игре
+});
 
 function resize() {
     canvas.width = window.innerWidth;
