@@ -1,4 +1,4 @@
-// pauseUI.js
+// pause.js
 
 export const GameState = {
     PLAYING: 'playing',
