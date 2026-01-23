@@ -11,12 +11,13 @@ export class PauseUI {
     constructor(canvas, ctx, callbacks) {
         this.canvas = canvas;
         this.ctx = ctx;
-
         this.callbacks = callbacks;
 
+        // кнопка паузы в верхнем левом углу
         this.pauseButton = { x: 20, y: 20, w: 40, h: 40 };
         this.pauseStart = 0;
 
+        // одна и та же пара кнопок для PAUSED и GAME_OVER
         this.buttons = {
             resume: { x: 0, y: 0, w: 200, h: 40 },
             menu: { x: 0, y: 0, w: 200, h: 40 }
@@ -28,29 +29,21 @@ export class PauseUI {
             this.drawPauseButton();
         }
 
-        if (gameState === GameState.PAUSED) {
-            this.drawOverlay();
-        }
-        if (gameState === GameState.GAME_OVER) {
+        if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
+            this.drawOverlay(gameState);
         }
     }
 
     drawPauseButton() {
         const { ctx } = this;
-
         ctx.strokeStyle = '#fff';
-        ctx.strokeRect(
-            this.pauseButton.x,
-            this.pauseButton.y,
-            this.pauseButton.w,
-            this.pauseButton.h
-        );
+        ctx.strokeRect(this.pauseButton.x, this.pauseButton.y, this.pauseButton.w, this.pauseButton.h);
 
         ctx.fillRect(this.pauseButton.x + 10, this.pauseButton.y + 8, 6, 24);
         ctx.fillRect(this.pauseButton.x + 24, this.pauseButton.y + 8, 6, 24);
     }
 
-    drawOverlay() {
+    drawOverlay(gameState) {
         const { ctx, canvas } = this;
 
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -72,27 +65,23 @@ export class PauseUI {
         ctx.fillStyle = '#fff';
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
+        const title = gameState === GameState.PAUSED ? 'ПАУЗА' : 'GAME OVER';
         ctx.fillText(title, canvas.width / 2, box.y + 40);
 
-        this.drawButtons(box, title)
+        this.drawButtons(box, gameState);
     }
 
-    drawButtons(box) {
+    drawButtons(box, gameState) {
         this.buttons.resume.x = box.x + 50;
         this.buttons.resume.y = box.y + 80;
 
         this.buttons.menu.x = box.x + 50;
         this.buttons.menu.y = box.y + 140;
 
-        if (gameState === GameState.PAUSED) {
-            this.drawButton('Продолжить', () => this.callbacks.onResume());
-            this.drawButton('Меню', () => this.callbacks.onMenu());
-        }
+        const resumeText = gameState === GameState.PAUSED ? 'Продолжить' : 'Играть';
 
-        if (gameState === GameState.GAME_OVER) {
-            this.drawButton('Играть', () => this.callbacks.onRestart());
-            this.drawButton('Меню', () => this.callbacks.onMenu());
-        }
+        this.drawButton(this.buttons.resume, resumeText);
+        this.drawButton(this.buttons.menu, 'Меню');
     }
 
     drawButton(btn, text) {
@@ -115,34 +104,26 @@ export class PauseUI {
             return true;
         }
 
-        // Кнопки паузы
+        // Кнопки PAUSED и GAME_OVER
         if (gameState === GameState.PAUSED) {
             if (this.isInside(x, y, this.buttons.resume)) {
                 this.callbacks.onResume(Date.now() - this.pauseStart);
                 return true;
             }
-
-            if (this.isInside(x, y, this.buttons.menu)) {
-                this.callbacks.onMenu();
-                return true;
-            }
-        }
-
-        // Кнопки Game Over
-        if (gameState === GameState.GAME_OVER) {
+        } else if (gameState === GameState.GAME_OVER) {
             if (this.isInside(x, y, this.buttons.resume)) {
                 this.callbacks.onRestart();
                 return true;
             }
-
-            if (this.isInside(x, y, this.buttons.menu)) {
-                this.callbacks.onMenu();
-                return true;
-            }
         }
 
-    return false;
-}
+        if (this.isInside(x, y, this.buttons.menu)) {
+            this.callbacks.onMenu();
+            return true;
+        }
+
+        return false;
+    }
 
     isInside(x, y, b) {
         return x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h;
