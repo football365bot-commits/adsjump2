@@ -10,18 +10,18 @@ ctx.imageSmoothingEnabled = false;
 
 const pauseUI = new PauseUI(canvas, ctx, {
     onPause() {
-        gameState = GameState.PAUSED;  // ставим паузу
+        gameState = GameState.PAUSED;
     },
     onResume() {
-        gameState = GameState.PLAYING; // продолжаем игру
+        gameState = GameState.PLAYING;
+    },
+    onRestart() {
+        restartGame();
+        gameState = GameState.PLAYING;
     },
     onMenu() {
         gameState = GameState.MENU;
-        player.reset();
-        ScoreManager.reset();
-        cameraY = 0;
-        bulletPool.forEach(b => b.active = false);
-        spawnEntities(true);
+        restartGame();
     }
 });
 
@@ -598,16 +598,22 @@ function update() {
     updateCamera();
 
     // проверка падения игрока
-    if (player.y - cameraY > canvas.height) {
-        alert('Game Over');
-        player.reset();
-        ScoreManager.reset();
-        cameraY = 0;
-        bulletPool.forEach(b => b.active = false);
-        spawnEntities(true);
+    if (player.y - cameraY > canvas.height || player.hp <= 0) {
+        gameState = GameState.GAME_OVER;
     }
 }
+function restartGame() {
+    player.reset();
+    ScoreManager.reset();
+    cameraY = 0;
 
+    bulletPool.forEach(b => b.active = false);
+    enemies.forEach(e => e.reset());
+    platforms.forEach(p => p.reset());
+    itemPool.forEach(i => i.active = false);
+
+    spawnEntities(true);
+}
 
 
 function draw() {
