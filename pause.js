@@ -67,7 +67,12 @@ export class PauseUI {
         ctx.textAlign = 'center';
         const title = gameState === GameState.PAUSED ? 'ПАУЗА' : 'GAME OVER';
         ctx.fillText(title, canvas.width / 2, box.y + 40);
-
+        
+        // Рисуем монетки только на Game Over
+        if (gameState === GameState.GAME_OVER) {
+            ctx.font = '24px Arial';
+            ctx.fillText(`Монетки: ${coins.toFixed(2)}`, canvas.width / 2, box.y + 90);
+        }
         this.drawButtons(box, gameState);
     }
 
