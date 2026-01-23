@@ -112,6 +112,7 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
+let delta = 1;
 
 
 // =====================
@@ -627,7 +628,7 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop(time) {
-    const delta = Math.min((time - lastTime) / 16.6667, 2);
+    delta = Math.min((time - lastTime) / 16.6667, 2);
     lastTime = time;
 
     if (gameState === GameState.PLAYING) {
