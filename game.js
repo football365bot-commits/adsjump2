@@ -417,7 +417,7 @@ class Item {
         this.active = true;
         this.platform = platform;
         this.x = platform.x + CONFIG.PLATFORM_WIDTH / 2 - this.size / 2;
-        this.y = this.y = platform.y - this.size;
+        this.y = platform.y - this.size;
     }
 
     update() {
