@@ -139,7 +139,7 @@ export class PauseUI {
                 this.callbacks.onMenu();
                 return true;
             }
-        I}
+        }
 
     return false;
 }
