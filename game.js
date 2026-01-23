@@ -237,7 +237,14 @@ class Player {
         // ---- Fire Logic ----
         if (this.shootCooldown <= 0) {
             // находим активного врага на экране
-            const target = enemies.find(e => e.active && isOnScreen(e));
+            let target = null;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.active && isOnScreen(e)) {
+                    target = e;
+                    break;
+                }
+            }
             if (target && isOnScreen(this)) {
                 ShootingSystem.requestShot('player', this, target);
                 this.shootCooldown = 10; // 6 выстрелов в секунду
@@ -507,6 +514,7 @@ const ScoreManager = {
 // =====================
 function spawnEntities(isReset = false) {
     const factor = ScoreManager.difficultyFactor();
+    if (!isReset && platforms.every(p => p.active)) return;
 
     if (isReset) {
         maxPlatformY = canvas.height;
