@@ -3,7 +3,8 @@
 export const GameState = {
     PLAYING: 'playing',
     PAUSED: 'paused',
-    MENU: 'menu'
+    MENU: 'menu',
+    GAME_OVER: 'game_over'
 };
 
 export class PauseUI {
