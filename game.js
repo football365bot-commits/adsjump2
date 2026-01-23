@@ -113,6 +113,16 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
+// =====================
+// MONETIZATION
+// =====================
+let coins = 0; // текущее количество монеток для этого запуска
+
+function calculateCoins(score) {
+    // 1000 очков = 0.01 монетки
+    coins = score * 0.01 / 1000; // т.е. score / 100_000
+    return coins;
+}
 
 
 // =====================
