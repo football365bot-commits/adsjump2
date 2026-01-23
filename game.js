@@ -111,7 +111,6 @@ let cameraY = 0;
 let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
-let lastTime = performance.now();
 
 
 // =====================
@@ -529,7 +528,7 @@ function spawnEntities(isReset = false) {
             // ↑ 0.15 — скорость роста (очень медленно)
 
             const minGap = Math.min(85 * growth, 95);
-            const maxGap = Math.min(100 * growth, 110);
+            const maxGap = Math.min(100 * growth, 105);
 
             const gap = rand(minGap, maxGap);
 
