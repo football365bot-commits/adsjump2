@@ -31,6 +31,8 @@ export class PauseUI {
         if (gameState === GameState.PAUSED) {
             this.drawOverlay();
         }
+        if (state === GameState.GAME_OVER) {
+        }
     }
 
     drawPauseButton() {
@@ -82,8 +84,15 @@ export class PauseUI {
         this.buttons.menu.x = box.x + 50;
         this.buttons.menu.y = box.y + 140;
 
-        this.drawButton(this.buttons.resume, 'Продолжить');
-        this.drawButton(this.buttons.menu, 'Главное меню');
+        if (gameState === GameState.PAUSED) {
+            this.drawButton('Продолжить', () => this.callbacks.onResume());
+            this.drawButton('Меню', () => this.callbacks.onMenu());
+        }
+
+        if (gameState === GameState.GAME_OVER) {
+            this.drawButton('Играть', () => this.callbacks.onRestart());
+            this.drawButton('Меню', () => this.callbacks.onMenu());
+        }
     }
 
     drawButton(btn, text) {
