@@ -24,13 +24,14 @@ export class PauseUI {
         };
     }
 
-    draw(gameState) {
+    // gameState — состояние игры, coins — количество монеток для Game Over
+    draw(gameState, coins = 0) {
         if (gameState === GameState.PLAYING) {
             this.drawPauseButton();
         }
 
         if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
-            this.drawOverlay(gameState);
+            this.drawOverlay(gameState, coins);
         }
     }
 
@@ -43,7 +44,7 @@ export class PauseUI {
         ctx.fillRect(this.pauseButton.x + 24, this.pauseButton.y + 8, 6, 24);
     }
 
-    drawOverlay(gameState) {
+    drawOverlay(gameState, coins = 0) {
         const { ctx, canvas } = this;
 
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -67,12 +68,13 @@ export class PauseUI {
         ctx.textAlign = 'center';
         const title = gameState === GameState.PAUSED ? 'ПАУЗА' : 'GAME OVER';
         ctx.fillText(title, canvas.width / 2, box.y + 40);
-        
+
         // Рисуем монетки только на Game Over
         if (gameState === GameState.GAME_OVER) {
             ctx.font = '24px Arial';
             ctx.fillText(`Монетки: ${coins.toFixed(2)}`, canvas.width / 2, box.y + 90);
         }
+
         this.drawButtons(box, gameState);
     }
 
@@ -122,6 +124,7 @@ export class PauseUI {
             }
         }
 
+        // Кнопка меню (для обоих состояний)
         if (this.isInside(x, y, this.buttons.menu)) {
             this.callbacks.onMenu();
             return true;
