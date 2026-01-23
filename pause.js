@@ -31,7 +31,7 @@ export class PauseUI {
         if (gameState === GameState.PAUSED) {
             this.drawOverlay();
         }
-        if (state === GameState.GAME_OVER) {
+        if (gameState === GameState.GAME_OVER) {
         }
     }
 
@@ -72,9 +72,9 @@ export class PauseUI {
         ctx.fillStyle = '#fff';
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('ПАУЗА', canvas.width / 2, box.y + 40);
+        ctx.fillText(title, canvas.width / 2, box.y + 40);
 
-        this.drawButtons(box);
+        this.drawButtons(box, title)
     }
 
     drawButtons(box) {
@@ -108,12 +108,14 @@ export class PauseUI {
     }
 
     handleClick(x, y, gameState) {
+        // Кнопка паузы
         if (gameState === GameState.PLAYING && this.isInside(x, y, this.pauseButton)) {
             this.pauseStart = Date.now();
             this.callbacks.onPause();
             return true;
         }
 
+        // Кнопки паузы
         if (gameState === GameState.PAUSED) {
             if (this.isInside(x, y, this.buttons.resume)) {
                 this.callbacks.onResume(Date.now() - this.pauseStart);
@@ -126,8 +128,21 @@ export class PauseUI {
             }
         }
 
-        return false;
-    }
+        // Кнопки Game Over
+        if (gameState === GameState.GAME_OVER) {
+            if (this.isInside(x, y, this.buttons.resume)) {
+                this.callbacks.onRestart();
+                return true;
+            }
+
+            if (this.isInside(x, y, this.buttons.menu)) {
+                this.callbacks.onMenu();
+                return true;
+            }
+        I}
+
+    return false;
+}
 
     isInside(x, y, b) {
         return x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h;
