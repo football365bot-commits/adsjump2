@@ -638,4 +638,3 @@ function loop() {
 }
 
 loop();
-loop();
