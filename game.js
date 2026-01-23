@@ -7,24 +7,20 @@ import { PauseUI, GameState } from './pause.js';
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-
 const pauseUI = new PauseUI(canvas, ctx, {
     onPause() {
-        gameState = GameState.PAUSED;
+        gameState = GameState.PAUSED;  // ставим паузу
     },
-    onResume(delta) {
-        pausedTime += delta;   // учёт времени паузы
-        gameState = GameState.PLAYING;
+    onResume() {
+        gameState = GameState.PLAYING; // продолжаем игру
     },
     onMenu() {
         gameState = GameState.MENU;
-        // например, сбросить игру
         player.reset();
         ScoreManager.reset();
         cameraY = 0;
         bulletPool.forEach(b => b.active = false);
         spawnEntities(true);
-        startTime = Date.now();
     }
 });
 
@@ -49,22 +45,15 @@ canvas.addEventListener('touchend', e => {
 // === функция обработки клика / тача ===
 function handleInput(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
 
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-
-    // Сначала проверяем кнопку паузы
+    // клики по паузе/меню
     if (pauseUI.handleClick(x, y, gameState)) return;
 
-    // Если игра не PLAYING — клики по игре игнорируем
+    // движения игрока только если PLAYING
     if (gameState !== GameState.PLAYING) return;
-
-    // ---- движение игрока ----
-    // Допустим, левая половина экрана = влево, правая = вправо
-    if (x < canvas.width / 2) inputX = -1;
-    else inputX = 1;
+    inputX = x < canvas.width / 2 ? -1 : 1;
 }
 function resize() {
     canvas.width = window.innerWidth;
