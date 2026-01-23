@@ -112,7 +112,6 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
-let delta = 1;
 
 
 // =====================
@@ -138,8 +137,8 @@ function updateBullets() {
     for (const b of bulletPool) {
         if (!b.active) continue;
 
-        b.x += b.vx * delta;
-        b.y += b.vy * delta;
+        b.x += b.vx;
+        b.y += b.vy;
 
         // если пуля вышла за экран — возвращаем в пул
         if (b.x < 0 || b.x > canvas.width || b.y - cameraY < 0 || b.y - cameraY > canvas.height) {
@@ -226,13 +225,13 @@ class Player {
     }
 
     update(inputX) {
-        this.x += inputX * 11 * delta;
+        this.x += inputX * 11;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
         this.lastY = this.y;
-        this.vy += CONFIG.GRAVITY * delta;
-        this.y += this.vy * delta;
+        this.vy += CONFIG.GRAVITY;
+        this.y += this.vy;
 
         // ---- Fire Logic ----
         if (this.shootCooldown <= 0) {
@@ -290,11 +289,11 @@ class Enemy {
 
         // движение
         if (this.type === 'horizontal') {
-            this.x += this.vx * delta;
+            this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.ENEMY_SIZE > canvas.width) this.vx *= -1;
         }
         if (this.type === 'vertical') {
-            this.y += this.vy * delta;
+            this.y += this.vy;
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude)
                 this.vy *= -1;
         }
@@ -358,11 +357,11 @@ class Platform {
         if (!this.active) return;
         this.prevY = this.y;
         if (this.movementType === 'horizontal') {
-            this.x += this.vx * delta;
+            this.x += this.vx;
             if (this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
         if (this.movementType === 'vertical') {
-            this.y += this.vy * delta;
+            this.y += this.vy;
             if (this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
         if (this.y - cameraY > canvas.height) this.active = false;
@@ -530,7 +529,7 @@ function spawnEntities(isReset = false) {
             // ↑ 0.15 — скорость роста (очень медленно)
 
             const minGap = Math.min(85 * growth, 95);
-            const maxGap = Math.min(100 * growth, 105);
+            const maxGap = Math.min(100 * growth, 110);
 
             const gap = rand(minGap, maxGap);
 
@@ -563,7 +562,7 @@ function spawnEntities(isReset = false) {
 function updateCamera() {
     const minY = canvas.height * 0.65;
     const target = Math.min(player.y - minY, cameraY);
-    cameraY += (target - cameraY) * 0.18 * delta;
+    cameraY += (target - cameraY) * 0.18;
 }
 
 // =====================
@@ -571,7 +570,7 @@ function updateCamera() {
 // =====================
 spawnEntities(true);
 
-function update(delta) {
+function update() {
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
@@ -627,12 +626,9 @@ function draw() {
 }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
-function loop(time) {
-    delta = Math.min((time - lastTime) / 16.6667, 2);
-    lastTime = time;
-
+function loop() {
     if (gameState === GameState.PLAYING) {
-        update(delta);
+        update();
     }
 
     draw();
@@ -640,4 +636,6 @@ function loop(time) {
 
     requestAnimationFrame(loop);
 }
+
+loop();
 loop();
