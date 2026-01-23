@@ -652,12 +652,12 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
-    if (gameState === GameState.PLAYING) {
-        update();
-    }
+    if (gameState === GameState.PLAYING) update();
 
     draw();
-    pauseUI.draw(gameState);
+    
+    const coins = calculateCoins(ScoreManager.value);
+    pauseUI.draw(gameState, coins);
 
     requestAnimationFrame(loop);
 }
