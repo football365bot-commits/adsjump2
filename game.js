@@ -490,6 +490,57 @@ class Item {
 
 
 function updateItems() { itemPool.forEach(i => i.update()); }
+
+// ===================== BLACK HOLE =====================
+class BlackHole {
+    constructor() {
+        this.active = false;
+        this.x = 0;
+        this.y = 0;
+        this.radius = 100;
+        this.strength = 1.2;
+    }
+
+    spawn(x, y, radius = 100, strength = 1.2) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.strength = strength;
+        this.active = true;
+    }
+
+    attract(obj) {
+        if (!this.active) return;
+
+        const dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
+        const dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
+        const dist = Math.hypot(dx, dy);
+        if (dist < this.radius) {
+            const force = this.strength * (1 - dist / this.radius);
+            obj.vx = (obj.vx || 0) + dx / dist * force;
+            obj.vy = (obj.vy || 0) + dy / dist * force;
+        }
+    }
+
+    draw(cameraY) {
+        if (!this.active) return;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - cameraY, this.radius, 0, Math.PI*2);
+        ctx.fill();
+    }
+}
+
+// Пул чёрных дыр
+const MAX_BLACKHOLES = 3;
+const blackHolePool = Array.from({ length: MAX_BLACKHOLES }, () => new BlackHole());
+let lastBlackHoleScore = 0; // для спавна по скору
+function getBlackHoleFromPool() {
+    for (const bh of blackHolePool) {
+        if (!bh.active) return bh;
+    }
+    return null;
+}
 // =====================
 // GAME STATE
 // =====================
@@ -575,6 +626,19 @@ function spawnEntities(isReset = false) {
             lastEnemyScore = ScoreManager.value; // обновляем порог
         }
     }
+    // --- SPAWN BLACK HOLES ---
+    const blackHoleInterval = 1500; // очки между спавнами
+    if (ScoreManager.value - lastBlackHoleScore >= blackHoleInterval) {
+        const bh = getBlackHoleFromPool();
+        if (bh) {
+            const x = rand(50, canvas.width - 50);
+            const y = player.y - rand(400, 800); // спауним выше игрока
+            const radius = rand(80, 120);
+            const strength = rand(0.8, 1.5);
+            bh.spawn(x, y, radius, strength);
+            lastBlackHoleScore = ScoreManager.value;
+        }
+    }
 
     
 }
@@ -599,6 +663,11 @@ function update() {
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
     spawnEntities();
+    blackHolePool.forEach(bh => {
+        bh.attract(player);       // тянет игрока
+        enemies.forEach(e => bh.attract(e)); // тянет врагов
+        itemPool.forEach(i => bh.attract(i)); // тянет предметы
+    });
     updateItems();
     
 
@@ -653,6 +722,7 @@ function draw() {
     // HP — чуть правее центра
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
+    blackHolePool.forEach(bh => bh.draw(cameraY));
 }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
