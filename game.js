@@ -326,11 +326,13 @@ class Player {
         ctx.restore();
 
         // === ТРУБОЧКА ===
+        
         // координаты руки с учётом зума и камеры
-        const handX = (this.x + this.handAnchor.x) * cameraZoom;
+        ctx.save();
+        const handX = (this.x + this.handAnchor.x);
         const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
 
-        ctx.save();
+        
         ctx.translate(handX, handY);
         ctx.rotate(this.pipe.angle); // угол к цели
         ctx.fillStyle = '#fff';
