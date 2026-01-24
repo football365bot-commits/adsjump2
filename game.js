@@ -220,25 +220,34 @@ const ShootingSystem = {
 // =====================
 // PLAYER
 // =====================
+import { PlayerAnchors } from './anchors.js';
+
 class Player {
     constructor() {
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
         this.hp = 100;
-        this.handAnchor = { x: this.size * 0.75, y: this.size * 0.5 }; // 75% вправо, 50% вниз
 
         // ===== АНИМАЦИИ =====
-        this.anim = {
-            tilt: 0,   // наклон влево/вправо
-            jump: 0,   // прыжковая анимация
-            land: 0    // анимация приземления
-        };
+        this.anim = { tilt: 0, jump: 0, land: 0 };
 
         // ===== ТРУБОЧКА =====
-        this.pipe = {
-            angle: 0,
-            length: 18
+        this.pipe = { angle: 0, length: 18 };
+
+        // ===== СПРАЙТЫ =====
+        this.baseSprite = new Image();
+        this.baseSprite.src = './base.png'; // путь к твоему PNG рядом с game.js
+
+        // ===== СЛОИ ДЛЯ АКСЕССУАРОВ =====
+        this.layers = {
+            hair: null,
+            beard: null,
+            hat: null,
+            earrings: null,
+            glasses: null,
+            backpack: null,
+            custom: [] // любые дополнительные скины
         };
 
         this.reset();
@@ -256,56 +265,43 @@ class Player {
     update(inputX) {
         this.lastY = this.y;
 
-        // === движение игрока ===
+        // движение
         this.x += inputX * 11;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
-        // === гравитация ===
+        // гравитация
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
 
-        // === АНИМАЦИЯ НАКЛОНА ===
+        // наклон
         const targetTilt = inputX * 0.25;
         this.anim.tilt += (targetTilt - this.anim.tilt) * 0.15;
 
-        // === АНИМАЦИЯ ПРЫЖКА ===
+        // прыжок / приземление
         if (this.vy < 0) this.anim.jump = 1;
         this.anim.jump = Math.max(0, this.anim.jump - 0.08);
-
-        // === АНИМАЦИЯ ПРИЗЕМЛЕНИЯ ===
         if (this.vy > 0 && this.lastY + this.size <= this.y) this.anim.land = 1;
         this.anim.land = Math.max(0, this.anim.land - 0.12);
 
-        // === СТРЕЛЬБА ===
+        // стрельба (оставляем как есть)
         if (this.shootCooldown <= 0) {
-            let target = null;
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
-                if (e.active && isOnScreen(e)) {
-                    target = e;
-                    break;
-                }
-            }
+            let target = enemies.find(e => e.active && isOnScreen(e));
             if (target && isOnScreen(this)) {
                 ShootingSystem.requestShot('player', this, target);
-                this.shootCooldown = 10; // 6 выстрелов в секунду
+                this.shootCooldown = 10;
 
-                // === ПОВОРОТ ТРУБОЧКИ К ЦЕЛИ ===
                 const dx = (target.x + CONFIG.ENEMY_SIZE / 2) - (this.x + this.size / 2);
                 const dy = (target.y + CONFIG.ENEMY_SIZE / 2) - (this.y + this.size / 2);
                 this.pipe.angle = Math.atan2(dy, dx);
             }
-        } else {
-            this.shootCooldown--;
-        }
+        } else this.shootCooldown--;
     }
 
     draw(cameraY) {
         const cx = this.x + this.size / 2;
         const cy = this.y - cameraY + this.size / 2;
 
-        // === АНИМАЦИЯ ПРЫЖКА / ПРИЗЕМЛЕНИЯ ===
         const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
         const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
         const scaleY = 1 + jumpStretch - landSquash;
@@ -313,30 +309,44 @@ class Player {
 
         ctx.save();
         ctx.translate(cx, cy);
-
-        // наклон
         ctx.rotate(this.anim.tilt);
-
-        // масштаб
         ctx.scale(scaleX, scaleY);
 
-        // тело игрока
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        // === Рисуем базовый спрайт ===
+        ctx.drawImage(this.baseSprite, -this.size/2, -this.size/2, this.size, this.size);
 
-        // === ТРУБОЧКА ===
-        const handAnchor = PlayerAnchors.hand; // берём из anchors.js
-        const handX = (handAnchor.x - 0.5) * this.size; // смещение относительно центра
+        // === Рисуем аксессуары по слоям ===
+        for (const key in this.layers) {
+            const layer = this.layers[key];
+            if (!layer) continue;
+            const anchor = PlayerAnchors[key] || { x: 0.5, y: 0.5 }; // fallback
+            const lx = (anchor.x - 0.5) * this.size;
+            const ly = (anchor.y - 0.5) * this.size;
+            ctx.drawImage(layer, lx, ly, this.size, this.size);
+        }
+
+        // === Рисуем трубу ===
+        const handAnchor = PlayerAnchors.hand;
+        const handX = (handAnchor.x - 0.5) * this.size;
         const handY = (handAnchor.y - 0.5) * this.size;
 
         ctx.save();
-        ctx.translate(handX, handY); // переносим в руку
-        ctx.rotate(this.pipe.angle); // угол к цели
+        ctx.translate(handX, handY);
+        ctx.rotate(this.pipe.angle);
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
 
         ctx.restore();
+    }
+
+    // метод для установки скина/аксессуара
+    setLayer(name, image) {
+        if (this.layers[name] !== undefined) {
+            this.layers[name] = image;
+        } else {
+            this.layers.custom.push({ name, image });
+        }
     }
 }
 // =====================
