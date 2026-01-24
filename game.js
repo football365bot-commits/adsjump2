@@ -502,10 +502,12 @@ class BlackHole {
         this.pullStrength = 0.4; // сила притяжения
     }
 
-    spawn(x, y) {
+    spawn(x, y, radius = 120, pullStrength = 0.4) {
         this.active = true;
         this.x = x;
         this.y = y;
+        this.radius = radius;
+        this.pullStrength = pullStrength;
     }
 
     update() {
