@@ -72,7 +72,7 @@ export class PauseUI {
         // Рисуем монетки только на Game Over
         if (gameState === GameState.GAME_OVER) {
             ctx.font = '18px Arial';
-            ctx.fillText(`Монетки: ${coins.toFixed(2)}`, canvas.width / 2, box.y + 40);
+            ctx.fillText(`Монетки: ${coins.toFixed(2)}`, canvas.width / 2, box.y + 70);
         }
 
         this.drawButtons(box, gameState);
