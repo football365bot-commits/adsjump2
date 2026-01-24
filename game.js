@@ -308,22 +308,22 @@ class Player {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(this.anim.tilt);
-        ctx.scale(scaleX, scaleY);
+        ctx.scale(scaleX * cameraZoom, scaleY * cameraZoom); // <-- применяем камеру зум
 
-        // === Рисуем базовый спрайт ===
+        // === Базовый спрайт игрока ===
         ctx.drawImage(this.baseSprite, -this.size/2, -this.size/2, this.size, this.size);
 
-        // === Рисуем аксессуары по слоям ===
+        // === Аксессуары ===
         for (const key in this.layers) {
             const layer = this.layers[key];
             if (!layer) continue;
-            const anchor = PlayerAnchors[key] || { x: 0.5, y: 0.5 }; // fallback
+            const anchor = PlayerAnchors[key] || { x: 0.5, y: 0.5 };
             const lx = (anchor.x - 0.5) * this.size;
             const ly = (anchor.y - 0.5) * this.size;
             ctx.drawImage(layer, lx, ly, this.size, this.size);
         }
 
-        // === Рисуем трубу ===
+        // === Труба ===
         const handAnchor = PlayerAnchors.hand;
         const handX = (handAnchor.x - 0.5) * this.size;
         const handY = (handAnchor.y - 0.5) * this.size;
@@ -336,6 +336,7 @@ class Player {
         ctx.restore();
 
         ctx.restore();
+        
     }
 
     // метод для установки скина/аксессуара
@@ -413,7 +414,7 @@ class Enemy {
 
         ctx.save();
         ctx.translate(this.x + CONFIG.ENEMY_SIZE/2, this.y - cameraY + CONFIG.ENEMY_SIZE/2);
-        ctx.scale(scale, scale);
+        ctx.scale(scale * cameraZoom, scale * cameraZoom);
 
         // тело врага
         ctx.fillStyle = '#ff0000';
@@ -471,8 +472,21 @@ class Platform {
     }
     draw(cameraY) {
         if (!this.active) return;
-        ctx.fillStyle = this.isBroken ? '#ff4444' : this.movementType === 'vertical' ? '#8888ff' : this.movementType === 'horizontal' ? '#00ffff' : '#00ff88';
-        ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
+
+        ctx.save();
+        ctx.translate(this.x, this.y - cameraY);
+        ctx.scale(cameraZoom, cameraZoom); // <-- применяем камеру зум
+
+        ctx.fillStyle = this.isBroken 
+            ? '#ff4444' 
+            : this.movementType === 'vertical' 
+                ? '#8888ff' 
+                : this.movementType === 'horizontal' 
+                    ? '#00ffff' 
+                    : '#00ff88';
+
+        ctx.fillRect(0, 0, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
+        ctx.restore();
     }
     checkCollision(player) {
         if (!this.active) return false;
@@ -568,8 +582,13 @@ class Item {
             case 'medkit': color = '#00ff00'; break;
             case 'adrenaline': color = '#ff00ff'; break;
         }
+        ctx.save();
+        ctx.translate(this.x, this.y - cameraY);
+        ctx.scale(cameraZoom, cameraZoom); // <-- применяем камеру зум
         ctx.fillStyle = color;
-        ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
+        ctx.fillRect(0, 0, this.size, this.size);
+        ctx.restore();
+
     }
 }
 
