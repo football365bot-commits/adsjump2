@@ -220,8 +220,6 @@ const ShootingSystem = {
 // =====================
 // PLAYER
 // =====================
-import { PlayerAnchors } from './anchors.js';
-
 class Player {
     constructor() {
         this.size = CONFIG.PLAYER_SIZE;
@@ -237,7 +235,7 @@ class Player {
 
         // ===== СПРАЙТЫ =====
         this.baseSprite = new Image();
-        this.baseSprite.src = './base.png'; // путь к твоему PNG рядом с game.js
+        this.baseSprite.src = './chiba.png'; // путь к твоему PNG рядом с game.js
 
         // ===== СЛОИ ДЛЯ АКСЕССУАРОВ =====
         this.layers = {
