@@ -95,7 +95,7 @@ const CONFIG = {
     BULLET_SPEED: 13,
 }; 
 
-
+const cameraZoom = 0.04; 
 // =====================
 // UTILS
 // =====================
@@ -114,7 +114,6 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
-let cameraZoom = 0.04;        // текущий зум камеры
 
 // =====================
 // MONETIZATION
@@ -328,7 +327,6 @@ class Player {
 
         // === ТРУБОЧКА ===
         // координаты руки с учётом зума и камеры
-        const hand = this.anchors.hand;
         const handX = (this.x + this.handAnchor.x) * cameraZoom;
         const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
 
@@ -823,23 +821,7 @@ function draw() {
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
     blackHolePool.forEach(bh => bh.draw(cameraY));
-    ctx.save();
-    ctx.translate(this.x + this.size/2, this.y - cameraY + this.size/2);
-    ctx.scale(cameraZoom, cameraZoom);  // применяем зум
-    ctx.rotate(this.anim.tilt);
-
-    // масштаб прыжка / приземления
-    const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
-    const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
-    const scaleY = 1 + jumpStretch - landSquash;
-    const scaleX = 1 - jumpStretch + landSquash;
-    ctx.scale(scaleX, scaleY);
-
-    // тело игрока
-    ctx.fillStyle = '#00ff00';
-    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
-
-    ctx.restore();
+    
     }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
