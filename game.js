@@ -529,6 +529,30 @@ class BlackHole {
         ctx.arc(this.x, this.y - cameraY, this.radius, 0, Math.PI*2);
         ctx.fill();
     }
+    update() {
+        if (!this.active) return;
+
+        const objects = [...enemies, ...itemPool, player]; // все объекты, которые можем тянуть
+        const strength = 0.4; // сила притяжения (можно регулировать)
+
+        objects.forEach(obj => {
+            if (!obj.active) return;
+
+            const dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            const dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < this.radius) {
+                // нормализуем вектор
+                const pullX = dx / dist * strength;
+                const pullY = dy / dist * strength;
+
+                // применяем к объекту
+                obj.x += pullX;
+                obj.y += pullY;
+            }
+        });
+    }
 }
 
 // Пул чёрных дыр
