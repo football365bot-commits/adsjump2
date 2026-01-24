@@ -1,5 +1,6 @@
 
 import { PauseUI, GameState } from './pause.js';
+import { PlayerAnchors } from './anchors.js';
 
 // =====================
 // CANVAS SETUP
@@ -327,6 +328,7 @@ class Player {
 
         // === ТРУБОЧКА ===
         // координаты руки с учётом зума и камеры
+        const hand = this.anchors.hand;
         const handX = (this.x + this.handAnchor.x) * cameraZoom;
         const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
 
