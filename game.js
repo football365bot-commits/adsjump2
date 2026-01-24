@@ -113,6 +113,8 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
+let cameraZoom = 0.04;        // текущий зум камеры
+
 // =====================
 // MONETIZATION
 // =====================
@@ -224,6 +226,7 @@ class Player {
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
         this.hp = 100;
+        this.handAnchor = { x: this.size * 0.75, y: this.size * 0.5 }; // 75% вправо, 50% вниз
 
         // ===== АНИМАЦИИ =====
         this.anim = {
@@ -323,9 +326,13 @@ class Player {
         ctx.restore();
 
         // === ТРУБОЧКА ===
+        // координаты руки с учётом зума и камеры
+        const handX = (this.x + this.handAnchor.x) * cameraZoom;
+        const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
+
         ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(this.pipe.angle);
+        ctx.translate(handX, handY);
+        ctx.rotate(this.pipe.angle); // угол к цели
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
@@ -814,7 +821,24 @@ function draw() {
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
     blackHolePool.forEach(bh => bh.draw(cameraY));
-}
+    ctx.save();
+    ctx.translate(this.x + this.size/2, this.y - cameraY + this.size/2);
+    ctx.scale(cameraZoom, cameraZoom);  // применяем зум
+    ctx.rotate(this.anim.tilt);
+
+    // масштаб прыжка / приземления
+    const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
+    const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
+    const scaleY = 1 + jumpStretch - landSquash;
+    const scaleX = 1 - jumpStretch + landSquash;
+    ctx.scale(scaleX, scaleY);
+
+    // тело игрока
+    ctx.fillStyle = '#00ff00';
+    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+
+    ctx.restore();
+    }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
