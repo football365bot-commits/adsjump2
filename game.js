@@ -512,7 +512,7 @@ class BlackHole {
         this.y = 0;
         this.radius = 120;      // радиус притяжения
         this.size = 50;         // отрисовка самой дыры
-        this.pullStrength = 0.8; // базовая сила притяжения
+        this.pullStrength = 0.4; // базовая сила притяжения
     }
 
     spawn(x, y, radius = 120, strength = 0.8) {
@@ -541,7 +541,7 @@ class BlackHole {
                 const strength = this.pullStrength * (1 + (this.radius - dist)/this.radius * 4);
 
                 // угол для спирали (вращение вокруг дыры)
-                const angle = Math.atan2(dy, dx) + 0.2;
+                const angle = Math.atan2(dy, dx) + 0.1;
                 const pullX = Math.cos(angle) * strength;
                 const pullY = Math.sin(angle) * strength;
 
@@ -549,7 +549,7 @@ class BlackHole {
                 obj.y += pullY;
 
                 // уменьшаем размер визуально
-                obj.visualScale = Math.max(0.1, dist / this.radius);
+                obj.visualScale = Math.max(0.5, dist / this.radius);
 
                 // если объект почти достиг центра
                 if (dist < 5) obj.active = false;
