@@ -522,6 +522,8 @@ const ScoreManager = {
 // =====================
 // SPAWN ENTITIES
 // =====================
+let lastEnemyScore = 0; // очки, при которых мы спавнили последнего врага
+
 function spawnEntities(isReset = false) {
     const factor = ScoreManager.difficultyFactor();
     if (!isReset && platforms.every(p => p.active)) return;
@@ -537,24 +539,21 @@ function spawnEntities(isReset = false) {
         start.spawn(x, y, 'static', false);
         player.y = y - player.size;
         maxPlatformY = y;
+
+        lastEnemyScore = 0; // сбрасываем спавн врагов при рестарте
     }
 
+    // ===== Платформы =====
     platforms.forEach(p => {
         if (!p.active) {
-
-            const factor = ScoreManager.difficultyFactor();
-
             const growth = 1 + factor * 0.08;
-            // ↑ 0.15 — скорость роста (очень медленно)
-
             const minGap = Math.min(85 * growth, 95);
             const maxGap = Math.min(100 * growth, 110);
 
             const gap = rand(minGap, maxGap);
-
             const x = rand(0, canvas.width - CONFIG.PLATFORM_WIDTH);
             const y = maxPlatformY - gap;
-    
+
             const types = ['static'];
             if (Math.random() < 0.15 + 0.7 * factor) types.push('horizontal');
             if (Math.random() < 0.12 * factor) types.push('vertical');
@@ -564,14 +563,20 @@ function spawnEntities(isReset = false) {
         }
     });
 
-    enemies.forEach(e => {
-        if (!e.active && Math.random() < CONFIG.ENEMY_SPAWN_CHANCE + 0.00002 * ScoreManager.difficultyFactor()) {
+    // ===== Враги по счёту =====
+    const SCORE_STEP = 500 + Math.random() * 500; // 500–1000 очков
+    if (ScoreManager.value - lastEnemyScore >= SCORE_STEP) {
+        const e = enemies.find(e => !e.active);
+        if (e) {
             const x = rand(0, canvas.width - CONFIG.ENEMY_SIZE);
-            const y = cameraY - CONFIG.ENEMY_SIZE; // спаун сверху экрана
+            const y = cameraY - CONFIG.ENEMY_SIZE; // сверху экрана
             e.spawn(x, y, pick(['static', 'horizontal', 'vertical']));
-            e.hp = CONFIG.ENEMY_HP; // задаем HP из конфига
+            e.hp = CONFIG.ENEMY_HP;
+            lastEnemyScore = ScoreManager.value; // обновляем порог
         }
-    });
+    }
+
+    
 }
 
 
