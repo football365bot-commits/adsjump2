@@ -497,44 +497,21 @@ class BlackHole {
         this.active = false;
         this.x = 0;
         this.y = 0;
-        this.radius = 100;
-        this.strength = 1.2;
+        this.radius = 120; // радиус притяжения
+        this.size = 50; // для отрисовки (можно потом заменить на скин)
+        this.pullStrength = 0.4; // сила притяжения
     }
 
-    spawn(x, y, radius = 100, strength = 1.2) {
+    spawn(x, y) {
+        this.active = true;
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.strength = strength;
-        this.active = true;
     }
 
-    attract(obj) {
-        if (!this.active) return;
-
-        const dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
-        const dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
-        const dist = Math.hypot(dx, dy);
-        if (dist < this.radius) {
-            const force = this.strength * (1 - dist / this.radius);
-            obj.vx = (obj.vx || 0) + dx / dist * force;
-            obj.vy = (obj.vy || 0) + dy / dist * force;
-        }
-    }
-
-    draw(cameraY) {
-        if (!this.active) return;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y - cameraY, this.radius, 0, Math.PI*2);
-        ctx.fill();
-    }
     update() {
         if (!this.active) return;
 
-        const objects = [...enemies, ...itemPool, player]; // все объекты, которые можем тянуть
-        const strength = 0.4; // сила притяжения (можно регулировать)
-
+        const objects = [...enemies, ...itemPool]; // враги и предметы
         objects.forEach(obj => {
             if (!obj.active) return;
 
@@ -543,15 +520,40 @@ class BlackHole {
             const dist = Math.hypot(dx, dy);
 
             if (dist < this.radius) {
-                // нормализуем вектор
-                const pullX = dx / dist * strength;
-                const pullY = dy / dist * strength;
+                const pullX = dx / dist * this.pullStrength;
+                const pullY = dy / dist * this.pullStrength;
 
-                // применяем к объекту
                 obj.x += pullX;
                 obj.y += pullY;
+
+                // если объект достиг центра черной дыры — деактивируем
+                if (dist < 5) obj.active = false;
             }
         });
+
+        // игрок
+        const dxP = this.x - (player.x + player.size/2);
+        const dyP = this.y - (player.y + player.size/2);
+        const distP = Math.hypot(dxP, dyP);
+
+        if (distP < this.radius) {
+            const pullX = dxP / distP * this.pullStrength;
+            const pullY = dyP / distP * this.pullStrength;
+
+            player.x += pullX;
+            player.y += pullY;
+
+            // если черная дыра “догнала” игрока
+            if (distP < 10) gameState = GameState.GAME_OVER;
+        }
+    }
+
+    draw(cameraY) {
+        if (!this.active) return;
+        ctx.fillStyle = '#000000'; // черная дыра
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - cameraY, this.size, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 
@@ -681,35 +683,25 @@ function updateCamera() {
 // GAME LOOP
 // =====================
 spawnEntities(true);
-
-function update() {
+update() {
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
     spawnEntities();
-    blackHolePool.forEach(bh => {
-        bh.attract(player);       // тянет игрока
-        enemies.forEach(e => bh.attract(e)); // тянет врагов
-        itemPool.forEach(i => bh.attract(i)); // тянет предметы
-    });
     updateItems();
-    
 
-    // обработка выстрелов через систему
+    blackHolePool.forEach(bh => bh.update()); // притяжение черных дыр
+
     ShootingSystem.processShots();
-
-    // обновление пуль
     updateBullets();
-
-    // обновление счета и камеры
     ScoreManager.update(player);
     updateCamera();
 
-    // проверка падения игрока
     if (player.y - cameraY > canvas.height || player.hp <= 0) {
         gameState = GameState.GAME_OVER;
     }
 }
+
 function restartGame() {
     player.reset();
     ScoreManager.reset();
