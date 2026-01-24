@@ -514,41 +514,46 @@ class BlackHole {
         if (!this.active) return;
 
         const objects = [...enemies, ...itemPool]; // враги и предметы
+        const spiralSpeed = 0.12; // скорость вращения вокруг центра
+
         objects.forEach(obj => {
             if (!obj.active) return;
 
-            const dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
-            const dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
-            const dist = Math.hypot(dx, dy);
+            let dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            let dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            let dist = Math.hypot(dx, dy);
+            if (dist > this.radius) return;
 
-            if (dist < this.radius) {
-                const pullX = dx / dist * this.pullStrength;
-                const pullY = dy / dist * this.pullStrength;
+            // сила притяжения пропорциональна близости
+            const pull = this.pullStrength * (1 - dist / this.radius) * 2; 
 
-                obj.x += pullX;
-                obj.y += pullY;
+            // угол к центру
+            const angle = Math.atan2(dy, dx);
 
-                // если объект достиг центра черной дыры — деактивируем
-                if (dist < 5) obj.active = false;
-            }
+            // спиральное движение
+            obj.x += Math.cos(angle) * pull - Math.sin(angle) * spiralSpeed * dist;
+            obj.y += Math.sin(angle) * pull + Math.cos(angle) * spiralSpeed * dist;
+
+            if (dist < 5) obj.active = false;
         });
 
         // игрок
-        const dxP = this.x - (player.x + player.size/2);
-        const dyP = this.y - (player.y + player.size/2);
-        const distP = Math.hypot(dxP, dyP);
+        let dxP = this.x - (player.x + player.size/2);
+        let dyP = this.y - (player.y + player.size/2);
+        let distP = Math.hypot(dxP, dyP);
 
         if (distP < this.radius) {
-            const pullX = dxP / distP * this.pullStrength;
-            const pullY = dyP / distP * this.pullStrength;
+            const pull = this.pullStrength * (1 - distP / this.radius) * 2;
 
-            player.x += pullX;
-            player.y += pullY;
+            const angleP = Math.atan2(dyP, dxP);
 
-            // если черная дыра “догнала” игрока
+            player.x += Math.cos(angleP) * pull - Math.sin(angleP) * spiralSpeed * distP;
+            player.y += Math.sin(angleP) * pull + Math.cos(angleP) * spiralSpeed * distP;
+
             if (distP < 10) gameState = GameState.GAME_OVER;
         }
     }
+    
 
     draw(cameraY) {
         if (!this.active) return;
