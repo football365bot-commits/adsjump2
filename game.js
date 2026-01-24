@@ -683,7 +683,7 @@ function updateCamera() {
 // GAME LOOP
 // =====================
 spawnEntities(true);
-update() {
+function update() {
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
