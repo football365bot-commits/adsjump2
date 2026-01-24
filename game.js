@@ -235,7 +235,7 @@ class Player {
 
         // ===== СПРАЙТЫ =====
         this.baseSprite = new Image();
-        this.baseSprite.src = './chiba.png'; // путь к твоему PNG рядом с game.js
+        this.baseSprite.src = './chiba.jpg'; // путь к твоему PNG рядом с game.js
 
         // ===== СЛОИ ДЛЯ АКСЕССУАРОВ =====
         this.layers = {
