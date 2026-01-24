@@ -265,8 +265,13 @@ class Player {
     }
 
     draw(cameraY) {
+        const scale = this.visualScale || 1;
+        ctx.save();
+        ctx.translate(this.x + this.size/2, this.y - cameraY + this.size/2);
+        ctx.scale(scale, scale);
         ctx.fillStyle = '#00ff00';
-        ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.restore();
     }
 }
 
@@ -332,17 +337,25 @@ class Enemy {
     draw(cameraY) {
         if (!this.active) return;
 
+        const scale = this.visualScale || 1;
+
+        ctx.save();
+        ctx.translate(this.x + CONFIG.ENEMY_SIZE/2, this.y - cameraY + CONFIG.ENEMY_SIZE/2);
+        ctx.scale(scale, scale);
+
         // тело врага
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(this.x, this.y - cameraY, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
+        ctx.fillRect(-CONFIG.ENEMY_SIZE/2, -CONFIG.ENEMY_SIZE/2, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
 
         // HP-бар сверху
         const barWidth = CONFIG.ENEMY_SIZE;
         const barHeight = 4;
-        ctx.fillStyle = '#555'; // фон полоски
-        ctx.fillRect(this.x, this.y - cameraY - 6, barWidth, barHeight);
-        ctx.fillStyle = '#00ff00'; // сам HP
-        ctx.fillRect(this.x, this.y - cameraY - 6, barWidth * (this.hp / CONFIG.ENEMY_HP), barHeight);
+        ctx.fillStyle = '#555';
+        ctx.fillRect(-barWidth/2, -CONFIG.ENEMY_SIZE/2 - 6, barWidth, barHeight);
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(-barWidth/2, -CONFIG.ENEMY_SIZE/2 - 6, barWidth * (this.hp / CONFIG.ENEMY_HP), barHeight);
+
+        ctx.restore();
     }
 }
 
@@ -498,71 +511,61 @@ class BlackHole {
         this.x = 0;
         this.y = 0;
         this.radius = 120; // радиус притяжения
-        this.size = 50; // для отрисовки (можно потом заменить на скин)
-        this.pullStrength = 0.4; // сила притяжения
+        this.size = 50; // для отрисовки
+        this.pullStrength = 0.4; // базовая сила притяжения
     }
 
-    spawn(x, y, radius = 120, pullStrength = 0.4) {
+    spawn(x, y) {
         this.active = true;
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.pullStrength = pullStrength;
     }
 
     update() {
         if (!this.active) return;
 
-        const objects = [...enemies, ...itemPool]; // враги и предметы
-        const spiralSpeed = 0.12; // скорость вращения вокруг центра
-
+        const objects = [...enemies, player]; // враги и игрок
         objects.forEach(obj => {
             if (!obj.active) return;
 
-            let dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
-            let dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
-            let dist = Math.hypot(dx, dy);
-            if (dist > this.radius) return;
+            const dx = this.x - (obj.x + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            const dy = this.y - (obj.y + (obj.size || CONFIG.ENEMY_SIZE)/2);
+            const dist = Math.hypot(dx, dy);
 
-            // сила притяжения пропорциональна близости
-            const pull = this.pullStrength * (1 - dist / this.radius) * 2; 
+            if (dist < this.radius) {
+                // ускорение: чем ближе к центру, тем сильнее
+                const strength = this.pullStrength * (1 + (this.radius - dist)/this.radius * 2);
 
-            // угол к центру
-            const angle = Math.atan2(dy, dx);
+                // угол для спирали
+                const angle = Math.atan2(dy, dx) + 0.2; // вращаем против часовой стрелки
+                const pullX = Math.cos(angle) * strength;
+                const pullY = Math.sin(angle) * strength;
 
-            // спиральное движение
-            obj.x += Math.cos(angle) * pull - Math.sin(angle) * spiralSpeed * dist;
-            obj.y += Math.sin(angle) * pull + Math.cos(angle) * spiralSpeed * dist;
+                obj.x += pullX;
+                obj.y += pullY;
 
-            if (dist < 5) obj.active = false;
+                // уменьшаем размер по мере приближения
+                obj.visualScale = Math.max(0.1, dist / this.radius);
+
+                // если центр дыры достигнут
+                if (dist < 5) obj.active = false;
+                // если это игрок
+                if (obj === player && dist < 10) gameState = GameState.GAME_OVER;
+            } else {
+                obj.visualScale = 1; // вне радиуса — нормальный размер
+            }
         });
-
-        // игрок
-        let dxP = this.x - (player.x + player.size/2);
-        let dyP = this.y - (player.y + player.size/2);
-        let distP = Math.hypot(dxP, dyP);
-
-        if (distP < this.radius) {
-            const pull = this.pullStrength * (1 - distP / this.radius) * 2;
-
-            const angleP = Math.atan2(dyP, dxP);
-
-            player.x += Math.cos(angleP) * pull - Math.sin(angleP) * spiralSpeed * distP;
-            player.y += Math.sin(angleP) * pull + Math.cos(angleP) * spiralSpeed * distP;
-
-            if (distP < 10) gameState = GameState.GAME_OVER;
-        }
     }
-    
 
     draw(cameraY) {
         if (!this.active) return;
-        ctx.fillStyle = '#000000'; // черная дыра
+        ctx.fillStyle = '#000000';
         ctx.beginPath();
         ctx.arc(this.x, this.y - cameraY, this.size, 0, Math.PI * 2);
         ctx.fill();
     }
 }
+
 
 // Пул чёрных дыр
 const MAX_BLACKHOLES = 3;
