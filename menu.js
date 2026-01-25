@@ -12,17 +12,20 @@ export class Menu {
             { text: 'Рейтинг', callback: () => console.log('Рейтинг') }
         ];
 
-        this.buttonWidth = 160;
-        this.buttonHeight = 40;
-        this.buttonGap = 20;
-        this.startX = 20; // отступ слева
-        this.startY = 20;
+        this.buttonWidth = 120;
+        this.buttonHeight = 30;
+        this.buttonGap = 25;
+        this.startX = 15; // отступ слева
+        this.startY = null;
     }
 
     draw(ctx, canvas, player) {
         // === фон ===
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const totalHeight = this.buttons.length * this.buttonHeight + (this.buttons.length - 1) * this.buttonGap;
+        this.startY = (canvas.height / 2) - (totalHeight / 2);
 
         // === кнопки слева ===
         this.buttons.forEach((b, i) => {
@@ -47,7 +50,7 @@ export class Menu {
         // === крупный игрок справа ===
 
         if (player && player.menuSkinCanvas) {
-            const px = canvas.width * 0.75;
+            const px = canvas.width * 0.625;
             const py = canvas.height / 2;
 
             // используем канвас самого игрока, уже с динамическим размером
