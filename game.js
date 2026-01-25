@@ -699,15 +699,19 @@ function getBlackHoleFromPool() {
 // =====================
 // GAME STATE
 // =====================
+// =====================
+// PLAYER SKINS
+// =====================
 const player = new Player();
 const playerSkin = new Image();
 playerSkin.src = 'chiba.jpg'; // путь к твоему скину
 playerSkin.onload = () => {
-    // мини-скин для игры 40x40
+    // мини-скин для игры (фиксированный размер из CONFIG)
     player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE);
 
-    // большой скин для меню 500x500
-    player.menuSkinCanvas = player.prepareSkin(playerSkin, 500);
+    // большой скин для меню — универсальный размер, зависит от экрана
+    const menuSize = Math.min(canvas.width, canvas.height) * 0.33; // 1/3 меньшей стороны экрана
+    player.menuSkinCanvas = player.prepareSkin(playerSkin, menuSize);
 };
 
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
