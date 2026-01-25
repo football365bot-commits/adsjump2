@@ -56,21 +56,22 @@ canvas.addEventListener('touchend', e => {
 }, { passive: false });
 
 // === функция обработки клика / тача ===
+// === handleInput ===
 function handleInput(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const x = (clientX - rect.left) * (canvas.width / rect.width);
     const y = (clientY - rect.top) * (canvas.height / rect.height);
 
-    // 1️⃣ Обработка паузы только если игра идёт
+    // кнопка паузы только в игре
     if (gameState === GameState.PLAYING && pauseUI.handleClick(x, y, gameState)) return;
 
-    // 2️⃣ Кнопки главного меню
+    // кнопки главного меню
     if (gameState === GameState.MENU) {
-        menu.handleClick(x, y, canvas);
+        menu.handleClick(x, y); // без canvas!
         return;
     }
 
-    // 3️⃣ Движение игрока только если PLAYING
+    // движение игрока только если PLAYING
     if (gameState === GameState.PLAYING) {
         inputX = x < canvas.width / 2 ? -1 : 1;
     }
@@ -887,11 +888,12 @@ function loop() {
     if (gameState === GameState.MENU) {
         menu.draw(ctx, canvas);
     } else if (gameState === GameState.PLAYING) {
-        update(); // твои игровые обновления
-        draw(); // отрисовка платформ, игрока, врагов и т.д.
+        update();
+        draw();
+        pauseUI.draw(GameState.PLAYING); // тут кнопка паузы
     } else if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
         draw();
-        pauseUI.draw(gameState);
+        pauseUI.draw(gameState); // остальное
     }
 
     requestAnimationFrame(loop);
