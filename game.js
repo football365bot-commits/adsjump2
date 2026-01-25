@@ -95,7 +95,7 @@ const CONFIG = {
     BULLET_SPEED: 13,
 }; 
 
-const cameraZoom = 0.04; 
+const cameraZoom = 1; 
 // =====================
 // UTILS
 // =====================
@@ -308,7 +308,7 @@ class Player {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(this.anim.tilt);
-        ctx.scale(scaleX * cameraZoom, scaleY * cameraZoom); // <-- применяем камеру зум
+        ctx.scale(scaleX, scaleY); // <-- применяем камеру зум
 
         // === Базовый спрайт игрока ===
         ctx.drawImage(this.baseSprite, -this.size/2, -this.size/2, this.size, this.size);
@@ -414,7 +414,7 @@ class Enemy {
 
         ctx.save();
         ctx.translate(this.x + CONFIG.ENEMY_SIZE/2, this.y - cameraY + CONFIG.ENEMY_SIZE/2);
-        ctx.scale(scale * cameraZoom, scale * cameraZoom);
+        ctx.scale(scale, scale);
 
         // тело врага
         ctx.fillStyle = '#ff0000';
@@ -475,7 +475,7 @@ class Platform {
 
         ctx.save();
         ctx.translate(this.x, this.y - cameraY);
-        ctx.scale(cameraZoom, cameraZoom); // <-- применяем камеру зум
+        
 
         ctx.fillStyle = this.isBroken 
             ? '#ff4444' 
@@ -583,8 +583,7 @@ class Item {
             case 'adrenaline': color = '#ff00ff'; break;
         }
         ctx.save();
-        ctx.translate(this.x, this.y - cameraY);
-        ctx.scale(cameraZoom, cameraZoom); // <-- применяем камеру зум
+        ctx.translate(this.x, this.y - cameraY);and 
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, this.size, this.size);
         ctx.restore();
@@ -830,27 +829,34 @@ function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // ===== МИР (С ЗУМОМ) =====
+    ctx.save();
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(cameraZoom, cameraZoom);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
     platforms.forEach(p => p.draw(cameraY));
     enemies.forEach(e => e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
+    blackHolePool.forEach(bh => bh.draw(cameraY));
 
+    ctx.restore();
+
+    // ===== UI (БЕЗ ЗУМА) =====
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
 
     const centerX = canvas.width / 2;
 
-    // Score — чуть левее центра
     ctx.textAlign = 'right';
     ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
 
-    // HP — чуть правее центра
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
-    blackHolePool.forEach(bh => bh.draw(cameraY));
-    
-    }
+}
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
