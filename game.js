@@ -284,7 +284,7 @@ class Player {
         this.lastY = this.y;
 
         // === движение игрока ===
-        this.x += inputX * 11;
+        this.x += inputX * 9;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
