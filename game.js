@@ -216,7 +216,7 @@ const ShootingSystem = {
     }
 };
 
-
+const player = new Player();
 const playerSkin = new Image();
 playerSkin.src = 'chiba.jpg'; // путь к твоему скину
 playerSkin.onload = () => {
@@ -689,7 +689,7 @@ function getBlackHoleFromPool() {
 // =====================
 // GAME STATE
 // =====================
-const player = new Player();
+
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
 const enemies = Array.from({ length: CONFIG.MAX_ENEMIES }, () => new Enemy());
 const itemPool = Array.from({ length: CONFIG.MAX_ITEMS }, () => new Item());
