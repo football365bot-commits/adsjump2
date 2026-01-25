@@ -62,16 +62,14 @@ function handleInput(clientX, clientY) {
     const x = (clientX - rect.left) * (canvas.width / rect.width);
     const y = (clientY - rect.top) * (canvas.height / rect.height);
 
-    // кнопка паузы только в игре
-    if (gameState === GameState.PLAYING && pauseUI.handleClick(x, y, gameState)) return;
+    if ((gameState === GameState.PLAYING || gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) &&
+        pauseUI.handleClick(x, y, gameState)) return;
 
-    // кнопки главного меню
     if (gameState === GameState.MENU) {
-        menu.handleClick(x, y); // без canvas!
+        menu.handleClick(x, y);
         return;
     }
 
-    // движение игрока только если PLAYING
     if (gameState === GameState.PLAYING) {
         inputX = x < canvas.width / 2 ? -1 : 1;
     }
