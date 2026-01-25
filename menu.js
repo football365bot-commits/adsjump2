@@ -1,25 +1,12 @@
-import { GameState } from './pause.js';
-
 export class Menu {
     constructor(onStartGame) {
         this.onStartGame = onStartGame;
         this.buttons = [
-            { text: 'Играть', x: 0, y: 0, w: 200, h: 50 } // координаты потом расставим
+            { text: 'Играть', x: 0, y: 0, w: 200, h: 50 }
         ];
-        this.visible = true;
-    }
-
-    show() {
-        this.visible = true;
-    }
-
-    hide() {
-        this.visible = false;
     }
 
     draw(ctx, canvas) {
-        if (!this.visible) return;
-
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -38,13 +25,9 @@ export class Menu {
     }
 
     handleClick(x, y) {
-        if (!this.visible) return false;
-
         for (const b of this.buttons) {
             if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
-                // Кнопка Играть
-                this.hide();
-                this.onStartGame();
+                this.onStartGame(); // переключаем gameState на PLAYING
                 return true;
             }
         }
