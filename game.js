@@ -299,6 +299,7 @@ class Player {
             this.shootCooldown--;
         }
     }
+
     draw(cameraY) {
         const cx = this.x + this.size / 2;
         const cy = this.y - cameraY + this.size / 2;
@@ -321,21 +322,23 @@ class Player {
         // тело игрока
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.restore();
 
         // === ТРУБОЧКА ===
-        const handAnchor = PlayerAnchors.hand; // берём из anchors.js
-        const handX = (handAnchor.x - 0.5) * this.size; // смещение относительно центра
-        const handY = (handAnchor.y - 0.5) * this.size;
-
+        
+        // координаты руки с учётом зума и камеры
         ctx.save();
-        ctx.translate(handX, handY); // переносим в руку
+        const handX = (this.x + this.handAnchor.x);
+        const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
+
+        
+        ctx.translate(handX, handY);
         ctx.rotate(this.pipe.angle); // угол к цели
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
-
-        ctx.restore();
     }
+}
 // =====================
 // ENEMY
 // =====================
