@@ -1,3 +1,5 @@
+
+import { Menu } from './menu.js';
 import { PauseUI, GameState } from './pause.js';
 import { PlayerAnchors } from './anchors.js';
 
@@ -7,6 +9,7 @@ import { PlayerAnchors } from './anchors.js';
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
+
 
 const pauseUI = new PauseUI(canvas, ctx, {
     onPause() {
@@ -20,8 +23,8 @@ const pauseUI = new PauseUI(canvas, ctx, {
         gameState = GameState.PLAYING;
     },
     onMenu() {
-        gameState = GameState.MENU;
-        restartGame();
+        menu.show();
+        
     }
 });
 
