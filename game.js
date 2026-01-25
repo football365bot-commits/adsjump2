@@ -276,22 +276,20 @@ class Player {
     // =====================
     // ПОДГОТОВКА СКИНА
     // =====================
-    prepareSkin(baseImage) {
-        // baseImage — Image или Canvas с исходным скином
-        const miniCanvas = document.createElement('canvas');
-        miniCanvas.width = CONFIG.PLAYER_SIZE;  // 40
-        miniCanvas.height = CONFIG.PLAYER_SIZE; // 40
-        const ctxMini = miniCanvas.getContext('2d');
-        ctxMini.imageSmoothingEnabled = false;
+    prepareSkin(baseImage, size = CONFIG.PLAYER_SIZE) {
+        const skinCanvas = document.createElement('canvas');
+        skinCanvas.width = size;
+        skinCanvas.height = size;
+        const ctx = skinCanvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
 
-        // масштабируем исходный скин в мини-канвас
-        ctxMini.drawImage(
-            baseImage, 
+        ctx.drawImage(
+            baseImage,
             0, 0, baseImage.width, baseImage.height,
-            0, 0, CONFIG.PLAYER_SIZE, CONFIG.PLAYER_SIZE
+            0, 0, size, size
         );
 
-        this.skinCanvas = miniCanvas; // сохраняем готовый канвас
+        return skinCanvas; // возвращаем канвас, который можно использовать
     }
 
     // =====================
