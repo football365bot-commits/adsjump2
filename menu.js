@@ -4,7 +4,7 @@ export class Menu {
 
         // Кнопки слева с коллбеками
         this.buttons = [
-            { text: 'Jump', callback: this.onStartGame },           // запускает игру
+            { text: 'Jump', callback: this.onStartGame },
             { text: 'Инвентарь', callback: () => console.log('Инвентарь') },
             { text: 'Магазин', callback: () => console.log('Магазин') },
             { text: 'Достижения', callback: () => console.log('Достижения') },
@@ -12,58 +12,61 @@ export class Menu {
             { text: 'Рейтинг', callback: () => console.log('Рейтинг') }
         ];
 
-        this.buttonWidth = 140;
-        this.buttonHeight = 35;
+        this.buttonWidth = 160;
+        this.buttonHeight = 40;
         this.buttonGap = 20;
-        this.startX = 10; // отступ слева
+        this.startX = 20; // отступ слева
+        this.startY = 20;
     }
 
-    // menu.js
     draw(ctx, canvas, player) {
+        // === фон ===
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // === кнопки слева ===
-        const leftMargin = 20;
-        const topMargin = 20;
-        const spacing = 20;
-
         this.buttons.forEach((b, i) => {
-            b.x = leftMargin;
-            b.y = topMargin + i * (b.h + spacing);
+            b.x = this.startX;
+            b.y = this.startY + i * (this.buttonHeight + this.buttonGap);
+            b.w = this.buttonWidth;
+            b.h = this.buttonHeight;
 
+            // рамка кнопки
             ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
             ctx.strokeRect(b.x, b.y, b.w, b.h);
 
+            // текст кнопки
             ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(b.text, b.x + b.w / 2, b.y + b.h / 2 + 6);
+            ctx.textBaseline = 'middle';
+            ctx.fillText(b.text, b.x + b.w / 2, b.y + b.h / 2);
         });
 
-        // === ИГРОК СПРАВА ===
-        if (!player || !player.skinCanvas) return;
+        // === крупный игрок справа ===
+        if (player && player.menuSkinCanvas) {
+            const px = canvas.width * 0.75;
+            const py = canvas.height / 2;
+            const menuSize = 500;
 
-        ctx.save();
-
-        const px = canvas.width * 0.75;
-        const py = canvas.height / 2;
-
-        ctx.translate(px, py);
-        ctx.drawImage(
-            player.skinCanvas,
-            -player.size / 2,
-            -player.size / 2,
-            player.size,
-            player.size
-        );
-
-        ctx.restore();
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.drawImage(
+                player.menuSkinCanvas,
+                -menuSize / 2,
+                -menuSize / 2,
+                menuSize,
+                menuSize
+            );
+            ctx.restore();
+        }
     }
 
     handleClick(x, y) {
         for (const b of this.buttons) {
-            if (x > b.x && x < b.x + this.buttonWidth && y > b.y && y < b.y + this.buttonHeight) {
-                b.callback(); // вызываем коллбек кнопки
+            if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
+                b.callback();
                 return true;
             }
         }
