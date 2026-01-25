@@ -221,7 +221,7 @@ const ShootingSystem = {
 // =====================
 class Player {
     constructor() {
-        this.size = CONFIG.PLAYER_SIZE;
+        this.size = CONFIG.PLAYER_SIZE; // 40
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
         this.hp = 100;
@@ -240,6 +240,9 @@ class Player {
             length: 18
         };
 
+        // ===== СКИН =====
+        this.skinCanvas = null; // сюда мы положим мини-канвас со скином
+
         this.reset();
     }
 
@@ -252,6 +255,30 @@ class Player {
         this.visualScale = 1;
     }
 
+    // =====================
+    // ПОДГОТОВКА СКИНА
+    // =====================
+    prepareSkin(baseImage) {
+        // baseImage — Image или Canvas с исходным скином
+        const miniCanvas = document.createElement('canvas');
+        miniCanvas.width = CONFIG.PLAYER_SIZE;  // 40
+        miniCanvas.height = CONFIG.PLAYER_SIZE; // 40
+        const ctxMini = miniCanvas.getContext('2d');
+        ctxMini.imageSmoothingEnabled = false;
+
+        // масштабируем исходный скин в мини-канвас
+        ctxMini.drawImage(
+            baseImage, 
+            0, 0, baseImage.width, baseImage.height,
+            0, 0, CONFIG.PLAYER_SIZE, CONFIG.PLAYER_SIZE
+        );
+
+        this.skinCanvas = miniCanvas; // сохраняем готовый канвас
+    }
+
+    // =====================
+    // ОБНОВЛЕНИЕ
+    // =====================
     update(inputX) {
         this.lastY = this.y;
 
@@ -300,6 +327,9 @@ class Player {
         }
     }
 
+    // =====================
+    // ОТРИСОВКА
+    // =====================
     draw(cameraY) {
         const cx = this.x + this.size / 2;
         const cy = this.y - cameraY + this.size / 2;
@@ -319,23 +349,25 @@ class Player {
         // масштаб
         ctx.scale(scaleX, scaleY);
 
-        // тело игрока
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        // === тело игрока через подготовленный канвас ===
+        if (this.skinCanvas) {
+            ctx.drawImage(this.skinCanvas, -this.size/2, -this.size/2, this.size, this.size);
+        } else {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        }
         ctx.restore();
 
         // === ТРУБОЧКА ===
         ctx.save();
         const handX = this.x + this.handAnchor.x;
-        const handY = this.y + this.handAnchor.y - cameraY; // убрали cameraZoom
-
+        const handY = this.y + this.handAnchor.y - cameraY;
         ctx.translate(handX, handY);
-        ctx.rotate(this.pipe.angle); // угол к цели
+        ctx.rotate(this.pipe.angle);
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
     }
-
 }
 // =====================
 // ENEMY
