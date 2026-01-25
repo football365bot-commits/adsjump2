@@ -888,6 +888,15 @@ function draw() {
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
     blackHolePool.forEach(bh => bh.draw(cameraY));
     
+    if (gameState === GameState.GAME_OVER) {
+        ctx.fillStyle = '#ffff00';
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 40);
+        ctx.fillText(`Coins: ${coins.toFixed(2)}`, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, canvas.width / 2, canvas.height / 2 + 40);
+    }
+    
     }
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
