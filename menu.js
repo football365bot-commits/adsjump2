@@ -18,48 +18,46 @@ export class Menu {
         this.startX = 10; // отступ слева
     }
 
+    // menu.js
     draw(ctx, canvas, player) {
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // === кнопки слева ===
         const leftMargin = 20;
         const topMargin = 20;
         const spacing = 20;
 
-        const btnW = 200 * 0.7; 
-        const btnH = 50 * 0.7;  
-
         this.buttons.forEach((b, i) => {
             b.x = leftMargin;
-            b.y = topMargin + i * (btnH + spacing);
-            b.w = btnW;
-            b.h = btnH;
+            b.y = topMargin + i * (b.h + spacing);
 
             ctx.strokeStyle = '#fff';
             ctx.strokeRect(b.x, b.y, b.w, b.h);
 
             ctx.fillStyle = '#fff';
-            ctx.font = '20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(b.text, b.x + b.w / 2, b.y + btnH / 2 + 7);
+            ctx.fillText(b.text, b.x + b.w / 2, b.y + b.h / 2 + 6);
         });
 
-        // === рисуем игрока справа ===
-        if (player) {
-            const savedX = player.x;
-            const savedY = player.y;
-            const savedCameraY = 0;
+        // === ИГРОК СПРАВА ===
+        if (!player || !player.skinCanvas) return;
 
-            // Размещаем игрока в правой половине
-            player.x = canvas.width * 0.75;
-            player.y = canvas.height / 2;
+        ctx.save();
 
-            player.draw(0); // передаем 0 вместо cameraY
+        const px = canvas.width * 0.75;
+        const py = canvas.height / 2;
 
-            // Восстанавливаем исходные координаты игрока
-            player.x = savedX;
-            player.y = savedY;
-        }
+        ctx.translate(px, py);
+        ctx.drawImage(
+            player.skinCanvas,
+            -player.size / 2,
+            -player.size / 2,
+            player.size,
+            player.size
+        );
+
+        ctx.restore();
     }
 
     handleClick(x, y) {
