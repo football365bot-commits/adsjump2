@@ -842,9 +842,7 @@ function update() {
     ScoreManager.update(player);
     updateCamera();
 
-    // проверка проигрыша
     if (player.y - cameraY > canvas.height || player.hp <= 0) {
-        coins = calculateCoins(ScoreManager.value); // считаем монетки один раз
         gameState = GameState.GAME_OVER;
     }
 }
