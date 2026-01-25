@@ -120,7 +120,6 @@ function isOnScreen(obj) {
 // =====================
 let cameraY = 0;
 let maxPlatformY = canvas.height;
-let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
 
