@@ -93,8 +93,7 @@ const CONFIG = {
     BULLET_POOL_SIZE: 500,
     BULLET_SPEED: 13,
 }; 
-
-const cameraZoom = 0.04; 
+ 
 // =====================
 // UTILS
 // =====================
@@ -215,6 +214,13 @@ const ShootingSystem = {
         });
         this.requests = []; // чистим очередь
     }
+};
+
+
+const playerSkin = new Image();
+playerSkin.src = 'chiba.jpg'; // путь к твоему скину
+playerSkin.onload = () => {
+    player.prepareSkin(playerSkin); // тут создаём мини-канвас 40x40 внутри Player
 };
 // =====================
 // PLAYER
