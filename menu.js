@@ -12,10 +12,10 @@ export class Menu {
             { text: 'Рейтинг', callback: () => console.log('Рейтинг') }
         ];
 
-        this.buttonWidth = 200;
-        this.buttonHeight = 50;
+        this.buttonWidth = 140;
+        this.buttonHeight = 35;
         this.buttonGap = 20;
-        this.startX = 50; // отступ слева
+        this.startX = 10; // отступ слева
     }
 
     draw(ctx, canvas) {
@@ -23,7 +23,7 @@ export class Menu {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = '#fff';
-        ctx.font = '32px Arial';
+        ctx.font = '20px Arial';
         ctx.textAlign = 'center';
 
         this.buttons.forEach((b, i) => {
