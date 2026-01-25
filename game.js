@@ -95,7 +95,7 @@ const CONFIG = {
     BULLET_SPEED: 13,
 }; 
 
-const cameraZoom = 1; 
+
 // =====================
 // UTILS
 // =====================
@@ -295,25 +295,25 @@ class Player {
             }
         } else this.shootCooldown--;
     }
-
     draw(cameraY) {
         const cx = this.x + this.size / 2;
         const cy = this.y - cameraY + this.size / 2;
 
+        // анимации прыжка и приземления
         const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
         const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
-        const scaleY = 1 + jumpStretch - landSquash;
-        const scaleX = 1 - jumpStretch + landSquash;
+        const scaleY = (1 + jumpStretch - landSquash) * this.visualScale; // применяем визуальный масштаб
+        const scaleX = (1 - jumpStretch + landSquash) * this.visualScale;
 
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(this.anim.tilt);
-        ctx.scale(scaleX, scaleY); // <-- применяем камеру зум
+        ctx.scale(scaleX, scaleY);
 
-        // === Базовый спрайт игрока ===
+        // === базовый спрайт игрока ===
         ctx.drawImage(this.baseSprite, -this.size/2, -this.size/2, this.size, this.size);
 
-        // === Аксессуары ===
+        // === аксессуары ===
         for (const key in this.layers) {
             const layer = this.layers[key];
             if (!layer) continue;
@@ -323,7 +323,7 @@ class Player {
             ctx.drawImage(layer, lx, ly, this.size, this.size);
         }
 
-        // === Труба ===
+        // === труба ===
         const handAnchor = PlayerAnchors.hand;
         const handX = (handAnchor.x - 0.5) * this.size;
         const handY = (handAnchor.y - 0.5) * this.size;
@@ -336,8 +336,8 @@ class Player {
         ctx.restore();
 
         ctx.restore();
-        
     }
+    
 
     // метод для установки скина/аксессуара
     setLayer(name, image) {
@@ -824,18 +824,12 @@ function restartGame() {
     spawnEntities(true);
 }
 
-
 function draw() {
+    // фон
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // ===== МИР (С ЗУМОМ) =====
-    ctx.save();
-
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.scale(cameraZoom, cameraZoom);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
+    // ===== МИР (без масштабирования всего мира) =====
     platforms.forEach(p => p.draw(cameraY));
     enemies.forEach(e => e.draw(cameraY));
     drawItems();
@@ -843,12 +837,9 @@ function draw() {
     drawBullets();
     blackHolePool.forEach(bh => bh.draw(cameraY));
 
-    ctx.restore();
-
-    // ===== UI (БЕЗ ЗУМА) =====
+    // ===== UI (без скейла) =====
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-
     const centerX = canvas.width / 2;
 
     ctx.textAlign = 'right';
@@ -857,7 +848,6 @@ function draw() {
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
 }
-
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
     if (gameState === GameState.PLAYING) update();
