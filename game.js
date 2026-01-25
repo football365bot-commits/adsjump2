@@ -15,6 +15,7 @@ let gameState = GameState.MENU;
 
 // ===== Menu =====
 const menu = new Menu(() => {
+    restartGame();
     gameState = GameState.PLAYING;
 });
 
