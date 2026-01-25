@@ -842,8 +842,13 @@ function update() {
     ScoreManager.update(player);
     updateCamera();
 
+    // Проверяем, наступил ли Game Over
     if (player.y - cameraY > canvas.height || player.hp <= 0) {
-        gameState = GameState.GAME_OVER;
+        if (gameState !== GameState.GAME_OVER) {
+            // один раз записываем монетки
+            coins = calculateCoins(ScoreManager.value);
+            gameState = GameState.GAME_OVER;
+        }
     }
 }
 
@@ -885,10 +890,7 @@ function draw() {
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
     blackHolePool.forEach(bh => bh.draw(cameraY));
     
-    if (gameState === GameState.GAME_OVER) {
-        calculateCoins(ScoreManager.value);
-        
-    }
+    
     
 }
 
@@ -907,7 +909,7 @@ function loop() {
         pauseUI.draw(gameState);
     } else if (gameState === GameState.GAME_OVER) {
         draw(); // просто рисуем финальный экран, апдейты больше не идут
-        pauseUI.draw(gameState); // если нужно
+        pauseUI.draw(gameState, coins); // если нужно
     }
 
     requestAnimationFrame(loop);
