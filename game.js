@@ -710,7 +710,7 @@ playerSkin.onload = () => {
     player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE);
 
     // большой скин для меню — универсальный размер, зависит от экрана
-    const menuSize = Math.min(canvas.width, canvas.height) * 0.33; // 1/3 меньшей стороны экрана
+    const menuSize = Math.min(canvas.width, canvas.height) * 0.70; // 1/3 меньшей стороны экрана
     player.menuSkinCanvas = player.prepareSkin(playerSkin, menuSize);
 };
 
