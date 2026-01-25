@@ -826,26 +826,25 @@ function updateCamera() {
 // GAME LOOP
 // =====================
 spawnEntities(true);
+
 function update() {
+    // апдейтим только если игра в процессе
+    if (gameState !== GameState.PLAYING) return;
+
     player.update(inputX);
     platforms.forEach(p => { p.update(); p.checkCollision(player); });
     enemies.forEach(e => e.update());
     spawnEntities();
     updateItems();
-
-    blackHolePool.forEach(bh => bh.update()); // притяжение черных дыр
-
+    blackHolePool.forEach(bh => bh.update());
     ShootingSystem.processShots();
     updateBullets();
     ScoreManager.update(player);
     updateCamera();
 
+    // проверка проигрыша
     if (player.y - cameraY > canvas.height || player.hp <= 0) {
-        // Считаем монетки только один раз, когда игрок проиграл
-        if (gameState !== GameState.GAME_OVER) {
-            coins = calculateCoins(ScoreManager.value);
-        }
-
+        coins = calculateCoins(ScoreManager.value); // считаем монетки один раз
         gameState = GameState.GAME_OVER;
     }
 }
@@ -908,10 +907,13 @@ function loop() {
     } else if (gameState === GameState.PLAYING) {
         update();
         draw();
-        pauseUI.draw(GameState.PLAYING); // тут кнопка паузы
-    } else if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
+        pauseUI.draw(GameState.PLAYING);
+    } else if (gameState === GameState.PAUSED) {
         draw();
-        pauseUI.draw(gameState); // остальное
+        pauseUI.draw(gameState);
+    } else if (gameState === GameState.GAME_OVER) {
+        draw(); // просто рисуем финальный экран, апдейты больше не идут
+        pauseUI.draw(gameState); // если нужно
     }
 
     requestAnimationFrame(loop);
