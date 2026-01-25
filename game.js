@@ -841,6 +841,11 @@ function update() {
     updateCamera();
 
     if (player.y - cameraY > canvas.height || player.hp <= 0) {
+        // Считаем монетки только один раз, когда игрок проиграл
+        if (gameState !== GameState.GAME_OVER) {
+            coins = calculateCoins(ScoreManager.value);
+        }
+
         gameState = GameState.GAME_OVER;
     }
 }
