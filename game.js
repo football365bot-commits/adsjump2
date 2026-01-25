@@ -882,7 +882,7 @@ function loop() {
         update(); // твои игровые обновления
         draw(); // отрисовка платформ, игрока, врагов и т.д.
     } else if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
-        drawGame();
+        draw();
         pauseUI.draw(gameState);
     }
 
