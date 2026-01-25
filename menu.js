@@ -18,21 +18,48 @@ export class Menu {
         this.startX = 10; // отступ слева
     }
 
-    draw(ctx, canvas) {
+    draw(ctx, canvas, player) {
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
+        const leftMargin = 20;
+        const topMargin = 20;
+        const spacing = 20;
+
+        const btnW = 200 * 0.7; 
+        const btnH = 50 * 0.7;  
 
         this.buttons.forEach((b, i) => {
-            b.x = this.startX;
-            b.y = 100 + i * (this.buttonHeight + this.buttonGap);
+            b.x = leftMargin;
+            b.y = topMargin + i * (btnH + spacing);
+            b.w = btnW;
+            b.h = btnH;
+
             ctx.strokeStyle = '#fff';
-            ctx.strokeRect(b.x, b.y, this.buttonWidth, this.buttonHeight);
-            ctx.fillText(b.text, b.x + this.buttonWidth / 2, b.y + this.buttonHeight / 2 + 10);
+            ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(b.text, b.x + b.w / 2, b.y + btnH / 2 + 7);
         });
+
+        // === рисуем игрока справа ===
+        if (player) {
+            const savedX = player.x;
+            const savedY = player.y;
+            const savedCameraY = 0;
+
+            // Размещаем игрока в правой половине
+            player.x = canvas.width * 0.75;
+            player.y = canvas.height / 2;
+
+            player.draw(0); // передаем 0 вместо cameraY
+
+            // Восстанавливаем исходные координаты игрока
+            player.x = savedX;
+            player.y = savedY;
+        }
     }
 
     handleClick(x, y) {
