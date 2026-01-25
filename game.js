@@ -703,7 +703,11 @@ const player = new Player();
 const playerSkin = new Image();
 playerSkin.src = 'chiba.jpg'; // путь к твоему скину
 playerSkin.onload = () => {
-    player.prepareSkin(playerSkin); // тут создаём мини-канвас 40x40 внутри Player
+    // мини-скин для игры 40x40
+    player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE);
+
+    // большой скин для меню 500x500
+    player.menuSkinCanvas = player.prepareSkin(playerSkin, 500);
 };
 
 const platforms = Array.from({ length: CONFIG.MAX_PLATFORMS }, () => new Platform());
