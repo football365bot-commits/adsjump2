@@ -299,7 +299,7 @@ class Player {
         this.lastY = this.y;
 
         // === движение игрока ===
-        this.x += inputX * 9;
+        this.x += inputX * 10;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
@@ -353,8 +353,8 @@ class Player {
         // === АНИМАЦИЯ ПРЫЖКА / ПРИЗЕМЛЕНИЯ ===
         const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
         const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
-        const scaleY = 1 + jumpStretch - landSquash;
-        const scaleX = 1 - jumpStretch + landSquash;
+        const scaleY = 1 - jumpStretch + landSquash;
+        const scaleX = 1 + jumpStretch - landSquash;
 
         ctx.save();
         ctx.translate(cx, cy);
