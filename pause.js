@@ -104,27 +104,24 @@ export class PauseUI {
     }
 
     handleClick(x, y, gameState) {
-        // Кнопка паузы
+        // === Кнопка паузы (только PLAYING) ===
         if (gameState === GameState.PLAYING && this.isInside(x, y, this.pauseButton)) {
             this.pauseStart = Date.now();
             this.callbacks.onPause();
             return true;
         }
 
-        // Кнопки PAUSED и GAME_OVER
-        if (gameState === GameState.PAUSED) {
-            if (this.isInside(x, y, this.buttons.resume)) {
+        // === Кнопки PAUSED и GAME_OVER ===
+        if (this.isInside(x, y, this.buttons.resume)) {
+            if (gameState === GameState.PAUSED) {
                 this.callbacks.onResume(Date.now() - this.pauseStart);
-                return true;
-            }
-        } else if (gameState === GameState.GAME_OVER) {
-            if (this.isInside(x, y, this.buttons.resume)) {
+            } else if (gameState === GameState.GAME_OVER) {
                 this.callbacks.onRestart();
-                return true;
             }
+            return true;
         }
 
-        // Кнопка меню (для обоих состояний)
+        // === Кнопка меню (работает в PAUSED и GAME_OVER) ===
         if (this.isInside(x, y, this.buttons.menu)) {
             this.callbacks.onMenu();
             return true;
