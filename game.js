@@ -325,19 +325,17 @@ class Player {
         ctx.restore();
 
         // === ТРУБОЧКА ===
-        
-        // координаты руки с учётом зума и камеры
         ctx.save();
-        const handX = (this.x + this.handAnchor.x);
-        const handY = (this.y + this.handAnchor.y - cameraY) * cameraZoom;
+        const handX = this.x + this.handAnchor.x;
+        const handY = this.y + this.handAnchor.y - cameraY; // убрали cameraZoom
 
-        
         ctx.translate(handX, handY);
         ctx.rotate(this.pipe.angle); // угол к цели
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
     }
+
 }
 // =====================
 // ENEMY
