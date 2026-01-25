@@ -10,6 +10,15 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+// ===== Game State =====
+let gameState = GameState.MENU;
+
+// ===== Menu =====
+const menu = new Menu(() => {
+    gameState = GameState.PLAYING;
+});
+
+// ===== Pause UI ===
 
 const pauseUI = new PauseUI(canvas, ctx, {
     onPause() {
@@ -22,9 +31,8 @@ const pauseUI = new PauseUI(canvas, ctx, {
         restartGame();
         gameState = GameState.PLAYING;
     },
-    onMenu() {
-        menu.show();
-        
+    onMenu() { 
+        gameState = GameState.MENU; menu.show(); 
     }
 });
 
@@ -872,11 +880,14 @@ function loop() {
     if (gameState === GameState.MENU) {
         menu.draw(ctx, canvas);
     } else if (gameState === GameState.PLAYING) {
-        update();
-        draw();
-        pauseUI.draw(gameState, calculateCoins(ScoreManager.value));
+        update(); // твои игровые обновления
+        drawGame(); // отрисовка платформ, игрока, врагов и т.д.
+    } else if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
+        drawGame();
+        pauseUI.draw(gameState);
     }
 
     requestAnimationFrame(loop);
 }
+
 loop();
