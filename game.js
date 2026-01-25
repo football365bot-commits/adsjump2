@@ -880,7 +880,7 @@ function loop() {
         menu.draw(ctx, canvas);
     } else if (gameState === GameState.PLAYING) {
         update(); // твои игровые обновления
-        drawGame(); // отрисовка платформ, игрока, врагов и т.д.
+        draw(); // отрисовка платформ, игрока, врагов и т.д.
     } else if (gameState === GameState.PAUSED || gameState === GameState.GAME_OVER) {
         drawGame();
         pauseUI.draw(gameState);
