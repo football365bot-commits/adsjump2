@@ -1,7 +1,7 @@
 // menu.js
-
 export class Menu {
     constructor(onStartGame) {
+        // создаём canvas для меню
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
         this.canvas.width = window.innerWidth;
@@ -14,36 +14,36 @@ export class Menu {
 
         this.onStartGame = onStartGame;
 
+        // кнопка "Играть"
         this.buttons = {
-            play: { x: this.canvas.width/2 - 100, y: this.canvas.height/2 - 50, w: 200, h: 50, text: 'Играть' }
+            play: {
+                x: this.canvas.width / 2 - 100,
+                y: this.canvas.height / 2 - 50,
+                w: 200,
+                h: 50,
+                text: 'Играть'
+            }
         };
 
+        // обработчик клика по canvas
         this.canvas.addEventListener('click', (e) => this.handleClick(e));
-        this.visible = false;
-    }
-
-    show() {
-        this.visible = true;
-        this.draw();
-    }
-
-    hide() {
-        this.visible = false;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.draw(); // сразу отрисовываем меню
     }
 
     draw() {
-        if (!this.visible) return;
         const { ctx, canvas } = this;
 
+        // фон
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // заголовок
         ctx.fillStyle = '#fff';
         ctx.font = '48px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Главное Меню', canvas.width/2, canvas.height/3);
+        ctx.fillText('Главное Меню', canvas.width / 2, canvas.height / 3);
 
+        // кнопка
         for (const key in this.buttons) {
             const b = this.buttons[key];
             ctx.strokeStyle = '#fff';
@@ -51,12 +51,11 @@ export class Menu {
 
             ctx.fillStyle = '#fff';
             ctx.font = '28px Arial';
-            ctx.fillText(b.text, b.x + b.w/2, b.y + 32);
+            ctx.fillText(b.text, b.x + b.w / 2, b.y + 32);
         }
     }
 
     handleClick(e) {
-        if (!this.visible) return;
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -70,5 +69,14 @@ export class Menu {
                 }
             }
         }
+    }
+
+    hide() {
+        this.canvas.style.display = 'none';
+    }
+
+    show() {
+        this.canvas.style.display = 'block';
+        this.draw();
     }
 }
