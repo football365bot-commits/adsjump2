@@ -59,6 +59,11 @@ function handleInput(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const x = (clientX - rect.left) * (canvas.width / rect.width);
     const y = (clientY - rect.top) * (canvas.height / rect.height);
+    if (gameState === GameState.MENU) {
+        menu.handleClick(x, y);
+        return;
+    }
+
 
     // клики по паузе/меню
     if (pauseUI.handleClick(x, y, gameState)) return;
