@@ -1,6 +1,5 @@
 
 import { PauseUI, GameState } from './pause.js';
-import { PlayerAnchors } from './anchors.js';
 
 // =====================
 // CANVAS SETUP
@@ -114,7 +113,6 @@ let maxPlatformY = canvas.height;
 let gameState = GameState.PLAYING;  // состояние игры
 let inputX = 0;
 let lastTime = performance.now();
-
 // =====================
 // MONETIZATION
 // =====================
@@ -226,28 +224,6 @@ class Player {
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
         this.hp = 100;
-
-        // ===== АНИМАЦИИ =====
-        this.anim = { tilt: 0, jump: 0, land: 0 };
-
-        // ===== ТРУБОЧКА =====
-        this.pipe = { angle: 0, length: 18 };
-
-        // ===== СПРАЙТЫ =====
-        this.baseSprite = new Image();
-        this.baseSprite.src = './chiba.jpg'; // путь к твоему PNG рядом с game.js
-
-        // ===== СЛОИ ДЛЯ АКСЕССУАРОВ =====
-        this.layers = {
-            hair: null,
-            beard: null,
-            hat: null,
-            earrings: null,
-            glasses: null,
-            backpack: null,
-            custom: [] // любые дополнительные скины
-        };
-
         this.reset();
     }
 
@@ -257,97 +233,48 @@ class Player {
         this.vy = 0;
         this.lastY = this.y;
         this.hp = 100;
-        this.visualScale = 1;
     }
 
     update(inputX) {
-        this.lastY = this.y;
-
-        // движение
         this.x += inputX * 11;
         if (this.x < -this.size) this.x = canvas.width;
         if (this.x > canvas.width) this.x = -this.size;
 
-        // гравитация
+        this.lastY = this.y;
         this.vy += CONFIG.GRAVITY;
         this.y += this.vy;
 
-        // наклон
-        const targetTilt = inputX * 0.25;
-        this.anim.tilt += (targetTilt - this.anim.tilt) * 0.15;
-
-        // прыжок / приземление
-        if (this.vy < 0) this.anim.jump = 1;
-        this.anim.jump = Math.max(0, this.anim.jump - 0.08);
-        if (this.vy > 0 && this.lastY + this.size <= this.y) this.anim.land = 1;
-        this.anim.land = Math.max(0, this.anim.land - 0.12);
-
-        // стрельба (оставляем как есть)
+        // ---- Fire Logic ----
         if (this.shootCooldown <= 0) {
-            let target = enemies.find(e => e.active && isOnScreen(e));
+            // находим активного врага на экране
+            let target = null;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.active && isOnScreen(e)) {
+                    target = e;
+                    break;
+                }
+            }
             if (target && isOnScreen(this)) {
                 ShootingSystem.requestShot('player', this, target);
-                this.shootCooldown = 10;
-
-                const dx = (target.x + CONFIG.ENEMY_SIZE / 2) - (this.x + this.size / 2);
-                const dy = (target.y + CONFIG.ENEMY_SIZE / 2) - (this.y + this.size / 2);
-                this.pipe.angle = Math.atan2(dy, dx);
+                this.shootCooldown = 10; // 6 выстрелов в секунду
             }
-        } else this.shootCooldown--;
-    }
-    draw(cameraY) {
-        const cx = this.x + this.size / 2;
-        const cy = this.y - cameraY + this.size / 2;
-
-        // анимации прыжка и приземления
-        const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
-        const landSquash  = Math.sin(this.anim.land * Math.PI) * 0.2;
-        const scaleY = (1 + jumpStretch - landSquash) * this.visualScale; // применяем визуальный масштаб
-        const scaleX = (1 - jumpStretch + landSquash) * this.visualScale;
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(this.anim.tilt);
-        ctx.scale(scaleX, scaleY);
-
-        // === базовый спрайт игрока ===
-        ctx.drawImage(this.baseSprite, -this.size/2, -this.size/2, this.size, this.size);
-
-        // === аксессуары ===
-        for (const key in this.layers) {
-            const layer = this.layers[key];
-            if (!layer) continue;
-            const anchor = PlayerAnchors[key] || { x: 0.5, y: 0.5 };
-            const lx = (anchor.x - 0.5) * this.size;
-            const ly = (anchor.y - 0.5) * this.size;
-            ctx.drawImage(layer, lx, ly, this.size, this.size);
-        }
-
-        // === труба ===
-        const handAnchor = PlayerAnchors.hand;
-        const handX = (handAnchor.x - 0.5) * this.size;
-        const handY = (handAnchor.y - 0.5) * this.size;
-
-        ctx.save();
-        ctx.translate(handX, handY);
-        ctx.rotate(this.pipe.angle);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, -2, this.pipe.length, 4);
-        ctx.restore();
-
-        ctx.restore();
-    }
-    
-
-    // метод для установки скина/аксессуара
-    setLayer(name, image) {
-        if (this.layers[name] !== undefined) {
-            this.layers[name] = image;
         } else {
-            this.layers.custom.push({ name, image });
+            this.shootCooldown--;
         }
+    }
+
+    draw(cameraY) {
+        const scale = this.visualScale || 1;
+        ctx.save();
+        ctx.translate(this.x + this.size/2, this.y - cameraY + this.size/2);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.restore();
     }
 }
+
 // =====================
 // ENEMY
 // =====================
@@ -472,21 +399,8 @@ class Platform {
     }
     draw(cameraY) {
         if (!this.active) return;
-
-        ctx.save();
-        ctx.translate(this.x, this.y - cameraY);
-        
-
-        ctx.fillStyle = this.isBroken 
-            ? '#ff4444' 
-            : this.movementType === 'vertical' 
-                ? '#8888ff' 
-                : this.movementType === 'horizontal' 
-                    ? '#00ffff' 
-                    : '#00ff88';
-
-        ctx.fillRect(0, 0, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
-        ctx.restore();
+        ctx.fillStyle = this.isBroken ? '#ff4444' : this.movementType === 'vertical' ? '#8888ff' : this.movementType === 'horizontal' ? '#00ffff' : '#00ff88';
+        ctx.fillRect(this.x, this.y - cameraY, CONFIG.PLATFORM_WIDTH, CONFIG.PLATFORM_HEIGHT);
     }
     checkCollision(player) {
         if (!this.active) return false;
@@ -582,12 +496,8 @@ class Item {
             case 'medkit': color = '#00ff00'; break;
             case 'adrenaline': color = '#ff00ff'; break;
         }
-        ctx.save();
-        ctx.translate(this.x, this.y - cameraY);and 
         ctx.fillStyle = color;
-        ctx.fillRect(0, 0, this.size, this.size);
-        ctx.restore();
-
+        ctx.fillRect(this.x, this.y - cameraY, this.size, this.size);
     }
 }
 
@@ -824,30 +734,32 @@ function restartGame() {
     spawnEntities(true);
 }
 
+
 function draw() {
-    // фон
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // ===== МИР (без масштабирования всего мира) =====
     platforms.forEach(p => p.draw(cameraY));
     enemies.forEach(e => e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
-    blackHolePool.forEach(bh => bh.draw(cameraY));
 
-    // ===== UI (без скейла) =====
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
+
     const centerX = canvas.width / 2;
 
+    // Score — чуть левее центра
     ctx.textAlign = 'right';
     ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX - 10, 30);
 
+    // HP — чуть правее центра
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${player.hp}`, centerX + 10, 30);
+    blackHolePool.forEach(bh => bh.draw(cameraY));
 }
+
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
     if (gameState === GameState.PLAYING) update();
