@@ -884,7 +884,7 @@ function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === GameState.MENU) {
-        menu.draw(ctx, canvas);
+        menu.draw(ctx, canvas, player);
     } else if (gameState === GameState.PLAYING) {
         update();
         draw();
