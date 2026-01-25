@@ -13,7 +13,7 @@ export class Menu {
         ];
 
         this.buttonWidth = 120;
-        this.buttonHeight = 30;
+        this.buttonHeight = 50;
         this.buttonGap = 25;
         this.startX = 15; // отступ слева
         this.startY = null;
