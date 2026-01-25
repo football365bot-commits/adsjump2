@@ -45,19 +45,22 @@ export class Menu {
         });
 
         // === крупный игрок справа ===
+
         if (player && player.menuSkinCanvas) {
             const px = canvas.width * 0.75;
             const py = canvas.height / 2;
-            const menuSize = 500;
 
-            ctx.save();
-            ctx.translate(px, py);
-            ctx.drawImage(
-                player.menuSkinCanvas,
-                -menuSize / 2,
-                -menuSize / 2,
-                menuSize,
-                menuSize
+            // используем канвас самого игрока, уже с динамическим размером
+            const menuSize = player.menuSkinCanvas.width; // теперь это универсальный размер
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.drawImage(
+                    player.menuSkinCanvas,
+                    -menuSize / 2,
+                    -menuSize / 2,
+                    menuSize,
+                    menuSize
             );
             ctx.restore();
         }
