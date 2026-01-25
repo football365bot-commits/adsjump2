@@ -867,14 +867,16 @@ function draw() {
 
 function drawItems() { itemPool.forEach(i => i.draw()); }
 function loop() {
-    if (gameState === GameState.PLAYING) update();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    draw();
-    
-    const coins = calculateCoins(ScoreManager.value);
-    pauseUI.draw(gameState, coins);
+    if (gameState === GameState.MENU) {
+        menu.draw(ctx, canvas);
+    } else if (gameState === GameState.PLAYING) {
+        update();
+        draw();
+        pauseUI.draw(gameState, calculateCoins(ScoreManager.value));
+    }
 
     requestAnimationFrame(loop);
 }
-
 loop();
