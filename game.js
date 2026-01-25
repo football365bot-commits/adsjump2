@@ -17,7 +17,6 @@ let gameState = GameState.MENU;
 const menu = new Menu(() => {
     gameState = GameState.PLAYING;
 });
-menu.show();
 
 // ===== Pause UI ===
 
