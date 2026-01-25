@@ -886,7 +886,7 @@ function draw() {
     blackHolePool.forEach(bh => bh.draw(cameraY));
     
     if (gameState === GameState.GAME_OVER) {
-        const coins = calculateCoins(ScoreManager.value);
+        calculateCoins(ScoreManager.value);
         ctx.fillStyle = '#ffff00';
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
