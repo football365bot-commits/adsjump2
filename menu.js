@@ -2,70 +2,92 @@ export class Menu {
     constructor(onStartGame) {
         this.onStartGame = onStartGame;
 
-        // Кнопки слева с коллбеками
+        // создаём состояния прямо здесь
+        this.states = {
+            Inventory: { name: 'Инвентарь' },
+            Shop: { name: 'Магазин' },
+            Achievements: { name: 'Достижения' },
+            Settings: { name: 'Настройки' },
+            Leaderboard: { name: 'Рейтинг' }
+        };
+
+        // текущее активное состояние меню (может быть null)
+        this.activeState = null;
+
+        // кнопки с коллбеками на состояния
         this.buttons = [
             { text: 'Jump', callback: this.onStartGame },
-            { text: 'Инвентарь', callback: () => console.log('Инвентарь') },
-            { text: 'Магазин', callback: () => console.log('Магазин') },
-            { text: 'Достижения', callback: () => console.log('Достижения') },
-            { text: 'Настройки', callback: () => console.log('Настройки') },
-            { text: 'Рейтинг', callback: () => console.log('Рейтинг') }
+            { text: 'Инвентарь', callback: () => this.activateState('Inventory') },
+            { text: 'Магазин', callback: () => this.activateState('Shop') },
+            { text: 'Достижения', callback: () => this.activateState('Achievements') },
+            { text: 'Настройки', callback: () => this.activateState('Settings') },
+            { text: 'Рейтинг', callback: () => this.activateState('Leaderboard') }
         ];
 
         this.buttonWidth = 120;
         this.buttonHeight = 50;
         this.buttonGap = 25;
-        this.startX = 10; // отступ слева
+        this.startX = 10;
         this.startY = null;
     }
 
+    // функция для активации состояния
+    activateState(stateKey) {
+        // переключаем состояние на выбранное
+        this.activeState = this.states[stateKey];
+        console.log('Активировано состояние:', this.activeState.name);
+    }
+
     draw(ctx, canvas, player) {
-        // === фон ===
+        // фон
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         const totalHeight = this.buttons.length * this.buttonHeight + (this.buttons.length - 1) * this.buttonGap;
         this.startY = (canvas.height / 2) - (totalHeight / 2);
 
-        // === кнопки слева ===
+        // рисуем кнопки
         this.buttons.forEach((b, i) => {
             b.x = this.startX;
             b.y = this.startY + i * (this.buttonHeight + this.buttonGap);
             b.w = this.buttonWidth;
             b.h = this.buttonHeight;
 
-            // рамка кнопки
-            ctx.strokeStyle = '#fff';
+            const isActive = this.activeState && this.activeState.name === b.text;
+
+            ctx.strokeStyle = isActive ? '#00ff00' : '#fff';
             ctx.lineWidth = 2;
             ctx.strokeRect(b.x, b.y, b.w, b.h);
 
-            // текст кнопки
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = isActive ? '#00ff00' : '#fff';
             ctx.font = '20px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(b.text, b.x + b.w / 2, b.y + b.h / 2);
         });
 
-        // === крупный игрок справа ===
-
+        // игрок справа
         if (player && player.menuSkinCanvas) {
             const px = canvas.width * 0.625;
             const py = canvas.height / 2;
+            const menuSize = player.menuSkinCanvas.width;
 
-            // используем канвас самого игрока, уже с динамическим размером
-            const menuSize = player.menuSkinCanvas.width; // теперь это универсальный размер
-
-                ctx.save();
-                ctx.translate(px, py);
-                ctx.drawImage(
-                    player.menuSkinCanvas,
-                    -menuSize / 2,
-                    -menuSize / 2,
-                    menuSize,
-                    menuSize
-            );
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.drawImage(player.menuSkinCanvas, -menuSize/2, -menuSize/2, menuSize, menuSize);
             ctx.restore();
+        }
+
+        // рисуем контент текущего состояния (пока заглушка)
+        if (this.activeState) {
+            ctx.fillStyle = '#222';
+            ctx.fillRect(canvas.width / 3, canvas.height / 4, canvas.width / 2, canvas.height / 2);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.activeState.name, canvas.width / 2, canvas.height / 2);
         }
     }
 
