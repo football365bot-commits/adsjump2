@@ -2,7 +2,7 @@ export class Menu {
     constructor(onStartGame) {
         this.onStartGame = onStartGame;
 
-        // создаём состояния прямо здесь
+        // состояния
         this.states = {
             Inventory: { name: 'Инвентарь' },
             Shop: { name: 'Магазин' },
@@ -11,10 +11,9 @@ export class Menu {
             Leaderboard: { name: 'Рейтинг' }
         };
 
-        // текущее активное состояние меню (может быть null)
         this.activeState = null;
 
-        // кнопки с коллбеками на состояния
+        // кнопки
         this.buttons = [
             { text: 'Jump', callback: this.onStartGame },
             { text: 'Инвентарь', callback: () => this.activateState('Inventory') },
@@ -31,9 +30,7 @@ export class Menu {
         this.startY = null;
     }
 
-    // функция для активации состояния
     activateState(stateKey) {
-        // переключаем состояние на выбранное
         this.activeState = this.states[stateKey];
         console.log('Активировано состояние:', this.activeState.name);
     }
@@ -46,7 +43,7 @@ export class Menu {
         const totalHeight = this.buttons.length * this.buttonHeight + (this.buttons.length - 1) * this.buttonGap;
         this.startY = (canvas.height / 2) - (totalHeight / 2);
 
-        // рисуем кнопки
+        // кнопки слева
         this.buttons.forEach((b, i) => {
             b.x = this.startX;
             b.y = this.startY + i * (this.buttonHeight + this.buttonGap);
@@ -78,13 +75,13 @@ export class Menu {
             ctx.restore();
         }
 
-        // рисуем контент текущего состояния (пока заглушка)
+        // ===== полный экран для активного состояния =====
         if (this.activeState) {
-            ctx.fillStyle = '#222';
-            ctx.fillRect(canvas.width / 3, canvas.height / 4, canvas.width / 2, canvas.height / 2);
+            ctx.fillStyle = '#222'; // фон состояния
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = '#fff';
-            ctx.font = '30px Arial';
+            ctx.font = '50px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(this.activeState.name, canvas.width / 2, canvas.height / 2);
