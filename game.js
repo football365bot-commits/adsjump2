@@ -66,9 +66,6 @@ function isOnScreen(obj) {
     return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
 }
-function calculateCoins(score) {
-    coins = score * 0.01 / 1000;
-    
 // =====================
 // PLAYER
 // =====================
