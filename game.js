@@ -1,3 +1,6 @@
+
+// В начале game.js
+import { PlayerAnchors } from './PlayerAnchors.js';
 // =====================
 // CANVAS SETUP
 // =====================
@@ -66,37 +69,37 @@ function isOnScreen(obj) {
 }
 function calculateCoins(score) {
     coins = score * 0.01 / 1000;
-    return coins;
-}
-
+    
 // =====================
 // PLAYER
 // =====================
-class Player {
-    constructor() {
+class Player { 
+    constructor(){
         this.size = CONFIG.PLAYER_SIZE;
         this.jumpForce = CONFIG.BASE_JUMP_FORCE;
         this.shootCooldown = 0;
         this.hp = 100;
+
         this.handAnchor = { x: this.size * 0.75, y: this.size * 0.5 };
         this.anim = { tilt: 0, jump: 0, land: 0 };
         this.pipe = { angle: 0, length: 18 };
+
         this.skinCanvas = null;
-        this.hasLootBox = false; // игрок подобрал лутбокс
+        this.equippedItems = {}; // тут будут все аксессуары
         this.reset();
     }
 
-    reset() {
+    reset(){
         this.x = canvas.width / 2;
         this.y = canvas.height - 50;
         this.vy = 0;
         this.lastY = this.y;
         this.hp = 100;
         this.visualScale = 1;
-        this.hasLootBox = false;
+        this.equippedItems = {}; // сбрасываем все аксессуары
     }
 
-    prepareSkin(baseImage, size = CONFIG.PLAYER_SIZE) {
+    prepareSkin(baseImage, size = CONFIG.PLAYER_SIZE){
         const skinCanvas = document.createElement('canvas');
         skinCanvas.width = size;
         skinCanvas.height = size;
@@ -106,7 +109,13 @@ class Player {
         return skinCanvas;
     }
 
-    update(inputX) {
+    equipItem(item){
+        // item должен иметь type (например: "glasses") и optional subType ("left", "right")
+        // item.image — картинка аксессуара
+        this.equippedItems[item.type] = item;
+    }
+
+    update(inputX){
         this.lastY = this.y;
         this.x += inputX * 10;
         if(this.x < -this.size) this.x = canvas.width;
@@ -120,19 +129,19 @@ class Player {
 
         if(this.vy < 0) this.anim.jump = 1;
         this.anim.jump = Math.max(0, this.anim.jump - 0.08);
-
         if(this.vy > 0 && this.lastY + this.size <= this.y) this.anim.land = 1;
         this.anim.land = Math.max(0, this.anim.land - 0.12);
 
-        if(this.shootCooldown <= 0) {
+        // стреляет автоматически
+        if(this.shootCooldown <= 0){
             let target = null;
-            for(const e of enemies) {
-                if(e.active && isOnScreen(e)) {
+            for(const e of enemies){
+                if(e.active && isOnScreen(e)){
                     target = e;
                     break;
                 }
             }
-            if(target && isOnScreen(this)) {
+            if(target && isOnScreen(this)){
                 ShootingSystem.requestShot('player', this, target);
                 this.shootCooldown = 10;
 
@@ -143,27 +152,25 @@ class Player {
         } else this.shootCooldown--;
     }
 
-    draw(cameraY) {
+    draw(cameraY){
         const cx = this.x + this.size / 2;
         const cy = this.y - cameraY + this.size / 2;
+
         const jumpStretch = Math.sin(this.anim.jump * Math.PI) * 0.25;
         const landSquash = Math.sin(this.anim.land * Math.PI) * 0.2;
         const scaleY = 1 - jumpStretch + landSquash;
         const scaleX = 1 + jumpStretch - landSquash;
 
+        // базовый игрок
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(this.anim.tilt);
         ctx.scale(scaleX, scaleY);
-        if(this.skinCanvas)
-            ctx.drawImage(this.skinCanvas, -this.size/2, -this.size/2, this.size, this.size);
-        else {
-            ctx.fillStyle = '#00ff00';
-            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
-        }
+        if(this.skinCanvas) ctx.drawImage(this.skinCanvas, -this.size/2, -this.size/2, this.size, this.size);
+        else { ctx.fillStyle = '#00ff00'; ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size); }
         ctx.restore();
 
-        // трубочка
+        // трубочка для стрельбы
         ctx.save();
         const handX = this.x + this.handAnchor.x;
         const handY = this.y + this.handAnchor.y - cameraY;
@@ -172,6 +179,26 @@ class Player {
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, -2, this.pipe.length, 4);
         ctx.restore();
+
+        // отрисовка аксессуаров
+        for(const key in this.equippedItems){
+            const item = this.equippedItems[key];
+            if(!item.image) continue;
+
+            // вычисляем позицию
+            let anchor = PlayerAnchors;
+            const parts = key.split('.'); // "head.glasses", "hands.left.glove" и т.д.
+            for(const part of parts){
+                anchor = anchor[part];
+                if(!anchor) break;
+            }
+            if(!anchor) continue;
+
+            let posX = this.x + anchor.x * this.size;
+            let posY = this.y + anchor.y * this.size - cameraY;
+
+            ctx.drawImage(item.image, posX - item.width/2, posY - item.height/2, item.width, item.height);
+        }
     }
 }
 
