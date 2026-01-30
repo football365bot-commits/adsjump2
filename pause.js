@@ -17,11 +17,9 @@ export class PauseUI {
 
         // кнопки для PAUSED и GAME_OVER
         this.buttons = {
-            resume: { x: 0, y: 0, w: 200, h: 40 },
-            restart: { x: 0, y: 0, w: 200, h: 40 }
+            resume: { x: 0, y: 0, w: 200, h: 40 },   // "Продолжить" или "Играть"
+            restart: { x: 0, y: 0, w: 200, h: 40 }   // всегда "Рестарт"
         };
-
-        this.pauseStart = 0;
     }
 
     draw(gameState, coins = 0) {
@@ -48,13 +46,7 @@ export class PauseUI {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // бокс с кнопками
-        const box = {
-            w: 300,
-            h: 180,
-            x: canvas.width / 2 - 150,
-            y: canvas.height / 2 - 90
-        };
-
+        const box = { w: 300, h: 180, x: canvas.width / 2 - 150, y: canvas.height / 2 - 90 };
         ctx.fillStyle = '#222';
         ctx.fillRect(box.x, box.y, box.w, box.h);
         ctx.strokeStyle = '#fff';
@@ -93,7 +85,6 @@ export class PauseUI {
     handleClick(x, y, gameState) {
         // кнопка паузы
         if (gameState === GameState.PLAYING && this.isInside(x, y, this.pauseButton)) {
-            this.pauseStart = Date.now();
             this.callbacks.onPause();
             return true;
         }
