@@ -1,5 +1,4 @@
 // anchors.js
-// anchors.js
 export const PlayerAnchors = {
     // ===========================
     // ГОЛОВА
