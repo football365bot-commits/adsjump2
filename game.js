@@ -259,6 +259,82 @@ function draw(){
     ctx.textAlign='left'; ctx.fillText(`HP: ${player.hp}`,centerX+10,30);
     blackHolePool.forEach(bh=>bh.draw(cameraY));
 }
+// ===================== GAME OVER UI =====================
+function drawGameOverUI() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // затемнение фона
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', centerX, centerY - 80);
+
+    const buttonWidth = 180;
+    const buttonHeight = 50;
+    const gap = 20;
+
+    // кнопка "Играть заново"
+    const restartX = centerX - buttonWidth - gap/2;
+    const restartY = centerY;
+    ctx.fillStyle = '#00ff00';
+    ctx.fillRect(restartX, restartY, buttonWidth, buttonHeight);
+    ctx.fillStyle = '#000';
+    ctx.font = '24px Arial';
+    ctx.fillText('Играть заново', restartX + buttonWidth/2, restartY + buttonHeight/2 + 8);
+
+    // кнопка "Вывести NFT"
+    const nftX = centerX + gap/2;
+    const nftY = centerY;
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(nftX, nftY, buttonWidth, buttonHeight);
+    ctx.fillStyle = '#000';
+    ctx.fillText('Вывести NFT', nftX + buttonWidth/2, nftY + buttonHeight/2 + 8);
+}
+
+// ===================== INPUT UPDATE =====================
+function handleInput(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+    if (gameState === GameState.PLAYING){
+        inputX = x < canvas.width / 2 ? -1 : 1;
+        return;
+    }
+
+    if (gameState === GameState.GAME_OVER){
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const buttonWidth = 180;
+        const buttonHeight = 50;
+        const gap = 20;
+
+        const restartX = centerX - buttonWidth - gap/2;
+        const restartY = centerY;
+        const nftX = centerX + gap/2;
+        const nftY = centerY;
+
+        // Проверка кнопки "Играть заново"
+        if (x > restartX && x < restartX + buttonWidth &&
+            y > restartY && y < restartY + buttonHeight){
+            restartGame();
+            gameState = GameState.PLAYING;
+            return;
+        }
+
+        // Проверка кнопки "Вывести NFT"
+        if (x > nftX && x < nftX + buttonWidth &&
+            y > nftY && y < nftY + buttonHeight){
+            console.log("NFT button clicked!");
+            // сюда вставь свою функцию вывода NFT
+            return;
+        }
+    }
+}
 
 function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);update();draw();requestAnimationFrame(loop);}
 loop();
