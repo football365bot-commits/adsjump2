@@ -30,7 +30,6 @@ let gameState = GameState.PLAYING;
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 let inputX = 0;
-let coins = 0;
 let lootBoxSpawned = false; // флаг спавна единственного лутбокса
 
 // =====================
@@ -67,8 +66,6 @@ function isOnScreen(obj) {
     return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
 }
-function calculateCoins(score) {
-    coins = score * 0.01 / 1000;
     
 // =====================
 // PLAYER
@@ -731,11 +728,7 @@ function update(){
 
     updateCamera();
 
-    if(player.y - cameraY > canvas.height || player.hp<=0){
-        if(gameState !== GameState.GAME_OVER){
-            coins = calculateCoins(ScoreManager.value);
-            gameState = GameState.GAME_OVER;
-        }
+    
     }
 }
 
