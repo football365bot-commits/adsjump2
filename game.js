@@ -192,12 +192,6 @@ canvas.addEventListener('click', e=>{handleInput(e.clientX,e.clientY);});
 canvas.addEventListener('touchstart', e=>{e.preventDefault(); const t=e.touches[0]; handleInput(t.clientX,t.clientY);},{passive:false});
 canvas.addEventListener('touchend', e=>{e.preventDefault(); inputX=0;},{passive:false});
 
-function handleInput(clientX,clientY){
-    const rect=canvas.getBoundingClientRect();
-    const x=(clientX-rect.left)*(canvas.width/rect.width);
-    if(gameState===GameState.PLAYING){inputX=x<canvas.width/2?-1:1;}
-    else if(gameState===GameState.GAME_OVER){restartGame(); gameState=GameState.PLAYING;}
-}
 
 // ===================== GLOBAL OBJECTS
 // =====================
