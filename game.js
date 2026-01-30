@@ -729,6 +729,7 @@ function update(){
 
     if(player.y - cameraY > canvas.height || player.hp<=0){
         if(gameState !== GameState.GAME_OVER){
+            ScoreManager.update(player);
             gameState = GameState.GAME_OVER;
         }
     }
