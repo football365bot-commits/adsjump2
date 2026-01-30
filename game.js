@@ -66,6 +66,8 @@ function isOnScreen(obj) {
     return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
 }
+function calculateCoins(score) {
+    coins = score * 0.01 / 1000;
     
 // =====================
 // PLAYER
@@ -727,14 +729,12 @@ function update(){
     ScoreManager.update(player);
 
     updateCamera();
-    
+
     if(player.y - cameraY > canvas.height || player.hp<=0){
         if(gameState !== GameState.GAME_OVER){
-    
             gameState = GameState.GAME_OVER;
         }
     }
-
 }
 
 function restartGame(){
