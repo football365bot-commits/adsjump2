@@ -1,6 +1,6 @@
 
 // В начале game.js
-import { PlayerAnchors } from '.anchors.js';
+import { PlayerAnchors } from './anchors.js';
 // =====================
 // CANVAS SETUP
 // =====================
