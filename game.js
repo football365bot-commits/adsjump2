@@ -8,6 +8,17 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+// =====================
+// BACKGROUND
+// =====================
+const bgImage = new Image();
+bgImage.src = 'background.jpg'; // твой фон
+let bgReady = false;
+
+bgImage.onload = () => {
+    bgReady = true;
+};
+
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -65,6 +76,29 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 function isOnScreen(obj) {
     return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
+}
+function drawInfiniteBackground() {
+    if (!bgReady) return;
+
+    const bgHeight = bgImage.height;
+    
+    // фон скроллится медленнее камеры (параллакс)
+    const scrollY = cameraY * 0.4;
+
+    // стартовая Y
+    let y = -(scrollY % bgHeight);
+
+    // рисуем столько раз, сколько нужно, чтобы закрыть экран
+    while (y < canvas.height) {
+        ctx.drawImage(
+            bgImage,
+            0,
+            y,
+            canvas.width,
+            bgHeight
+        );
+        y += bgHeight;
+    }
 }
 // =====================
 // PLAYER
@@ -748,17 +782,26 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // 1️⃣ ФОН — ВСЕГДА ПЕРВЫМ
+    drawInfiniteBackground();
+
+    // 2️⃣ ИГРА
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
 
-    ctx.fillStyle='#fff'; ctx.font='20px Arial';
+    // 3️⃣ UI
+    ctx.fillStyle='#fff'; 
+    ctx.font='20px Arial';
     const centerX = canvas.width/2;
-    ctx.textAlign='right'; ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
-    ctx.textAlign='left'; ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
+    ctx.textAlign='right'; 
+    ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
+    ctx.textAlign='left'; 
+    ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
 
     blackHolePool.forEach(bh=>bh.draw(cameraY));
 }
