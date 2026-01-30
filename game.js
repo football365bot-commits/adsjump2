@@ -113,7 +113,7 @@ class Player {
 
     update(inputX){
         this.lastY = this.y;
-        this.x += inputX * 10;
+        this.x += inputX * 9;
         if(this.x < -this.size) this.x = canvas.width;
         if(this.x > canvas.width) this.x = -this.size;
 
@@ -657,7 +657,7 @@ const blackHolePool = Array.from({length:MAX_BLACKHOLES},()=>new BlackHole());
 // ===================== PLAYER SKIN
 // =====================
 const playerSkin = new Image();
-playerSkin.src = 'chiba.jpg';
+playerSkin.src = 'adsjump.png';
 playerSkin.onload = ()=>{ player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE); };
 
 // ===================== INPUT
