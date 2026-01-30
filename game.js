@@ -728,8 +728,6 @@ function update(){
 
     updateCamera();
 
-    
-    }
 }
 
 function restartGame(){
