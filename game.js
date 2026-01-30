@@ -335,6 +335,12 @@ function handleInput(clientX, clientY){
         }
     }
 }
-
-function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);update();draw();requestAnimationFrame(loop);}
-loop();
+function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    update();
+    draw();
+    if(gameState === GameState.GAME_OVER){
+        drawGameOverUI();
+    }
+    requestAnimationFrame(loop);
+}
