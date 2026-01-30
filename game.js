@@ -763,15 +763,25 @@ function draw(){
 }
 
 function drawGameOverUI() {
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0); // сброс всех трансформаций камеры
+
     const centerX = canvas.width/2;
     const centerY = canvas.height/2;
+
+    // затемнённый фон
     ctx.fillStyle='rgba(0,0,0,0.5)';
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
+    // надпись GAME OVER
     ctx.fillStyle='#fff';
     ctx.font='40px Arial';
     ctx.textAlign='center';
     ctx.fillText('GAME OVER', centerX, centerY-80);
+
+    // новый: отображение счёта
+    ctx.font='32px Arial';
+    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, centerX, centerY-30);
 
     const buttonWidth=180, buttonHeight=50, gap=20;
     const restartX=centerX-buttonWidth-gap/2, restartY=centerY;
@@ -789,6 +799,8 @@ function drawGameOverUI() {
     ctx.fillRect(nftX, nftY, buttonWidth, buttonHeight);
     ctx.fillStyle='#000';
     ctx.fillText('Вывести NFT', nftX+buttonWidth/2, nftY+buttonHeight/2+8);
+
+    ctx.restore();
 }
 
 function loop(){
