@@ -758,9 +758,6 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-
     
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
