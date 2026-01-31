@@ -1,6 +1,64 @@
 
 // В начале game.js
 import { PlayerAnchors } from './anchors.js';
+// ===================== GRAFFITI SETUP =====================
+const graffitiImages = [];
+const graffitiSources = [
+    'graffiti1.png',
+    'graffiti2.png',
+    'graffiti3.png',
+    'graffiti4.png',
+    'graffiti5.png'
+];
+
+graffitiSources.forEach(src => {
+    const img = new Image();
+    img.src = src;
+    graffitiImages.push(img);
+});
+
+// класс Graffiti
+class Graffiti {
+    constructor() {
+        this.active = false;
+        this.x = 0;
+        this.y = 0;
+        this.size = 40;
+        this.image = null;
+    }
+
+    spawn(x, y, image, size = 40) {
+        this.active = true;
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.image = image;
+    }
+
+    draw() {
+        if (!this.active || !this.image) return;
+        ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+    }
+
+    deactivate() {
+        this.active = false;
+        this.image = null;
+    }
+}
+
+// создаём пул
+const MAX_GRAFFITI = 20;
+const graffitiPool = Array.from({ length: MAX_GRAFFITI }, () => new Graffiti());
+
+// функция спавна всех граффити
+function spawnAllGraffiti() {
+    graffitiPool.forEach(g => {
+        const x = Math.random() * (canvas.width - 40);
+        const y = Math.random() * (canvas.height - 100);
+        const image = pick(graffitiImages); // берём случайное изображение
+        g.spawn(x, y, image, 40);
+    });
+}
 // =====================
 // CANVAS SETUP
 // =====================
@@ -720,6 +778,7 @@ canvas.addEventListener('touchend', e=>{ e.preventDefault(); inputX=0; }, {passi
 // ===================== GAME LOOP
 // =====================
 spawnEntities(true);
+spawnAllGraffiti(); 
 
 function update(){
     if(gameState !== GameState.PLAYING) return;
@@ -754,12 +813,17 @@ function restartGame(){
     platforms.forEach(p=>p.reset());
     itemPool.forEach(i=>i.active=false);
     lootBoxSpawned=false;
+    graffitiPool.forEach(g => g.deactivate());
+    spawnAllGraffiti();
+    
     spawnEntities(true);
 }
 
 function draw(){
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    graffitiPool.forEach(g => g.draw());
     
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
