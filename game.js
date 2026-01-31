@@ -56,7 +56,22 @@ const CONFIG = {
     BULLET_POOL_SIZE: 500,
     BULLET_SPEED: 13,
 };
+const GRAFFITI_COUNT = 20;
+const graffitiPool = Array.from(
+    { length: GRAFFITI_COUNT },
+    () => new Graffiti()
+);
 
+function getFreeGraffiti() {
+    return graffitiPool.find(g => !g.active);
+}
+const graffitiImages = [];
+
+for (let i = 1; i <= 5; i++) {
+    const img = new Image();
+    img.src = graffiti${i}.png;
+    graffitiImages.push(img);
+}
 // =====================
 // UTILS
 // =====================
@@ -494,6 +509,40 @@ class BlackHole {
     }
 }
 
+
+
+class Graffiti {
+    constructor() {
+        this.active = false;
+        this.x = 0;
+        this.y = 0;
+        this.w = 100;
+        this.h = 100;
+        this.image = null;
+    }
+
+    spawn(x, y, image) {
+        this.active = true;
+        this.x = x;
+        this.y = y;
+        this.image = image;
+    }
+
+    update() {
+        if (!this.active) return;
+
+        // если ушло ниже экрана — ресет
+        if (this.y - cameraY > canvas.height + this.h) {
+            this.active = false;
+        }
+    }
+
+    draw(cameraY) {
+        if (!this.active) return;
+        ctx.drawImage(this.image, this.x, this.y - cameraY, this.w, this.h);
+    }
+}
+
 // ===================== BULLETS / SHOOTING
 // =====================
 const ShootingSystem = {
@@ -550,6 +599,22 @@ function updateBullets(){
     }
 }
 
+
+function updateGraffitiSpawn() {
+    const activeCount = graffitiPool.filter(g => g.active).length;
+
+    // хотим, например, всегда 10 штук на экране
+    if (activeCount < 10) {
+        const g = getFreeGraffiti();
+        if (!g) return;
+
+        const x = rand(0, canvas.width - 100);
+        const y = cameraY - rand(0, canvas.height);
+        const img = pick(graffitiImages);
+
+        g.spawn(x, y, img);
+    }
+}
 function drawBullets(){ for(const b of bulletPool) if(b.active){ ctx.fillStyle=b.owner==='player'?'#ff0':'#f80'; ctx.fillRect(b.x-2,b.y-cameraY-1,2,2); } }
 function updateItems(){ itemPool.forEach(i=>i.update()); }
 function drawItems(){ itemPool.forEach(i=>i.draw()); }
@@ -724,6 +789,9 @@ function update(){
     ShootingSystem.processShots();
     updateBullets();
     ScoreManager.update(player);
+    
+    updateGraffitiSpawn();
+    graffitiPool.forEach(g => g.update());
 
     updateCamera();
 
@@ -748,7 +816,11 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.fillStyle='#555'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#555'; 
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    graffitiPool.forEach(g => g.draw(cameraY));
+    
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
