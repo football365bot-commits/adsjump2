@@ -751,7 +751,7 @@ function restartGame(){
 
 function draw(){
     if(bg.complete){
-        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
     }
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
