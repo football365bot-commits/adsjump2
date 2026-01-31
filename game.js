@@ -1,8 +1,5 @@
-
 // В начале game.js
 import { PlayerAnchors } from './anchors.js';
-
-
 // =====================
 // CANVAS SETUP
 // =====================
@@ -10,79 +7,12 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-
-function fillBackgroundOnce() {
-    ctx.fillStyle = '#000';        // просто чёрный
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-
-
 resize();
 window.addEventListener('resize', resize);
-fillBackgroundOnce();
-// ===================== GRAFFITI SETUP =====================
-const graffitiImages = [];
-const graffitiSources = [
-    'graffiti1.png',
-    'graffiti2.png',
-    'graffiti3.png',
-    'graffiti4.png',
-    'graffiti5.png'
-];
-
-graffitiSources.forEach(src => {
-    const img = new Image();
-    img.src = src;
-    graffitiImages.push(img);
-});
-
-// класс Graffiti
-class Graffiti {
-    constructor() {
-        this.active = false;
-        this.x = 0;
-        this.y = 0;
-        this.size = 40;
-        this.image = null;
-    }
-
-    spawn(x, y, image, size = 40) {
-        this.active = true;
-        this.x = x;
-        this.y = y;
-        this.size = size;
-        this.image = image;
-    }
-
-    draw() {
-        if (!this.active || !this.image) return;
-        ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
-    }
-
-    deactivate() {
-        this.active = false;
-        this.image = null;
-    }
-}
-
-// создаём пул
-const MAX_GRAFFITI = 20;
-const graffitiPool = Array.from({ length: MAX_GRAFFITI }, () => new Graffiti());
-
-// функция спавна всех граффити
-function spawnAllGraffiti() {
-    graffitiPool.forEach(g => {
-        const x = Math.random() * (canvas.width - 40);
-        const y = Math.random() * (canvas.height - 100);
-        const image = pick(graffitiImages); // берём случайное изображение
-        g.spawn(x, y, image, 40);
-    });
-}
 
 // =====================
 // GAME STATE
@@ -132,7 +62,7 @@ const CONFIG = {
 const rand = (a,b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 function isOnScreen(obj) {
-    return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
+    return obj.y - cameraY + (obj.size  CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
 }
 // =====================
@@ -182,7 +112,7 @@ class Player {
 
     update(inputX){
         this.lastY = this.y;
-        this.x += inputX * 9;
+        this.x += inputX * 10;
         if(this.x < -this.size) this.x = canvas.width;
         if(this.x > canvas.width) this.x = -this.size;
 
@@ -210,7 +140,7 @@ class Player {
                 ShootingSystem.requestShot('player', this, target);
                 this.shootCooldown = 10;
 
-                const dx = (target.x + CONFIG.ENEMY_SIZE/2) - (this.x + this.size/2);
+                const dx = (target.x +CONFIG.ENEMY_SIZE/2) - (this.x + this.size/2);
                 const dy = (target.y + CONFIG.ENEMY_SIZE/2) - (this.y + this.size/2);
                 this.pipe.angle = Math.atan2(dy, dx);
             }
@@ -300,11 +230,11 @@ class Enemy {
 
         if(this.type === 'horizontal') {
             this.x += this.vx;
-            if(this.x<0 || this.x+CONFIG.ENEMY_SIZE>canvas.width) this.vx *= -1;
+            if(this.x<0  this.x+CONFIG.ENEMY_SIZE>canvas.width) this.vx *= -1;
         }
         if(this.type === 'vertical') {
             this.y += this.vy;
-            if(this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+            if(this.y > this.baseY + this.amplitude  this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
         if(this.shootCooldown <= 0) {
@@ -314,7 +244,7 @@ class Enemy {
             }
         } else this.shootCooldown--;
 
-        if(this.y - cameraY > canvas.height || this.hp <= 0) this.active = false;
+        if(this.y - cameraY > canvas.height  this.hp <= 0) this.active = false;
     }
 
     draw(cameraY) {
@@ -323,9 +253,7 @@ class Enemy {
         ctx.translate(this.x + CONFIG.ENEMY_SIZE/2, this.y - cameraY + CONFIG.ENEMY_SIZE/2);
         ctx.scale(this.visualScale||1, this.visualScale||1);
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(-CONFIG.ENEMY_SIZE/2, -CONFIG.ENEMY_SIZE/2, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);
-
-        const barWidth = CONFIG.ENEMY_SIZE, barHeight = 4;
+        ctx.fillRect(-CONFIG.ENEMY_SIZE/2, -CONFIG.ENEMY_SIZE/2, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);const barWidth = CONFIG.ENEMY_SIZE, barHeight = 4;
         ctx.fillStyle = '#555';
         ctx.fillRect(-barWidth/2, -CONFIG.ENEMY_SIZE/2-6, barWidth, barHeight);
         ctx.fillStyle = '#0f0';
@@ -382,11 +310,11 @@ class Platform {
 
         if(this.movementType === 'horizontal') {
             this.x += this.vx;
-            if(this.x < 0 || this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
+            if(this.x < 0  this.x + CONFIG.PLATFORM_WIDTH > canvas.width) this.vx *= -1;
         }
         if(this.movementType === 'vertical') {
             this.y += this.vy;
-            if(this.y > this.baseY + this.amplitude || this.y < this.baseY - this.amplitude) this.vy *= -1;
+            if(this.y > this.baseY + this.amplitude  this.y < this.baseY - this.amplitude) this.vy *= -1;
         }
 
         if(this.y - cameraY > canvas.height) this.active = false;
@@ -449,9 +377,7 @@ class Item {
             else if(r<0.004) this.type='adrenaline';
             else if(r<0.007) this.type='medkit';
             else return;
-        }
-
-        this.active = true;
+        }this.active = true;
         this.platform = platform;
         this.x = platform.x + CONFIG.PLATFORM_WIDTH/2 - this.size/2;
         this.y = platform.y - this.size;
@@ -460,7 +386,7 @@ class Item {
     update() {
         if(!this.active) return;
 
-        if(!this.platform || !this.platform.active) {
+        if(!this.platform  !this.platform.active) {
             this.active = false;
             this.platform = null;
             return;
@@ -534,7 +460,7 @@ class BlackHole {
         const objects = [...enemies, player];
         objects.forEach(obj=>{
             if(obj !== player && !obj.active) return;
-            const objSize = obj.size || CONFIG.ENEMY_SIZE;
+            const objSize = obj.size  CONFIG.ENEMY_SIZE;
             const dx = this.x - (obj.x + objSize/2);
             const dy = this.y - (obj.y + objSize/2);
             const dist = Math.hypot(dx, dy);
@@ -561,9 +487,7 @@ class BlackHole {
         ctx.fill();
         ctx.restore();
     }
-}
-
-// ===================== BULLETS / SHOOTING
+}// ===================== BULLETS / SHOOTING
 // =====================
 const ShootingSystem = {
     requests: [],
@@ -574,7 +498,7 @@ const ShootingSystem = {
             if(!bullet) return;
             const dx = (req.target.x+CONFIG.ENEMY_SIZE/2) - (req.shooter.x+CONFIG.PLAYER_SIZE/2);
             const dy = (req.target.y+CONFIG.ENEMY_SIZE/2) - (req.shooter.y+CONFIG.PLAYER_SIZE/2);
-            const dist = Math.hypot(dx, dy)||1;
+            const dist = Math.hypot(dx, dy)1;
             bullet.active = true;
             bullet.owner = req.owner;
             bullet.x = req.shooter.x + CONFIG.PLAYER_SIZE/2;
@@ -629,7 +553,7 @@ const ScoreManager={
     value:0,
     maxY:null,
     update(p){
-        if(this.maxY===null || p.y<this.maxY){
+        if(this.maxY===null  p.y<this.maxY){
             if(this.maxY!==null) this.value += this.maxY - p.y;
             this.maxY = p.y;
         }
@@ -662,9 +586,7 @@ function spawnEntities(isReset=false){
         maxPlatformY = y;
         lastEnemyScore = 0;
         lootBoxSpawned = false; // сброс флага при рестарте
-    }
-
-    platforms.forEach(p=>{
+    }platforms.forEach(p=>{
         if(!p.active){
             const growth = 1 + factor*0.08;
             const minGap = Math.min(85*growth,95);
@@ -770,9 +692,7 @@ function handleInput(clientX, clientY){
             return;
         }
     }
-}
-
-// Навешиваем события
+}// Навешиваем события
 canvas.addEventListener('click', e=>handleInput(e.clientX,e.clientY));
 canvas.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.touches[0]; handleInput(t.clientX,t.clientY); }, {passive:false});
 canvas.addEventListener('touchend', e=>{ e.preventDefault(); inputX=0; }, {passive:false});
@@ -780,7 +700,6 @@ canvas.addEventListener('touchend', e=>{ e.preventDefault(); inputX=0; }, {passi
 // ===================== GAME LOOP
 // =====================
 spawnEntities(true);
-spawnAllGraffiti(); 
 
 function update(){
     if(gameState !== GameState.PLAYING) return;
@@ -809,38 +728,26 @@ function restartGame(){
     player.reset();
     ScoreManager.reset();
     cameraY=0;
-    fillBackgroundOnce();
     bulletPool.forEach(b=>b.active=false);
     enemies.forEach(e=>e.reset());
     platforms.forEach(p=>p.reset());
     itemPool.forEach(i=>i.active=false);
     lootBoxSpawned=false;
-    graffitiPool.forEach(g => g.deactivate());
-    spawnAllGraffiti();
-    
     spawnEntities(true);
 }
 
 function draw(){
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    graffitiPool.forEach(g => g.draw());
-    
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
 
-    
-    ctx.fillStyle='#fff'; 
-    ctx.font='20px Arial';
+    ctx.fillStyle='#fff'; ctx.font='20px Arial';
     const centerX = canvas.width/2;
-    ctx.textAlign='right'; 
-    ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
-    ctx.textAlign='left'; 
-    ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
+    ctx.textAlign='right'; ctx.fillText(${Math.floor(ScoreManager.value)}, centerX-10,30);
+    ctx.textAlign='left'; ctx.fillText(HP: ${player.hp}, centerX+10,30);
 
     blackHolePool.forEach(bh=>bh.draw(cameraY));
 }
@@ -864,7 +771,7 @@ function drawGameOverUI() {
 
     // новый: отображение счёта
     ctx.font='32px Arial';
-    ctx.fillText(`Score: ${Math.floor(ScoreManager.value)}`, centerX, centerY-30);
+    ctx.fillText(Score: ${Math.floor(ScoreManager.value)}, centerX, centerY-30);
 
     const buttonWidth=180, buttonHeight=50, gap=20;
     const restartX=centerX-buttonWidth-gap/2, restartY=centerY;
@@ -887,6 +794,7 @@ function drawGameOverUI() {
 }
 
 function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     update();
     draw();
     if(gameState === GameState.GAME_OVER) drawGameOverUI();
