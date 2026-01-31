@@ -8,11 +8,21 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-function drawBackgroundColor() {
-    ctx.fillStyle = '#888'; // светло-серый, можно поменять на любой цвет
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
+// ======== OFFSCREEN CANVAS ДЛЯ ФОНА ========
+// ======== OFFSCREEN CANVAS ДЛЯ ФОНА ========
+const bgCanvas = document.createElement('canvas');
+const bgCtx = bgCanvas.getContext('2d');
 
+function drawBackgroundColor() {
+    if(bgCanvas.width !== canvas.width || bgCanvas.height !== canvas.height){
+        bgCanvas.width = canvas.width;
+        bgCanvas.height = canvas.height;
+        bgCtx.fillStyle = '#888'; // светло-серый фон
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    }
+
+    ctx.drawImage(bgCanvas, 0, 0);
+}
 
 function resize() {
     canvas.width = window.innerWidth;
