@@ -656,6 +656,8 @@ const blackHolePool = Array.from({length:MAX_BLACKHOLES},()=>new BlackHole());
 
 // ===================== PLAYER SKIN
 // =====================
+const bg = new Image();
+bg.src = 'background.jpg';
 const playerSkin = new Image();
 playerSkin.src = 'adsjump.png';
 playerSkin.onload = ()=>{ player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE); };
@@ -748,9 +750,9 @@ function restartGame(){
 }
 
 function draw(){
-    const bg = new Image();
-    bg.src = 'background.jpg';
-    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+    if(bgImage.complete){
+        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    }
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
