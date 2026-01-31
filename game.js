@@ -497,7 +497,7 @@ const ShootingSystem = {
             if(!bullet) return;
             const dx = (req.target.x+CONFIG.ENEMY_SIZE/2) - (req.shooter.x+CONFIG.PLAYER_SIZE/2);
             const dy = (req.target.y+CONFIG.ENEMY_SIZE/2) - (req.shooter.y+CONFIG.PLAYER_SIZE/2);
-            const dist = Math.hypot(dx, dy)1;
+            const dist = Math.hypot(dx, dy);
             bullet.active = true;
             bullet.owner = req.owner;
             bullet.x = req.shooter.x + CONFIG.PLAYER_SIZE/2;
