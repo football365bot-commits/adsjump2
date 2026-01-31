@@ -8,21 +8,6 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-// ======== OFFSCREEN CANVAS ДЛЯ ФОНА ========
-// ======== OFFSCREEN CANVAS ДЛЯ ФОНА ========
-const bgCanvas = document.createElement('canvas');
-const bgCtx = bgCanvas.getContext('2d');
-
-function drawBackgroundColor() {
-    if(bgCanvas.width !== canvas.width || bgCanvas.height !== canvas.height){
-        bgCanvas.width = canvas.width;
-        bgCanvas.height = canvas.height;
-        bgCtx.fillStyle = '#888'; // светло-серый фон
-        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-    }
-
-    ctx.drawImage(bgCanvas, 0, 0);
-}
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -33,6 +18,12 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
+function fillBackgroundOnce() {
+    ctx.setTransform(1,0,0,1,0,0); // сброс трансформаций
+    ctx.fillStyle = '#888';        // серый фон
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+fillBackgroundOnce();
 // =====================
 // GAME STATE
 // =====================
@@ -757,6 +748,7 @@ function restartGame(){
     player.reset();
     ScoreManager.reset();
     cameraY=0;
+    fillBackgroundOnce();
     bulletPool.forEach(b=>b.active=false);
     enemies.forEach(e=>e.reset());
     platforms.forEach(p=>p.reset());
@@ -768,17 +760,15 @@ function restartGame(){
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // 1️⃣ ФОН — ВСЕГДА ПЕРВЫМ
-    drawBackgroundColor();
 
-    // 2️⃣ ИГРА
+    
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
 
-    // 3️⃣ UI
+    
     ctx.fillStyle='#fff'; 
     ctx.font='20px Arial';
     const centerX = canvas.width/2;
@@ -832,7 +822,6 @@ function drawGameOverUI() {
 }
 
 function loop(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
     update();
     draw();
     if(gameState === GameState.GAME_OVER) drawGameOverUI();
