@@ -748,7 +748,9 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const bg = new Image();
+    bg.src = 'background.png';
+    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
