@@ -30,8 +30,8 @@ let gameState = GameState.PLAYING;
 let cameraY = 0;
 let maxPlatformY = canvas.height;
 let inputX = 0;
-let lootBoxSpawned = false; // флаг спавна единственного лутбокса
-
+let lootBoxSpawned = false; // 
+let maxGraffitiY = 0;
 // =====================
 // CONFIG
 // =====================
@@ -57,6 +57,9 @@ const CONFIG = {
     BULLET_SPEED: 13,
 };
 
+const bgImage = new Image();
+bgImage.src = 'background.png';
+
 
 function getFreeGraffiti() {
     return graffitiPool.find(g => !g.active);
@@ -67,6 +70,18 @@ for (let i = 1; i <= 5; i++) {
     const img = new Image();
     img.src = `graffiti${i}.png`;
     graffitiImages.push(img);
+}
+function spawnGraffiti() {
+    graffitiPool.forEach(g => {
+        if (!g.active) {
+            const x = rand(0, canvas.width - g.w);
+            const gap = rand(200, 400); // расстояние между граффити
+            const y = maxGraffitiY - gap;
+
+            g.spawn(x, y, pick(graffitiImages));
+            maxGraffitiY = y;
+        }
+    });
 }
 // =====================
 // UTILS
@@ -505,15 +520,13 @@ class BlackHole {
     }
 }
 
-
-
 class Graffiti {
     constructor() {
         this.active = false;
         this.x = 0;
         this.y = 0;
-        this.w = 100;
-        this.h = 100;
+        this.w = 120;
+        this.h = 120;
         this.image = null;
     }
 
@@ -524,17 +537,17 @@ class Graffiti {
         this.image = image;
     }
 
-    update() {
+    update(cameraY) {
         if (!this.active) return;
 
-        // если ушло ниже экрана — ресет
+        // ушло ниже экрана → в пул
         if (this.y - cameraY > canvas.height + this.h) {
             this.active = false;
         }
     }
 
     draw(cameraY) {
-        if (!this.active) return;
+        if (!this.active || !this.image) return;
         ctx.drawImage(this.image, this.x, this.y - cameraY, this.w, this.h);
     }
 }
@@ -792,8 +805,8 @@ function update(){
     updateBullets();
     ScoreManager.update(player);
     
-    updateGraffitiSpawn();
-    graffitiPool.forEach(g => g.update());
+    spawnGraffiti();
+    graffitiPool.forEach(g => g.update(cameraY));
 
     updateCamera();
 
@@ -817,24 +830,26 @@ function restartGame(){
     spawnEntities(true);
 }
 
-function draw(){
-    ctx.fillStyle='#555'; 
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+function draw() {
+    // 1. ФОН (статичный, без cameraY)
+    if (bgImage.complete) {
+        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = '#555'; // fallback
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
+    // 2. ГРАФФИТИ (двигаются с камерой)
     graffitiPool.forEach(g => g.draw(cameraY));
-    
-    platforms.forEach(p=>p.draw(cameraY));
-    enemies.forEach(e=>e.draw(cameraY));
+
+    // 3. ВСЁ ОСТАЛЬНОЕ
+    platforms.forEach(p => p.draw(cameraY));
+    enemies.forEach(e => e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
 
-    ctx.fillStyle='#fff'; ctx.font='20px Arial';
-    const centerX = canvas.width/2;
-    ctx.textAlign='right'; ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
-    ctx.textAlign='left'; ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
-
-    blackHolePool.forEach(bh=>bh.draw(cameraY));
+    blackHolePool.forEach(bh => bh.draw(cameraY));
 }
 
 function drawGameOverUI() {
