@@ -8,21 +8,18 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-// =====================
-// BACKGROUND
-// =====================
-const bgImage = new Image();
-bgImage.src = 'background.jpg'; // твой фон
-let bgReady = false;
+function drawBackgroundColor() {
+    ctx.fillStyle = '#888'; // светло-серый, можно поменять на любой цвет
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
 
-bgImage.onload = () => {
-    bgReady = true;
-};
 
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+
+
 resize();
 window.addEventListener('resize', resize);
 
@@ -76,33 +73,6 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 function isOnScreen(obj) {
     return obj.y - cameraY + (obj.size || CONFIG.ENEMY_SIZE) > 0 &&
            obj.y - cameraY < canvas.height;
-}
-function drawInfiniteBackground() {
-    if (!bgReady) return;
-
-    const scale = canvas.width / bgImage.width;
-    const bgHeightScaled = bgImage.height * scale;
-
-    // параллакс: фон движется медленнее игрока
-    const scrollY = cameraY * 0.4;
-
-    // стартовая Y: берем остаток деления на высоту, чтобы фон «циклировался»
-    let y = -(scrollY % bgHeightScaled);
-
-    // рисуем несколько копий подряд, чтобы перекрыть весь экран
-    const repeatCount = Math.ceil(canvas.height / bgHeightScaled) + 1;
-
-    for (let i = 0; i < repeatCount; i++) {
-        ctx.drawImage(
-            bgImage,       // source
-            0, 0,
-            bgImage.width, bgImage.height,
-            0,             // canvas x
-            y + i * bgHeightScaled, // canvas y
-            canvas.width,  // canvas width
-            bgHeightScaled // canvas height
-        );
-    }
 }
 // =====================
 // PLAYER
@@ -789,7 +759,7 @@ function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // 1️⃣ ФОН — ВСЕГДА ПЕРВЫМ
-    drawInfiniteBackground();
+    drawBackgroundColor();
 
     // 2️⃣ ИГРА
     platforms.forEach(p=>p.draw(cameraY));
