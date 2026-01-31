@@ -1,8 +1,6 @@
 
 // В начале game.js
 import { PlayerAnchors } from './anchors.js';
-
-
 // =====================
 // CANVAS SETUP
 // =====================
@@ -10,78 +8,12 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-
-function fillBackgroundOnce() {
-    ctx.fillStyle = '#888';        // просто чёрный
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-
-
 resize();
 window.addEventListener('resize', resize);
-// ===================== GRAFFITI SETUP =====================
-const graffitiImages = [];
-const graffitiSources = [
-    'graffiti1.png',
-    'graffiti2.png',
-    'graffiti3.png',
-    'graffiti4.png',
-    'graffiti5.png'
-];
-
-graffitiSources.forEach(src => {
-    const img = new Image();
-    img.src = src;
-    graffitiImages.push(img);
-});
-
-// класс Graffiti
-class Graffiti {
-    constructor() {
-        this.active = false;
-        this.x = 0;
-        this.y = 0;
-        this.size = 40;
-        this.image = null;
-    }
-
-    spawn(x, y, image, size = 40) {
-        this.active = true;
-        this.x = x;
-        this.y = y;
-        this.size = size;
-        this.image = image;
-    }
-
-    draw() {
-        if (!this.active || !this.image) return;
-        ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
-    }
-
-    deactivate() {
-        this.active = false;
-        this.image = null;
-    }
-}
-
-// создаём пул
-const MAX_GRAFFITI = 20;
-const graffitiPool = Array.from({ length: MAX_GRAFFITI }, () => new Graffiti());
-
-// функция спавна всех граффити
-function spawnAllGraffiti() {
-    graffitiPool.forEach(g => {
-        const x = Math.random() * (canvas.width - 40);
-        const y = Math.random() * (canvas.height - 100);
-        const image = pick(graffitiImages); // берём случайное изображение
-        g.spawn(x, y, image, 40);
-    });
-}
 
 // =====================
 // GAME STATE
@@ -181,7 +113,7 @@ class Player {
 
     update(inputX){
         this.lastY = this.y;
-        this.x += inputX * 9;
+        this.x += inputX * 10;
         if(this.x < -this.size) this.x = canvas.width;
         if(this.x > canvas.width) this.x = -this.size;
 
@@ -725,7 +657,7 @@ const blackHolePool = Array.from({length:MAX_BLACKHOLES},()=>new BlackHole());
 // ===================== PLAYER SKIN
 // =====================
 const playerSkin = new Image();
-playerSkin.src = 'adsjump.png';
+playerSkin.src = 'chiba.jpg';
 playerSkin.onload = ()=>{ player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE); };
 
 // ===================== INPUT
@@ -779,7 +711,6 @@ canvas.addEventListener('touchend', e=>{ e.preventDefault(); inputX=0; }, {passi
 // ===================== GAME LOOP
 // =====================
 spawnEntities(true);
-spawnAllGraffiti(); 
 
 function update(){
     if(gameState !== GameState.PLAYING) return;
@@ -808,38 +739,26 @@ function restartGame(){
     player.reset();
     ScoreManager.reset();
     cameraY=0;
-    fillBackgroundOnce();
     bulletPool.forEach(b=>b.active=false);
     enemies.forEach(e=>e.reset());
     platforms.forEach(p=>p.reset());
     itemPool.forEach(i=>i.active=false);
     lootBoxSpawned=false;
-    graffitiPool.forEach(g => g.deactivate());
-    spawnAllGraffiti();
-    
     spawnEntities(true);
 }
 
 function draw(){
-    ctx.fillStyle = '#888';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    graffitiPool.forEach(g => g.draw());
-    
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
     player.draw(cameraY);
     drawBullets();
 
-    
-    ctx.fillStyle='#fff'; 
-    ctx.font='20px Arial';
+    ctx.fillStyle='#fff'; ctx.font='20px Arial';
     const centerX = canvas.width/2;
-    ctx.textAlign='right'; 
-    ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
-    ctx.textAlign='left'; 
-    ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
+    ctx.textAlign='right'; ctx.fillText(`${Math.floor(ScoreManager.value)}`, centerX-10,30);
+    ctx.textAlign='left'; ctx.fillText(`HP: ${player.hp}`, centerX+10,30);
 
     blackHolePool.forEach(bh=>bh.draw(cameraY));
 }
@@ -886,6 +805,7 @@ function drawGameOverUI() {
 }
 
 function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     update();
     draw();
     if(gameState === GameState.GAME_OVER) drawGameOverUI();
