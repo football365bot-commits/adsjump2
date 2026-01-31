@@ -56,11 +56,7 @@ const CONFIG = {
     BULLET_POOL_SIZE: 500,
     BULLET_SPEED: 13,
 };
-const GRAFFITI_COUNT = 20;
-const graffitiPool = Array.from(
-    { length: GRAFFITI_COUNT },
-    () => new Graffiti()
-);
+
 
 function getFreeGraffiti() {
     return graffitiPool.find(g => !g.active);
@@ -69,7 +65,7 @@ const graffitiImages = [];
 
 for (let i = 1; i <= 5; i++) {
     const img = new Image();
-    img.src = graffiti${i}.png;
+    img.src = 'graffiti${i}.png';
     graffitiImages.push(img);
 }
 // =====================
@@ -542,6 +538,12 @@ class Graffiti {
         ctx.drawImage(this.image, this.x, this.y - cameraY, this.w, this.h);
     }
 }
+
+const GRAFFITI_COUNT = 20;
+const graffitiPool = Array.from(
+    { length: GRAFFITI_COUNT },
+    () => new Graffiti()
+);
 
 // ===================== BULLETS / SHOOTING
 // =====================
