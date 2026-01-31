@@ -24,6 +24,7 @@ function resize() {
 
 resize();
 window.addEventListener('resize', resize);
+fillBackgroundOnce();
 // ===================== GRAFFITI SETUP =====================
 const graffitiImages = [];
 const graffitiSources = [
