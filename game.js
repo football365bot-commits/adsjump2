@@ -58,7 +58,7 @@ const CONFIG = {
 };
 
 const bgImage = new Image();
-bgImage.src = 'background.png';
+bgImage.src = 'background.jpg';
 
 
 function getFreeGraffiti() {
