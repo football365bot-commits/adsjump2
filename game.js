@@ -657,7 +657,7 @@ const blackHolePool = Array.from({length:MAX_BLACKHOLES},()=>new BlackHole());
 // ===================== PLAYER SKIN
 // =====================
 const playerSkin = new Image();
-playerSkin.src = 'chiba.jpg';
+playerSkin.src = 'adsjump.png';
 playerSkin.onload = ()=>{ player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE); };
 
 // ===================== INPUT
