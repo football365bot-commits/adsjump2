@@ -140,7 +140,7 @@ class Player {
                 ShootingSystem.requestShot('player', this, target);
                 this.shootCooldown = 10;
 
-                const dx = (target.x +CONFIG.ENEMY_SIZE/2) - (this.x + this.size/2);
+                const dx = (target.x + CONFIG.ENEMY_SIZE/2) - (this.x + this.size/2);
                 const dy = (target.y + CONFIG.ENEMY_SIZE/2) - (this.y + this.size/2);
                 this.pipe.angle = Math.atan2(dy, dx);
             }
@@ -253,7 +253,7 @@ class Enemy {
         ctx.translate(this.x + CONFIG.ENEMY_SIZE/2, this.y - cameraY + CONFIG.ENEMY_SIZE/2);
         ctx.scale(this.visualScale||1, this.visualScale||1);
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(-CONFIG.ENEMY_SIZE/2, -CONFIG.ENEMY_SIZE/2, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE);const barWidth = CONFIG.ENEMY_SIZE, barHeight = 4;
+        ctx.fillRect(-CONFIG.ENEMY_SIZE/2, -CONFIG.ENEMY_SIZE/2, CONFIG.ENEMY_SIZE, CONFIG.ENEMY_SIZE); const barWidth = CONFIG.ENEMY_SIZE, barHeight = 4;
         ctx.fillStyle = '#555';
         ctx.fillRect(-barWidth/2, -CONFIG.ENEMY_SIZE/2-6, barWidth, barHeight);
         ctx.fillStyle = '#0f0';
@@ -376,8 +376,7 @@ class Item {
             else if(r<0.0025) this.type='spikes';
             else if(r<0.004) this.type='adrenaline';
             else if(r<0.007) this.type='medkit';
-            else return;
-        }this.active = true;
+            this.active = true;
         this.platform = platform;
         this.x = platform.x + CONFIG.PLATFORM_WIDTH/2 - this.size/2;
         this.y = platform.y - this.size;
@@ -487,7 +486,7 @@ class BlackHole {
         ctx.fill();
         ctx.restore();
     }
-}// ===================== BULLETS / SHOOTING
+} else // ===================== BULLETS / SHOOTING
 // =====================
 const ShootingSystem = {
     requests: [],
@@ -586,7 +585,7 @@ function spawnEntities(isReset=false){
         maxPlatformY = y;
         lastEnemyScore = 0;
         lootBoxSpawned = false; // сброс флага при рестарте
-    }platforms.forEach(p=>{
+    } return platforms.forEach(p=>{
         if(!p.active){
             const growth = 1 + factor*0.08;
             const minGap = Math.min(85*growth,95);
@@ -692,7 +691,8 @@ function handleInput(clientX, clientY){
             return;
         }
     }
-}// Навешиваем события
+};
+        } // Навешиваем события
 canvas.addEventListener('click', e=>handleInput(e.clientX,e.clientY));
 canvas.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.touches[0]; handleInput(t.clientX,t.clientY); }, {passive:false});
 canvas.addEventListener('touchend', e=>{ e.preventDefault(); inputX=0; }, {passive:false});
