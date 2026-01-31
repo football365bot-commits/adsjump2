@@ -1,14 +1,37 @@
 
 // В начале game.js
 import { PlayerAnchors } from './anchors.js';
+
+
+// =====================
+// CANVAS SETUP
+// =====================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+
+function fillBackgroundOnce() {
+    ctx.fillStyle = '#000';        // просто чёрный
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+
+resize();
+window.addEventListener('resize', resize);
 // ===================== GRAFFITI SETUP =====================
 const graffitiImages = [];
 const graffitiSources = [
-    'graffiti1.jpg',
-    'graffiti2.jpg',
-    'graffiti3.jpg',
-    'graffiti4.jpg',
-    'graffiti5.jpg'
+    'graffiti1.png',
+    'graffiti2.png',
+    'graffiti3.png',
+    'graffiti4.png',
+    'graffiti5.png'
 ];
 
 graffitiSources.forEach(src => {
@@ -59,28 +82,6 @@ function spawnAllGraffiti() {
         g.spawn(x, y, image, 40);
     });
 }
-// =====================
-// CANVAS SETUP
-// =====================
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
-
-
-function fillBackgroundOnce() {
-    ctx.fillStyle = '#000';        // просто чёрный
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-
-resize();
-window.addEventListener('resize', resize);
-
 
 // =====================
 // GAME STATE
