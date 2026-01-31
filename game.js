@@ -750,7 +750,7 @@ function restartGame(){
 }
 
 function draw(){
-    if(bgImage.complete){
+    if(bg.complete){
         ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
     }
     platforms.forEach(p=>p.draw(cameraY));
