@@ -496,30 +496,7 @@ class BlackHole {
         ctx.restore();
     }
 }
-class Graffiti {
-    constructor(img, size = 50) {
-        this.x = 0;
-        this.y = 0;
-        this.img = img;
-        this.size = size;
-        this.active = false;
-    }
 
-    spawn(x, y) {
-        this.x = x;
-        this.y = y;
-        this.active = true;
-    }
-
-    reset() {
-        this.active = false;
-    }
-
-    draw(cameraY) {
-        if(!this.active || !this.img) return;
-        ctx.drawImage(this.img, this.x, this.y - cameraY, this.size, this.size);
-    }
-}
 // ===================== BULLETS / SHOOTING
 // =====================
 const ShootingSystem = {
@@ -661,27 +638,7 @@ function spawnEntities(isReset=false){
         }
     }
 }
-function spawnGraffiti() {
-    const SPAWN_GAP = 200; // интервал по высоте
-    if(player.y < lastGraffitiY - SPAWN_GAP) {
-        const count = Math.floor(rand(1,3)); // 1-2 граффити
-        for(let i=0; i<count; i++) {
-            const g = graffitiPool.find(g => !g.active);
-            if(g) {
-                const x = rand(0, canvas.width - g.size);
-                const y = player.y - rand(150, 300);
-                g.img = pick(graffitiImages);
-                g.spawn(x, y);
-            }
-        }
-        lastGraffitiY = player.y;
-    }
 
-    // рецикл граффити, ушедших вниз
-    graffitiPool.forEach(g => {
-        if(g.active && g.y - cameraY > canvas.height) g.reset();
-    });
-}
 
 // ===================== CAMERA
 // =====================
@@ -700,22 +657,12 @@ const itemPool = Array.from({length:CONFIG.MAX_ITEMS},()=>new Item());
 const bulletPool = Array.from({length:CONFIG.BULLET_POOL_SIZE},()=>({active:false,x:0,y:0,vx:0,vy:0,speed:CONFIG.BULLET_SPEED,damage:CONFIG.PLAYER_BULLET_DAMAGE,owner:null}));
 const MAX_BLACKHOLES=3;
 const blackHolePool = Array.from({length:MAX_BLACKHOLES},()=>new BlackHole());
-const GRAFFITI_POOL_SIZE = 10;
-const graffitiPool = Array.from({length: GRAFFITI_POOL_SIZE}, () => new Graffiti(pick(graffitiImages), 50));
-let lastGraffitiY = canvas.height;
 
 // ===================== PLAYER SKIN
 // =====================
 const playerSkin = new Image();
 playerSkin.src = 'adsjump.png';
 playerSkin.onload = ()=>{ player.skinCanvas = player.prepareSkin(playerSkin, CONFIG.PLAYER_SIZE); };
-// ===================== GRAFFITI =====================
-const graffitiImages = [];
-for(let i=1;i<=10;i++){
-    const img = new Image();
-    img.src = `graffiti${i}.png`; // свои картинки сюда
-    graffitiImages.push(img);
-}
 
 // ===================== INPUT
 // =====================
@@ -778,7 +725,6 @@ function update(){
     spawnEntities();
     updateItems();
     blackHolePool.forEach(bh=>bh.update());
-    spawnGraffiti(); 
     ShootingSystem.processShots();
     updateBullets();
     ScoreManager.update(player);
@@ -810,7 +756,6 @@ function draw(){
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
     drawItems();
-    graffitiPool.forEach(g => g.draw(cameraY));
     player.draw(cameraY);
     drawBullets();
 
