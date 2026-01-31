@@ -65,7 +65,7 @@ const graffitiImages = [];
 
 for (let i = 1; i <= 5; i++) {
     const img = new Image();
-    img.src = 'graffiti${i}.png';
+    img.src = `graffiti${i}.png`;
     graffitiImages.push(img);
 }
 // =====================
