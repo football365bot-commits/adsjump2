@@ -4,11 +4,11 @@ import { PlayerAnchors } from './anchors.js';
 // ===================== GRAFFITI SETUP =====================
 const graffitiImages = [];
 const graffitiSources = [
-    'graffiti1.png',
-    'graffiti2.png',
-    'graffiti3.png',
-    'graffiti4.png',
-    'graffiti5.png'
+    'graffiti1.jpg',
+    'graffiti2.jpg',
+    'graffiti3.jpg',
+    'graffiti4.jpg',
+    'graffiti5.jpg'
 ];
 
 graffitiSources.forEach(src => {
