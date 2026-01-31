@@ -12,7 +12,7 @@ ctx.imageSmoothingEnabled = false;
 
 
 function fillBackgroundOnce() {
-    ctx.fillStyle = '#000';        // просто чёрный
+    ctx.fillStyle = '#888';        // просто чёрный
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -821,7 +821,7 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = '#888';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     graffitiPool.forEach(g => g.draw());
