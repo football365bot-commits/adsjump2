@@ -9,6 +9,11 @@ const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
 
+function fillBackgroundOnce() {
+    ctx.fillStyle = '#000';        // просто чёрный
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -18,12 +23,7 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-function fillBackgroundOnce() {
-    ctx.setTransform(1,0,0,1,0,0); // сброс трансформаций
-    ctx.fillStyle = '#888';        // серый фон
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-fillBackgroundOnce();
+
 // =====================
 // GAME STATE
 // =====================
@@ -758,7 +758,8 @@ function restartGame(){
 }
 
 function draw(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
