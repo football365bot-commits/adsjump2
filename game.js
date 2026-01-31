@@ -39,22 +39,22 @@ const CONFIG = {
     GRAVITY: 0.8,
     BASE_JUMP_FORCE: 13.5,
     PLAYER_SIZE: 40,
-    PLATFORM_WIDTH: 50,
+    PLATFORM_WIDTH: 45,
     PLATFORM_HEIGHT: 12,
     MIN_GAP: 85,
     MAX_GAP: 100,
     MAX_PLATFORMS: 18,
-    ENEMY_SIZE: 30,
+    ENEMY_SIZE: 25,
     MAX_ENEMIES: 5,
     MAX_ITEMS: 7,
     ENEMY_SPAWN_CHANCE: 0.00005,
-    ENEMY_SHOOT_INTERVAL: 25,
+    ENEMY_SHOOT_INTERVAL: 20,
     ENEMY_DAMAGE: 1,
     ENEMY_HP: 10,
     PLAYER_BULLET_DAMAGE: 1,
     PLAYER_SHOOT_COOLDOWN: 15,
     BULLET_POOL_SIZE: 500,
-    BULLET_SPEED: 13,
+    BULLET_SPEED: 15,
 };
 
 // =====================
@@ -372,13 +372,13 @@ class Item {
 
         if(this.type !== 'lootbox') { // обычные предметы
             const r = Math.random();
-            if(r<0.0003) this.type='rocket';
-            else if(r<0.0007) this.type='drone';
-            else if(r<0.0014) this.type='trampoline';
-            else if(r<0.0018) this.type='bomb';
-            else if(r<0.0025) this.type='spikes';
-            else if(r<0.004) this.type='adrenaline';
-            else if(r<0.007) this.type='medkit';
+            if(r<0.0004) this.type='rocket';
+            else if(r<0.0009) this.type='drone';
+            else if(r<0.0018) this.type='trampoline';
+            else if(r<0.0025) this.type='bomb';
+            else if(r<0.0035) this.type='spikes';
+            else if(r<0.0065) this.type='adrenaline';
+            else if(r<0.0095) this.type='medkit';
             else return;
         }
 
@@ -408,12 +408,12 @@ class Item {
             if(this.type === 'lootbox') player.hasLootBox = true;
 
             switch(this.type){
-                case 'trampoline': player.vy -=5; break;
-                case 'drone': player.vy -=35; break;
-                case 'rocket': player.vy -=75; break;
-                case 'spikes': player.hp -=1; break;
+                case 'trampoline': player.vy -=10; break;
+                case 'drone': player.vy -=40; break;
+                case 'rocket': player.vy -=85; break;
+                case 'spikes': player.hp -=2; break;
                 case 'bomb': player.hp -=5; break;
-                case 'medkit': player.hp = Math.min(player.hp+1,100); break;
+                case 'medkit': player.hp = Math.min(player.hp+3,100); break;
                 case 'adrenaline': player.hp = Math.min(player.hp+5,100); break;
             }
 
@@ -447,12 +447,12 @@ class BlackHole {
         this.active = false;
         this.x = 0;
         this.y = 0;
-        this.radius = 120;
-        this.size = 50;
-        this.pullStrength = 0.4;
+        this.radius = 60;
+        this.size = 25;
+        this.pullStrength = 0.2;
     }
 
-    spawn(x,y,radius=120,strength=0.8){
+    spawn(x,y,radius=60,strength=0.8){
         this.active = true;
         this.x = x;
         this.y = y;
@@ -470,7 +470,7 @@ class BlackHole {
             const dy = this.y - (obj.y + objSize/2);
             const dist = Math.hypot(dx, dy);
             if(dist < this.radius){
-                const strength = this.pullStrength * (1 + (this.radius-dist)/this.radius*4);
+                const strength = this.pullStrength * (1 + (this.radius-dist)/this.radius*2);
                 const angle = Math.atan2(dy, dx) + 0.1;
                 const pullX = Math.cos(angle) * strength;
                 const pullY = Math.sin(angle) * strength;
@@ -809,7 +809,6 @@ function drawGameOverUI() {
 }
 
 function loop(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
     update();
     draw();
     if(gameState === GameState.GAME_OVER) drawGameOverUI();
