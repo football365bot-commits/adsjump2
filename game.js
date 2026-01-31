@@ -749,7 +749,7 @@ function restartGame(){
 
 function draw(){
     const bg = new Image();
-    bg.src = 'background.png';
+    bg.src = 'background.jpg';
     ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
