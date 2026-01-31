@@ -80,25 +80,28 @@ function isOnScreen(obj) {
 function drawInfiniteBackground() {
     if (!bgReady) return;
 
-    const scale = canvas.width / bgImage.width; // масштабируем по ширине
-    const bgHeightScaled = bgImage.height * scale; // высота после масштабирования
+    const scale = canvas.width / bgImage.width; 
+    const bgHeightScaled = bgImage.height * scale;
 
     // параллакс: скорость меньше игрока
     const scrollY = cameraY * 0.4;
 
-    // стартовая Y
-    let y = -(scrollY % bgHeightScaled);
+    // стартовая Y, чтобы всегда был плавный цикл
+    let y = - (scrollY % bgHeightScaled);
 
-    // рисуем столько раз, чтобы закрыть экран
-    while (y < canvas.height) {
+    // рисуем два или три раза подряд, чтобы перекрыть экран полностью
+    for (let i = 0; i <= Math.ceil(canvas.height / bgHeightScaled) + 1; i++) {
         ctx.drawImage(
             bgImage,
             0,
-            y,
+            0,
+            bgImage.width,
+            bgImage.height,
+            0,
+            y + i * bgHeightScaled,
             canvas.width,
             bgHeightScaled
         );
-        y += bgHeightScaled;
     }
 }
 // =====================
