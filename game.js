@@ -57,6 +57,9 @@ const CONFIG = {
     BULLET_SPEED: 13,
 };
 
+ const bg = new Image();
+    bg.src = 'background.jpg';
+
 // =====================
 // UTILS
 // =====================
@@ -803,8 +806,6 @@ function restartGame(){
 }
 
 function draw(){
-    const bg = new Image();
-    bg.src = 'background.jpg';
     ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
     platforms.forEach(p=>p.draw(cameraY));
     enemies.forEach(e=>e.draw(cameraY));
